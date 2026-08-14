@@ -1,0 +1,34 @@
+"use client"
+
+import { RecordPageLayoutEditor } from "@/components/crm/RecordPageLayoutEditor"
+
+const DEFAULT_LEFT = [
+  { id: "about", label: "About this task", enabled: true, type: "property" as const },
+  { id: "keyinfo", label: "Key information", enabled: true, type: "property" as const },
+]
+
+const DEFAULT_RIGHT = [
+  { id: "notes", label: "Notes", enabled: true, type: "activity" as const },
+  { id: "contacts", label: "Contacts", enabled: true, type: "association" as const },
+  { id: "deals", label: "Deals", enabled: true, type: "association" as const },
+]
+
+const LIBRARY = [
+  { id: "about", label: "About this task", enabled: true, type: "property" as const },
+  { id: "keyinfo", label: "Key information", enabled: true, type: "property" as const },
+  { id: "activity", label: "Activity timeline", enabled: false, type: "activity" as const },
+  { id: "companies", label: "Companies", enabled: false, type: "association" as const },
+]
+
+export default function TasksRecordPageSettings() {
+  return (
+    <RecordPageLayoutEditor
+      moduleName="Task"
+      moduleSlug="tasks"
+      backHref="/tasks"
+      defaultLeftCards={DEFAULT_LEFT}
+      defaultRightCards={DEFAULT_RIGHT}
+      libraryCards={LIBRARY}
+    />
+  )
+}

@@ -1,0 +1,219 @@
+const API_BASE = '/api/laravel'
+
+function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  const impersonationToken = sessionStorage.getItem('impersonation_token')
+  if (impersonationToken) return impersonationToken
+  return localStorage.getItem('auth_token')
+}
+
+function getActiveWorkspaceId(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('active_workspace_id')
+}
+
+function setToken(token: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem('auth_token', token)
+}
+
+function clearToken(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('auth_token')
+}
+
+export function getStoredToken(): string | null {
+  return getToken()
+}
+
+export function storeToken(token: string): void {
+  setToken(token)
+}
+
+export function removeToken(): void {
+  clearToken()
+}
+
+export function isImpersonating(): boolean {
+  if (typeof window === 'undefined') return false
+  return sessionStorage.getItem('impersonation_token') !== null
+}
+
+export function storeImpersonationToken(token: string, workspaceId?: string): void {
+  if (typeof window === 'undefined') return
+  const originalToken = localStorage.getItem('auth_token')
+  if (originalToken) {
+    sessionStorage.setItem('original_token', originalToken)
+  }
+  const originalWorkspaceId = localStorage.getItem('active_workspace_id')
+  if (originalWorkspaceId) {
+    sessionStorage.setItem('original_workspace_id', originalWorkspaceId)
+  }
+  sessionStorage.setItem('impersonation_token', token)
+  if (workspaceId) {
+    localStorage.setItem('active_workspace_id', workspaceId)
+  }
+}
+
+export function clearImpersonationToken(): void {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem('impersonation_token')
+  const originalToken = sessionStorage.getItem('original_token')
+  if (originalToken) {
+    localStorage.setItem('auth_token', originalToken)
+    sessionStorage.removeItem('original_token')
+  }
+  const originalWorkspaceId = sessionStorage.getItem('original_workspace_id')
+  if (originalWorkspaceId) {
+    localStorage.setItem('active_workspace_id', originalWorkspaceId)
+    sessionStorage.removeItem('original_workspace_id')
+  } else {
+    localStorage.removeItem('active_workspace_id')
+  }
+}
+
+export interface LaravelApiValidationErrors {
+  [field: string]: string[]
+}
+
+interface LaravelApiResponse<T> {
+  data: T | null
+  error: string | null
+  validationErrors?: LaravelApiValidationErrors
+}
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<LaravelApiResponse<T>> {
+  const token = getToken()
+  const workspaceId = getActiveWorkspaceId()
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  if (workspaceId) {
+    headers['X-Workspace-Id'] = workspaceId
+  }
+
+  const isFormData = options.body instanceof FormData
+  if (isFormData) {
+    delete headers['Content-Type']
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        ...headers,
+        ...(options.headers as Record<string, string>),
+      },
+    })
+
+    const contentType = response.headers.get('content-type') || ''
+    const json = contentType.includes('application/json') ? await response.json() : null
+
+    if (response.status === 401) {
+      const impersonating = typeof window !== 'undefined' && sessionStorage.getItem('impersonation_token') !== null
+      if (impersonating) {
+        clearImpersonationToken()
+        if (typeof window !== 'undefined') {
+          window.location.href = '/super-admin/users'
+        }
+        return { data: null, error: json?.message || 'Impersonation session expired' }
+      }
+      clearToken()
+      const isLoginPage =
+        typeof window !== 'undefined' && window.location.pathname === '/login'
+      if (!isLoginPage) {
+        window.location.href = '/login'
+      }
+      return { data: null, error: json?.message || 'Unauthorized' }
+    }
+
+    if (response.status === 403) {
+      if (typeof window !== 'undefined') {
+        const hasWorkspace = localStorage.getItem('active_workspace_id')
+        if (hasWorkspace) {
+          localStorage.removeItem('active_workspace_id')
+          const retryHeaders = { ...headers }
+          delete retryHeaders['X-Workspace-Id']
+          try {
+            const retryResponse = await fetch(`${API_BASE}${path}`, {
+              ...options,
+              headers: {
+                ...retryHeaders,
+                ...(options.headers as Record<string, string>),
+              },
+            })
+            if (retryResponse.ok) {
+              const retryContentType = retryResponse.headers.get('content-type') || ''
+              const retryJson = retryContentType.includes('application/json') ? await retryResponse.json() : null
+              return { data: retryJson as T, error: null }
+            }
+          } catch {
+            // Fall through to default error response
+          }
+        }
+      }
+    }
+
+    if (!response.ok) {
+      const validationErrors: LaravelApiValidationErrors | undefined =
+        response.status === 422 && json?.errors ? json.errors : undefined
+      const message =
+        json?.message ||
+        json?.error ||
+        (json?.errors ? Object.values(json.errors).flat().join(', ') : null) ||
+        `Request failed with status ${response.status}`
+      return { data: null, error: message, validationErrors }
+    }
+
+    return { data: json as T, error: null }
+  } catch (err) {
+    return { data: null, error: (err as Error).message || 'Network error' }
+  }
+}
+
+export const laravelApi = {
+  get: <T>(path: string, params?: Record<string, string | number | boolean>) => {
+    const queryString = params
+      ? '?' + new URLSearchParams(
+          Object.entries(params).map(([k, v]) => [k, String(v)])
+        ).toString()
+      : ''
+    return request<T>(`${path}${queryString}`)
+  },
+
+  post: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'POST',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'PUT',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+
+  patch: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'PATCH',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+
+  delete: <T>(path: string) =>
+    request<T>(path, { method: 'DELETE' }),
+
+  upload: <T>(path: string, formData: FormData) =>
+    request<T>(path, {
+      method: 'POST',
+      body: formData,
+    }),
+}

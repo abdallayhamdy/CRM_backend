@@ -1,0 +1,46 @@
+export const STEPS = [
+  { id: "details", label: "Details", description: "Name and description" },
+  { id: "field-type", label: "Field type", description: "How data is entered" },
+  { id: "rules", label: "Rules", description: "Validation and visibility" },
+  { id: "manage-access", label: "Manage access", description: "Permissions" },
+  { id: "preview", label: "Preview", description: "Review and create" },
+];
+
+export const CALC_DATE_PROPERTIES = [
+  'Close Date', 'Create Date', 'Date of last meeting booked in meetings tool',
+  'First Conversion Date', 'First Deal Created Date', 'Time First Seen',
+  'Last Activity Date', 'Last Contacted', 'Last Modified Date',
+];
+
+export const FORMULA_FUNCTIONS = [
+  { name: 'abs', description: 'Get the absolute value of the given number' },
+  { name: 'add_time', description: 'Adds the given time to the base time, controlled by the provided unit' },
+  { name: 'concatenate', description: 'Combine between 2 and 100 string values' },
+  { name: 'contains', description: 'Determine if a string is found within a piece of text' },
+  { name: 'currency_decimal_places', description: 'Get the number of decimal places for a currency' },
+  { name: 'dated_exchange_rate', description: 'Get the value of an exchange rate at the given time' },
+  { name: 'euler', description: "Returns the Euler's number value" },
+  { name: 'exchange_rate', description: 'Get the most recent exchange rate' },
+  { name: 'if', description: 'Set up a conditional expression' },
+  { name: 'is_known', description: 'Determine if a value is known for the token' },
+  { name: 'last_updated', description: 'Get the date of when the token was last updated' },
+  { name: 'lowercase', description: 'Change all characters to lowercase' },
+  { name: 'max', description: 'Get the maximum of 2 to 100 numbers' },
+  { name: 'min', description: 'Get the minimum of 2 to 100 numbers' },
+  { name: 'month', description: 'Get the numeric month of a given date' },
+  { name: 'number_to_string', description: 'Convert a number to a string' },
+  { name: 'pipeline_probability', description: 'Get the probability of a pipeline stage' },
+  { name: 'power', description: 'Raise one number to the value of another number' },
+  { name: 'round_down', description: 'Round a number down to a specified precision' },
+  { name: 'round_nearest', description: 'Round a number to a specified precision' },
+  { name: 'round_up', description: 'Round a number up to a specified precision' },
+  { name: 'sqrt', description: 'Get the square root of the given number' },
+  { name: 'starts_with', description: 'Determine if a piece of text starts with a given string' },
+  { name: 'string_length', description: 'Returns the length of the given string' },
+  { name: 'string_to_number', description: 'Convert a string to a number' },
+  { name: 'subtract_time', description: 'Subtracts the given time from the base time, controlled by the provided unit' },
+  { name: 'time_between', description: 'Get the difference between two dates' },
+  { name: 'time_between_exclude_weekends', description: 'Get the difference between two dates, excluding weekends, based on your account time zone' },
+  { name: 'uppercase', description: 'Change all characters to uppercase' },
+  { name: 'year', description: 'Get the numeric year of a given date' },
+];
