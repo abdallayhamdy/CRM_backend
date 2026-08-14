@@ -1,5 +1,19 @@
 const API_BASE = '/api/laravel'
 
+function getApiErrorMessage(json: unknown): string {
+  if (typeof json !== 'object' || json === null) return ''
+  const record = json as Record<string, unknown>
+  if (typeof record.message === 'string') return record.message
+  if (typeof record.error === 'string') return record.error
+  if (record.errors !== null && typeof record.errors === 'object') {
+    const parts = Object.values(record.errors as Record<string, unknown>)
+      .flat()
+      .filter((part): part is string => typeof part === 'string')
+    if (parts.length > 0) return parts.join(', ')
+  }
+  return ''
+}
+
 function getToken(): string | null {
   if (typeof window === 'undefined') return null
   const impersonationToken = sessionStorage.getItem('impersonation_token')
@@ -125,7 +139,7 @@ async function request<T>(
         if (typeof window !== 'undefined') {
           window.location.href = '/super-admin/users'
         }
-        return { data: null, error: json?.message || 'Impersonation session expired' }
+        return { data: null, error: getApiErrorMessage(json) || 'Impersonation session expired' }
       }
       clearToken()
       const isLoginPage =
@@ -133,7 +147,7 @@ async function request<T>(
       if (!isLoginPage) {
         window.location.href = '/login'
       }
-      return { data: null, error: json?.message || 'Unauthorized' }
+      return { data: null, error: getApiErrorMessage(json) || 'Unauthorized' }
     }
 
     if (response.status === 403) {
@@ -167,16 +181,14 @@ async function request<T>(
       const validationErrors: LaravelApiValidationErrors | undefined =
         response.status === 422 && json?.errors ? json.errors : undefined
       const message =
-        json?.message ||
-        json?.error ||
-        (json?.errors ? Object.values(json.errors).flat().join(', ') : null) ||
-        `Request failed with status ${response.status}`
+        getApiErrorMessage(json) || `Request failed with status ${response.status}`
       return { data: null, error: message, validationErrors }
     }
 
     return { data: json as T, error: null }
   } catch (err) {
-    return { data: null, error: (err as Error).message || 'Network error' }
+    const message = err instanceof Error ? err.message : typeof err === 'string' ? err : ''
+    return { data: null, error: message || 'Network error' }
   }
 }
 

@@ -27,7 +27,7 @@ export function LoginForm() {
       if (result.success) {
         router.replace("/dashboard")
       } else {
-        setError(result.error || "Invalid email or password")
+        setError(typeof result.error === "string" && result.error ? result.error : "Invalid email or password")
       }
     } catch {
       setError("An error occurred during login")
