@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(_request: NextRequest) {
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (pathname.startsWith('/api/laravel') || pathname.startsWith('/storage')) {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('ngrok-skip-browser-warning', 'true')
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
+
   return NextResponse.next()
 }
 
