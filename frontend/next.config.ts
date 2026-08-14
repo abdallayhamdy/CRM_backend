@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
+const backendApiUrl = process.env.BACKEND_API_URL;
 
 const cspValue = [
   "default-src 'self'",
@@ -36,11 +37,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/laravel/:path*',
-        destination: 'http://127.0.0.1:8000/api/:path*',
+        destination: `${backendApiUrl}/api/:path*`,
       },
       {
         source: '/storage/:path*',
-        destination: 'http://127.0.0.1:8000/storage/:path*',
+        destination: `${backendApiUrl}/storage/:path*`,
       },
     ];
   },
