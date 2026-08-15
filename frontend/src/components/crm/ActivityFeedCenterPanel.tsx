@@ -677,6 +677,9 @@ export function ActivityFeedCenterPanel({
                                     content={item.description || item.title}
                                     isExpanded={!isCollapsedAll}
                                     associations={getAssociations()}
+                                    callDirection={isCall ? item.call_direction : undefined}
+                                    callDuration={isCall ? item.call_duration : undefined}
+                                    callOutcome={isCall ? item.call_outcome : undefined}
                                   />
                                 )}
                               </div>

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 export interface FieldOption {
   label: string
   value: string
+  color?: string
 }
 
 export interface EditableFieldProps {
@@ -62,10 +63,21 @@ export function EditableField({
 
   if (!editable) {
     if ((type === "select" || type === "owner") && options) {
-      const label = options.find((o) => o.value === value)?.label ?? String(value ?? "")
+      const matchedOption = options.find((o) => o.value.toLowerCase() === String(value ?? "").toLowerCase())
+      const label = matchedOption?.label ?? String(value ?? "")
+      const color = matchedOption?.color
       return (
         <div className="flex items-center justify-between h-7 text-[13px] text-foreground font-medium rounded border border-border px-2 bg-background">
-          <span>{label || <span className="text-muted-foreground">{placeholder}</span>}</span>
+          {color ? (
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white"
+              style={{ backgroundColor: color }}
+            >
+              {label}
+            </span>
+          ) : (
+            <span>{label || <span className="text-muted-foreground">{placeholder}</span>}</span>
+          )}
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         </div>
       )
@@ -255,7 +267,9 @@ export function EditableField({
 
   // Display mode (editable but not currently editing)
   if ((type === "select" || type === "owner") && options) {
-    const label = options.find((o) => o.value === value)?.label ?? String(value ?? "")
+    const matchedOption = options.find((o) => o.value.toLowerCase() === String(value ?? "").toLowerCase())
+    const label = matchedOption?.label ?? String(value ?? "")
+    const color = matchedOption?.color
     return (
       <button
         type="button"
@@ -267,7 +281,16 @@ export function EditableField({
           "outline-none focus-visible:ring-1 focus-visible:ring-ring"
         )}
       >
-        <span>{label || <span className="text-muted-foreground">{placeholder}</span>}</span>
+        {color ? (
+          <span
+            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white"
+            style={{ backgroundColor: color }}
+          >
+            {label}
+          </span>
+        ) : (
+          <span>{label || <span className="text-muted-foreground">{placeholder}</span>}</span>
+        )}
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       </button>
     )

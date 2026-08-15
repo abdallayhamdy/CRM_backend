@@ -16,7 +16,13 @@ import {
   AlignLeft,
   ChevronUp,
   Pencil,
-  Trash2
+  Trash2,
+  CheckCircle2,
+  Clock,
+  PhoneIncoming,
+  PhoneOff,
+  PhoneOutgoing,
+  XCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -65,6 +71,9 @@ interface ActivityLogCardProps {
   associations?: { name: string; type: string }[]
   compact?: boolean
   onSuccess?: () => void
+  callDirection?: string
+  callDuration?: string
+  callOutcome?: string
 }
 
 export function ActivityLogCard({
@@ -78,6 +87,9 @@ export function ActivityLogCard({
   associations = [],
   compact = false,
   onSuccess,
+  callDirection,
+  callDuration,
+  callOutcome,
 }: ActivityLogCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(initialExpanded);
 
@@ -100,6 +112,7 @@ export function ActivityLogCard({
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const isNote = type === "Note";
+  const isCall = type === "Call";
   const isNoteRecord = feedType === "note";
   const hasContentChanged = isNote && isEditing && editedContent !== content;
 
@@ -417,6 +430,46 @@ export function ActivityLogCard({
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      )}
+
+      {isCall && (callDirection || callDuration || callOutcome) && (
+        <div className={cn("px-4 md:px-12 py-4", compact && "!px-3 !py-3")}>
+          <div className={cn("flex flex-wrap items-center gap-3", compact && "gap-2")}>
+            {callDirection && (
+              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                {callDirection === 'Inbound' ? (
+                  <PhoneIncoming className="w-3.5 h-3.5 text-status-success" />
+                ) : (
+                  <PhoneOutgoing className="w-3.5 h-3.5 text-primary" />
+                )}
+                <span>{callDirection}</span>
+              </div>
+            )}
+            {callDuration && (
+              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{callDuration}</span>
+              </div>
+            )}
+            {callOutcome && (
+              <div className={cn(
+                "flex items-center gap-1.5 text-[12px] px-2 py-0.5 rounded-full",
+                callOutcome === 'Connected' || callOutcome === 'Resolved' ? "bg-status-success/10 text-status-success" :
+                callOutcome === 'No Answer' || callOutcome === 'Busy' || callOutcome === 'Wrong Number' ? "bg-status-danger/10 text-status-danger" :
+                "bg-muted text-muted-foreground"
+              )}>
+                {callOutcome === 'Connected' || callOutcome === 'Resolved' ? (
+                  <CheckCircle2 className="w-3 h-3" />
+                ) : callOutcome === 'No Answer' || callOutcome === 'Busy' || callOutcome === 'Wrong Number' ? (
+                  <XCircle className="w-3 h-3" />
+                ) : (
+                  <PhoneOff className="w-3 h-3" />
+                )}
+                <span>{callOutcome}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </motion.div>

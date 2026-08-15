@@ -5,7 +5,7 @@ export interface FieldConfig {
   label: string
   type: "text" | "email" | "phone" | "select" | "number" | "date" | "textarea" | "owner" | "lifecycle" | "toggle" | "richtext"
   editable: boolean
-  options?: { label: string; value: string }[]
+  options?: { label: string; value: string; color?: string }[]
   showInSidebar?: boolean
   showInFullPage?: boolean
   lifecycleObjectType?: "contact" | "company" | "deal" | "ticket"
@@ -36,7 +36,7 @@ export const CONTACT_FIELD_CONFIG: FieldConfig[] = [
     label: "Lead Status",
     type: "select",
     editable: false,
-    options: LEAD_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value })),
+    options: LEAD_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value, color: o.color })),
   },
   {
     key: "source",

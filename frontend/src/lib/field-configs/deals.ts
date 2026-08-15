@@ -26,7 +26,7 @@ export const DEAL_FIELD_CONFIG: FieldConfig[] = [
     label: "Stage",
     type: "select",
     editable: true,
-    options: DEAL_STAGE_OPTIONS.map((o) => ({ label: o.label, value: o.value })),
+    options: DEAL_STAGE_OPTIONS.map((o) => ({ label: o.label, value: o.value, color: o.color })),
   },
   {
     key: "amount",

@@ -41,6 +41,7 @@ import { CALL_FIELD_CONFIG } from "@/lib/field-configs/calls"
 import { TASK_FIELD_CONFIG } from "@/lib/field-configs/tasks"
 import { ActivityTaskCard } from "@/components/activity/ActivityTaskCard"
 import { ActivityLogCard } from "@/components/activity/ActivityLogCard"
+import { AssociationBadge } from "@/components/activity/AssociationBadge"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -297,6 +298,7 @@ export function RecordPreviewPanel({
             <PreviewRecentActivities
               recordType={recordType}
               recordId={recordId!}
+              data={data}
               workspaceId={workspaceId}
               isOpen={activitiesOpen}
               onToggle={() => setActivitiesOpen(!activitiesOpen)}
@@ -1093,6 +1095,7 @@ function getKeyFields(recordType: RecordType, data: any, ownerOptions?: FieldOpt
 function PreviewRecentActivities({
   recordType,
   recordId,
+  data,
   workspaceId,
   isOpen,
   onToggle,
@@ -1100,6 +1103,7 @@ function PreviewRecentActivities({
 }: {
   recordType: RecordType
   recordId: string
+  data: any
   workspaceId: string | null
   isOpen: boolean
   onToggle: () => void
@@ -1112,6 +1116,7 @@ function PreviewRecentActivities({
   const [isLoading, setIsLoading] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCollapsedAll, setIsCollapsedAll] = React.useState(false)
+  const [activeFilter, setActiveFilter] = React.useState("all")
 
   const fetchActivities = React.useCallback(async () => {
     if (!recordId || !workspaceId) return
@@ -1168,6 +1173,75 @@ function PreviewRecentActivities({
     }
     return items
   }, [activities, notes, tickets, searchQuery])
+
+  // Compute feed counts from unfiltered items
+  const feedCounts = React.useMemo(() => {
+    const all = allItems
+    const notesCount = all.filter(i => i._type === "note" || i.type === "note").length
+    const tasksCount = all.filter(i => i.type === "task").length
+    const ticketsCount = all.filter(i => i._type === "ticket" || i.type === "ticket").length
+    const callsCount = all.filter(i => i.type === "call").length
+    return {
+      all: all.length,
+      notes: notesCount,
+      tasks: tasksCount,
+      tickets: ticketsCount,
+      calls: callsCount,
+    }
+  }, [allItems])
+
+  // Filter items by active filter
+  const filteredItems = React.useMemo(() => {
+    if (activeFilter === "all") return allItems
+    return allItems.filter((item) => {
+      switch (activeFilter) {
+        case "notes": return item._type === "note" || item.type === "note"
+        case "tasks": return item.type === "task"
+        case "tickets": return item._type === "ticket" || item.type === "ticket"
+        case "calls": return item.type === "call"
+        default: return true
+      }
+    })
+  }, [allItems, activeFilter])
+
+  // Group filtered items by month
+  const groupedHistory = React.useMemo(() => {
+    const groups: Record<string, any[]> = {}
+    filteredItems.forEach(item => {
+      const date = new Date(item.created_at || (item as any).due_date)
+      const monthYear = date.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+      if (!groups[monthYear]) groups[monthYear] = []
+      groups[monthYear].push(item)
+    })
+    return groups
+  }, [filteredItems])
+
+  // Build associations from record data
+  const associations = React.useMemo(() => {
+    if (!data) return []
+    const assocs: { name: string; type: string }[] = []
+    switch (recordType) {
+      case "contact": {
+        const name = `${data.first_name || ""} ${data.last_name || ""}`.trim()
+        if (name) assocs.push({ name, type: "Contact" })
+        if (data.company?.name) assocs.push({ name: data.company.name, type: "Company" })
+        if (data.deals?.length) data.deals.forEach((d: any) => assocs.push({ name: d.title, type: "Deal" }))
+        break
+      }
+      case "company":
+        if (data.name) assocs.push({ name: data.name, type: "Company" })
+        break
+      case "deal":
+        if (data.title) assocs.push({ name: data.title, type: "Deal" })
+        break
+      case "ticket":
+        if (data.subject || data.title) assocs.push({ name: data.subject || data.title, type: "Ticket" })
+        break
+      default:
+        break
+    }
+    return assocs
+  }, [data, recordType])
 
   const fkField = getForeignKeyField(recordType)
   const hasActivities = fkField !== null
@@ -1239,67 +1313,123 @@ function PreviewRecentActivities({
               No history yet
             </div>
           ) : (
-            <div className="relative pl-8">
-              <div className="flex flex-col gap-3">
-                {allItems.map((item, idx) => {
-                  const isNote = item._type === "note" || item.type === "note"
-                  const isTicket = item._type === "ticket"
-                  const isTask = item.type === "task"
-                  const tlIcon = isNote ? FileText : isTicket ? TicketCheck : getActivityIcon(item.type)
-                  const tlIconColor = isNote ? "text-status-warning" : isTicket ? "text-destructive" : "text-primary"
-                  const tlIconBg = isNote ? "bg-status-warning/10" : isTicket ? "bg-destructive/10" : "bg-primary/10"
-                  return (
-                    <div key={`${item._type}-${item.id}`} className="relative">
-                      {/* Timeline connector line */}
-                      {idx < allItems.length - 1 && (
-                        <div className="absolute left-[-25px] top-8 bottom-[-12px] w-px bg-border z-0" />
-                      )}
-                      {/* Timeline icon */}
-                      <div className={cn("absolute -left-[37px] top-2 h-6 w-6 rounded-full flex items-center justify-center z-10", tlIconBg)}>
-                        {React.createElement(tlIcon, { className: cn("h-3 w-3", tlIconColor) })}
-                      </div>
-                      {isNote ? (
-                        <ActivityLogCard
-                          id={item.id}
-                          feedType={item._type === "note" ? "note" : "activity"}
-                          type="Note"
-                          author={item.author?.first_name ? `${item.author.first_name} ${item.author.last_name || ""}` : "System"}
-                          date={item.created_at ? format(new Date(item.created_at), "MMM d, yyyy 'at' h:mm a") + " GMT+2" : ""}
-                          content={item.content || item.description || ""}
-                          isExpanded={!isCollapsedAll}
-                          compact
-                          onSuccess={fetchActivities}
-                        />
-                      ) : isTask ? (
-                        <ActivityTaskCard
-                          id={item.id}
-                          title={item.title || ""}
-                          description={item.description || ""}
-                          assignedTo={item.owner?.first_name ? `${item.owner.first_name} ${item.owner.last_name || ""}` : "Unassigned"}
-                          dueDate={item.due_date || new Date().toISOString()}
-                          dueTime={item.due_date ? format(new Date(item.due_date), "HH:mm") : "09:00"}
-                          isExpanded={!isCollapsedAll}
-                          initialTaskSubtype={item.task_subtype || "To-do"}
-                          initialPriority={item.task_priority || "None"}
-                          initialQueue={item.task_queue || "General"}
-                          initialReminder={item.task_reminder || "No reminder"}
-                          initialRepeat={item.task_repeat || false}
-                          initialCompleted={item.completed || false}
-                          compact
-                          onSuccess={() => {}}
-                        />
-                      ) : (
-                        <ActivityTimelineItem
-                          item={item}
-                          isExpanded={!isCollapsedAll}
-                          onEdit={onEditNote}
-                        />
-                      )}
-                    </div>
-                  )
-                })}
+            <>
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1 mb-3 overflow-x-auto no-scrollbar">
+                {[
+                  { id: "all", label: "All", count: feedCounts.all },
+                  { id: "notes", label: "Notes", count: feedCounts.notes },
+                  { id: "tasks", label: "Tasks", count: feedCounts.tasks },
+                  { id: "tickets", label: "Tickets", count: feedCounts.tickets },
+                  { id: "calls", label: "Calls", count: feedCounts.calls },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setActiveFilter(tab.id)
+                    }}
+                    className={cn(
+                      "px-2.5 py-1 text-[11px] font-medium rounded-full whitespace-nowrap transition-colors shrink-0",
+                      activeFilter === tab.id
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    {tab.label} ({tab.count})
+                  </button>
+                ))}
               </div>
-            </div>
+
+              {/* Month-grouped items */}
+              {filteredItems.length === 0 ? (
+                <div className="text-[12px] text-muted-foreground text-center py-4">
+                  No activity matches your filters.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  {Object.entries(groupedHistory).map(([monthYear, items]) => (
+                    <div key={monthYear} className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <h4 className="text-[12px] text-foreground font-bold whitespace-nowrap">{monthYear}</h4>
+                        <div className="h-[1px] w-full bg-border" />
+                      </div>
+
+                      <div className="relative pl-8">
+                        <div className="flex flex-col gap-3">
+                          {items.map((item: any, idx: number) => {
+                            const isNote = item._type === "note" || item.type === "note"
+                            const isTicket = item._type === "ticket"
+                            const isTask = item.type === "task"
+                            const tlIcon = isNote ? FileText : isTicket ? TicketCheck : getActivityIcon(item.type)
+                            const tlIconColor = isNote ? "text-status-warning" : isTicket ? "text-destructive" : "text-primary"
+                            const tlIconBg = isNote ? "bg-status-warning/10" : isTicket ? "bg-destructive/10" : "bg-primary/10"
+                            return (
+                              <div key={`${item._type}-${item.id}`} className="relative">
+                                {/* Timeline connector line */}
+                                {idx < items.length - 1 && (
+                                  <div className="absolute left-[-25px] top-8 bottom-[-12px] w-px bg-border z-0" />
+                                )}
+                                {/* Timeline icon */}
+                                <div className={cn("absolute -left-[37px] top-2 h-6 w-6 rounded-full flex items-center justify-center z-10", tlIconBg)}>
+                                  {React.createElement(tlIcon, { className: cn("h-3 w-3", tlIconColor) })}
+                                </div>
+                                {isNote ? (
+                                  <ActivityLogCard
+                                    id={item.id}
+                                    feedType={item._type === "note" ? "note" : "activity"}
+                                    type="Note"
+                                    author={item.author?.first_name ? `${item.author.first_name} ${item.author.last_name || ""}` : "System"}
+                                    date={item.created_at ? format(new Date(item.created_at), "MMM d, yyyy 'at' h:mm a") + " GMT+2" : ""}
+                                    content={item.content || item.description || ""}
+                                    isExpanded={!isCollapsedAll}
+                                    compact
+                                    associations={associations}
+                                    onSuccess={fetchActivities}
+                                  />
+                                ) : isTask ? (
+                                  <ActivityTaskCard
+                                    id={item.id}
+                                    title={item.title || ""}
+                                    description={item.description || ""}
+                                    assignedTo={item.owner?.first_name ? `${item.owner.first_name} ${item.owner.last_name || ""}` : "Unassigned"}
+                                    dueDate={item.due_date || new Date().toISOString()}
+                                    dueTime={item.due_date ? format(new Date(item.due_date), "HH:mm") : "09:00"}
+                                    isExpanded={!isCollapsedAll}
+                                    initialTaskSubtype={item.task_subtype || "To-do"}
+                                    initialPriority={item.task_priority || "None"}
+                                    initialQueue={item.task_queue || "General"}
+                                    initialReminder={item.task_reminder || "No reminder"}
+                                    initialRepeat={item.task_repeat || false}
+                                    initialCompleted={item.completed || false}
+                                    compact
+                                    associations={associations}
+                                    onSuccess={() => {}}
+                                  />
+                                ) : (
+                                  <>
+                                    <ActivityTimelineItem
+                                      item={item}
+                                      isExpanded={!isCollapsedAll}
+                                      onEdit={onEditNote}
+                                    />
+                                    {associations.length > 0 && (
+                                      <div className="mt-1 ml-1">
+                                        <AssociationBadge associations={associations} />
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
