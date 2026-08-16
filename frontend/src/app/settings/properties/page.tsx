@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { laravelApi } from '@/lib/laravel-api';
+import { clearPropertiesCache } from '@/hooks/use-properties';
 
 import {
   Search, ChevronDown, Plus, Lock, ExternalLink,
@@ -327,6 +328,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success('Property archived successfully', { id: toastId });
         fetchProperties();
+        clearPropertiesCache();
         window.dispatchEvent(new Event('properties-count-changed'));
       } else {
         toast.error(error || 'Failed to archive property', { id: toastId });
@@ -346,6 +348,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success(current ? 'Property marked as optional' : 'Property marked as required', { id: toastId });
         fetchProperties();
+        clearPropertiesCache();
       } else {
         toast.error(error || 'Failed to update property', { id: toastId });
       }
@@ -362,6 +365,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success('Property restored successfully', { id: toastId });
         fetchProperties();
+        clearPropertiesCache();
         window.dispatchEvent(new Event('properties-count-changed'));
       } else {
         toast.error(error || 'Failed to restore property', { id: toastId });
@@ -881,6 +885,7 @@ export default function PropertiesPage() {
         onCreated={() => {
           fetchProperties();
           fetchGroups();
+          clearPropertiesCache();
           window.dispatchEvent(new Event('properties-count-changed'));
         }}
       />

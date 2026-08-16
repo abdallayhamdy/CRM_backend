@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CreatePropertyForm, { CreatePropertyFormRef, STEPS } from "@/components/properties/CreatePropertyForm";
+import { clearPropertiesCache } from "@/hooks/use-properties";
 import { Button } from "@/components/ui/button";
 import { X, Sparkles, Loader2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -182,7 +183,7 @@ export default function CreatePropertyPage() {
             <CreatePropertyForm
               ref={formRef}
               initialData={initialData}
-              onSuccess={() => router.push("/settings/properties?object_type=" + objectType)}
+              onSuccess={() => { clearPropertiesCache(); router.push("/settings/properties?object_type=" + objectType); }}
               onCancel={() => router.back()}
               isFullPage={true}
               onStateChange={(state) => {

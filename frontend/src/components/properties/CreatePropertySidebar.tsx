@@ -581,8 +581,7 @@ export default function CreatePropertySidebar({
           allowed_characters: form.allowed_characters,
           allowed_spaces: form.allowed_spaces,
           case_sensitivity: form.case_sensitivity,
-          numberFormat: form.numberFormat,
-          dateDisplayFormat: form.dateDisplayFormat,
+          number_format: form.numberFormat,
           date_display_format: form.date_display_format,
           access: {
             type: "everyone_edit",

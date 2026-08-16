@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Trash2, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { clearPropertiesCache } from '@/hooks/use-properties';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +63,7 @@ export default function ArchivedPage() {
     const { error } = await laravelApi.patch(`/properties/${id}`, { restore: true });
     if (!error) {
       setArchivedProperties(prev => prev.filter(p => p.id !== id));
+      clearPropertiesCache();
       window.dispatchEvent(new Event('properties-count-changed'));
     }
   };
@@ -71,6 +73,7 @@ export default function ArchivedPage() {
     const { error } = await laravelApi.delete(`/properties/${id}?force=1`);
     if (!error) {
       setArchivedProperties(prev => prev.filter(p => p.id !== id));
+      clearPropertiesCache();
       window.dispatchEvent(new Event('properties-count-changed'));
     }
   };

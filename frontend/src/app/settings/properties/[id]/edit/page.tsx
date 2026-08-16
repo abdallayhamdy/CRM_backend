@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import dynamic from 'next/dynamic';
 import { laravelApi } from '@/lib/laravel-api';
+import { clearPropertiesCache } from '@/hooks/use-properties';
 
 const RulesTab = dynamic(
   () => import('@/components/properties/RulesTab'),
@@ -133,6 +134,7 @@ export default function PropertyEditPage() {
       if (error) { setError(error); return; }
       const updated = (data as any)?.data ?? data;
       if (updated) setProperty(updated);
+      clearPropertiesCache();
       setSaved(true); setTimeout(() => setSaved(false), 3000);
     } catch { setError('Failed to save property.'); }
     finally { setSaving(false); }
