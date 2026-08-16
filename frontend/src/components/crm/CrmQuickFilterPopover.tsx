@@ -317,7 +317,7 @@ export function DateQuickFilter({
   const [open, setOpen] = React.useState(false);
 
   const dateOptions = [
-    { label: "All time", value: "" },
+    { label: "All time", value: "all" },
     { label: "Today", value: "today" },
     { label: "Yesterday", value: "yesterday" },
     { label: "Last 7 days", value: "last_7_days" },

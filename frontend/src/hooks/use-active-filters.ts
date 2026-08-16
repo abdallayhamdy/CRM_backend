@@ -128,8 +128,6 @@ export function useActiveFilters({
         onChange: () => { },
       }
     })
-  // NOTE: lifecycleStages is used inside this memo but intentionally excluded
-  // from the dependency array to preserve the original behavior (stale closure).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinnedFilterIds, filters.properties, filters.dateRanges, handleSetProperty, owners, updateDateRange, handleToggleProperty])
+  }, [pinnedFilterIds, filters.properties, filters.dateRanges, handleSetProperty, owners, lifecycleStages, updateDateRange, handleToggleProperty])
 }

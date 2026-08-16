@@ -43,7 +43,9 @@ export const HISTORY_KEY_ALIASES: Record<PropertyHistoryEntityType, Record<strin
     assigned_to: { configKey: "owner_id", label: "Owner" },
   },
   note: {},
-  company: {},
+  company: {
+    assigned_to: { configKey: "owner_id", label: "Owner" },
+  },
   deal: {},
   product: {},
   order: {},

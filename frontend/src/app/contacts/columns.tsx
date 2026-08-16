@@ -15,7 +15,7 @@ import { LifecycleBadge } from "@/components/crm/LifecycleBadge"
 
 import { PropertyFromDB } from "@/hooks/use-properties"
 
-export function getCoreColumns(lifecycleStages: StageConfig[], properties?: PropertyFromDB[]): ColumnDef<Contact>[] {
+export function getCoreColumns(lifecycleStages: StageConfig[], properties?: PropertyFromDB[], owners?: { value: string; label: string }[], companyOptions?: { value: string; label: string }[]): ColumnDef<Contact>[] {
   const leadStatusProp = properties?.find(p => p.name === 'lead_status' && p.options?.some(o => typeof o !== 'string' && !!o.color))
   const leadStatusOptions = leadStatusProp?.options
     ? leadStatusProp.options
@@ -128,11 +128,12 @@ export function getCoreColumns(lifecycleStages: StageConfig[], properties?: Prop
   },
   {
     id: "company",
+    accessorFn: (row) => row.company_id ?? "",
     header: "Company",
     cell: ({ row }) => <span className="text-foreground font-medium truncate">{row.original.company?.name || '--'}</span>,
     size: 150,
     minSize: 120,
-    meta: { hideBelow: 'md' },
+    meta: { editable: true, hideBelow: 'md', options: companyOptions || [] },
   },
   {
     accessorKey: "lifecycle_stage",
@@ -178,6 +179,7 @@ export function getCoreColumns(lifecycleStages: StageConfig[], properties?: Prop
   },
   {
     id: "owner",
+    accessorFn: (row) => row.owner_id ?? "",
     header: "Contact Owner",
     cell: ({ row }) => {
       const owner = row.original.owner
@@ -192,6 +194,7 @@ export function getCoreColumns(lifecycleStages: StageConfig[], properties?: Prop
     },
     size: 180,
     minSize: 100,
+    meta: { editable: true, options: owners || [] },
   },
   {
     id: "createDate",

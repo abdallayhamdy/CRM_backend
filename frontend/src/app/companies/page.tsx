@@ -605,7 +605,7 @@ export default function CompaniesPage() {
         type: "searchable-property", 
         options: allOwners, 
         value: filters.properties["owner"] || [], 
-        onChange: (val: string) => toggleProperty("owner", val) 
+        onChange: (val: string[]) => setProperty("owner", val as string[])
       }
     }
     if (id === "createDate" || id === "create-date") {
@@ -669,7 +669,7 @@ export default function CompaniesPage() {
     )
     
     // Add owner manually as it's often missing or differently named in static data
-    const ownerFilter = { id: "owner", label: "Company owner", type: "property" as const, options: allOwners.map(o => o.label) }
+    const ownerFilter = { id: "owner", label: "Company owner", type: "property" as const, options: allOwners.map(o => o.value) }
     
     return [
       { id: "company-name", label: "Company name", type: "text" as const },
@@ -1090,6 +1090,7 @@ export default function CompaniesPage() {
         config={sidebarConfig}
         onToggleProperty={handleToggleProperty}
         onUpdateNumber={updateNumber}
+        onUpdateDateRange={(propId, val) => updateDateRange(propId, val as any)}
         onClearAll={clearAll}
         onAddAdvancedFilter={addAdvancedFilter}
         onRemoveAdvancedFilter={removeAdvancedFilter}

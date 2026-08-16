@@ -35,6 +35,7 @@ interface CrmFilterSidebarProps {
   config: SidebarFilterConfig[] | SidebarFilterCategory[]
   onToggleProperty: (propertyId: string, value: string) => void
   onUpdateNumber: (propertyId: string, bound: "min" | "max", value: string) => void
+  onUpdateDateRange?: (propertyId: string, value: string) => void
   onClearAll: () => void
   onAddAdvancedFilter: (filter: Omit<AdvancedFilter, "id">) => void
   onRemoveAdvancedFilter: (id: string) => void
@@ -45,12 +46,14 @@ const FilterItemRow = ({
   conf,
   filters,
   onToggleProperty,
-  onUpdateNumber
+  onUpdateNumber,
+  onUpdateDateRange
 }: {
   conf: SidebarFilterConfig,
   filters: GenericCrmFilters,
   onToggleProperty: (id: string, val: string) => void,
-  onUpdateNumber: (id: string, bound: "min" | "max", val: string) => void
+  onUpdateNumber: (id: string, bound: "min" | "max", val: string) => void,
+  onUpdateDateRange?: (id: string, val: string) => void
 }) => {
   if (conf.type === "property" && conf.options) {
     return (
@@ -71,6 +74,32 @@ const FilterItemRow = ({
           min={numState.min}
           max={numState.max}
           onChange={(bound, val) => onUpdateNumber(conf.id, bound, val)}
+        />
+      </FilterSection>
+    )
+  }
+  if (conf.type === "text") {
+    const textValue = (filters.properties[conf.id] || [])[0] || ""
+    return (
+      <FilterSection key={conf.id} title={conf.label} defaultOpen={false}>
+        <TextFilterSection
+          value={textValue}
+          onChange={(val) => onToggleProperty(conf.id, val)}
+        />
+      </FilterSection>
+    )
+  }
+  if (conf.type === "date") {
+    const dateValue = (filters.dateRanges as Record<string, string>)[conf.id] || "all"
+    return (
+      <FilterSection key={conf.id} title={conf.label} defaultOpen={false}>
+        <DateFilterSection
+          value={dateValue}
+          onChange={(val) => {
+            if (onUpdateDateRange) {
+              onUpdateDateRange(conf.id, val)
+            }
+          }}
         />
       </FilterSection>
     )
@@ -198,6 +227,72 @@ function AmountFilterSection({ min, max, onChange }: {
   )
 }
 
+function TextFilterSection({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [localValue, setLocalValue] = React.useState(value)
+  React.useEffect(() => { setLocalValue(value) }, [value])
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Input
+        placeholder="Type to filter..."
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") onChange(localValue) }}
+        className="h-8 text-[13px] border-border focus-visible:ring-0 focus-visible:border-primary"
+      />
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => { setLocalValue(""); onChange("") }}
+          className="text-[12px] text-muted-foreground hover:text-foreground"
+        >
+          Clear
+        </button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-[12px] px-3"
+          onClick={() => onChange(localValue)}
+        >
+          Apply
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+const DATE_RANGE_OPTIONS = [
+  { label: "All time", value: "all" },
+  { label: "Today", value: "today" },
+  { label: "Yesterday", value: "yesterday" },
+  { label: "Last 7 days", value: "last_7_days" },
+  { label: "Last 30 days", value: "last_30_days" },
+  { label: "Last 90 days", value: "last_90_days" },
+  { label: "This month", value: "this_month" },
+  { label: "Last month", value: "last_month" },
+]
+
+function DateFilterSection({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {DATE_RANGE_OPTIONS.map((opt) => (
+        <label
+          key={opt.value}
+          className="flex items-center gap-3 px-1 py-1.5 hover:bg-muted/50 rounded-md cursor-pointer"
+        >
+          <input
+            type="radio"
+            name="date-filter"
+            className="rounded border-border text-primary focus:ring-primary"
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+          />
+          <span className="text-[13px] text-foreground font-medium">{opt.label}</span>
+        </label>
+      ))}
+    </div>
+  )
+}
+
 function AddFilterSection({ config, onAdd }: { config: SidebarFilterConfig[], onAdd: (filter: Omit<AdvancedFilter, "id">) => void }) {
   const [search, setSearch] = React.useState("")
   const filtered = config.filter((p) =>
@@ -244,6 +339,7 @@ export function CrmFilterSidebar({
   config,
   onToggleProperty,
   onUpdateNumber,
+  onUpdateDateRange,
   onClearAll,
   onAddAdvancedFilter,
   onRemoveAdvancedFilter,
@@ -403,6 +499,7 @@ export function CrmFilterSidebar({
                         filters={filters}
                         onToggleProperty={onToggleProperty}
                         onUpdateNumber={onUpdateNumber}
+                        onUpdateDateRange={onUpdateDateRange}
                       />
                     ))}
                   </div>
@@ -419,6 +516,7 @@ export function CrmFilterSidebar({
                   filters={filters}
                   onToggleProperty={onToggleProperty}
                   onUpdateNumber={onUpdateNumber}
+                  onUpdateDateRange={onUpdateDateRange}
                 />
               ));
           })()}

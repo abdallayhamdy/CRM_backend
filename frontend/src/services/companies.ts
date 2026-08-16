@@ -108,7 +108,7 @@ export const companiesService = {
         Object.assign(params, dateRangeToParams(createDateRange, 'created_at'))
       }
 
-      const lastActivityRange = filters.dateRanges['lastActivityDate'] || filters.dateRanges['lastActivity']
+      const lastActivityRange = filters.dateRanges['lastActivity']
       if (lastActivityRange && lastActivityRange !== 'all') {
         Object.assign(params, dateRangeToParams(lastActivityRange, 'last_activity_at'))
       }

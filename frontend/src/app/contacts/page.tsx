@@ -50,7 +50,8 @@ const TaskEditorSheet = dynamic(
 import { usePanelCards } from "@/hooks/use-panel-cards"
 
 import { contactsService, getColumn } from "@/services/contacts"
-import { Contact, Profile } from "@/lib/types/crm"
+import { companiesService } from "@/services/companies"
+import { Contact, Profile, Company } from "@/lib/types/crm"
 import { useAuth } from "@/hooks/use-auth"
 import { logAudit } from "@/lib/audit"
 import { CrmTableSkeleton } from "@/components/crm/Skeletons"
@@ -113,6 +114,7 @@ export default function ContactsPage() {
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
   const [owners, setOwners] = React.useState<Profile[]>([])
+  const [companies, setCompanies] = React.useState<Company[]>([])
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null)
 
   const { workspaceId, user } = useAuth()
@@ -237,8 +239,11 @@ export default function ContactsPage() {
         type: prop.field_type
       }))
 
-    return [...getCoreColumns(lifecycleStages, properties), ...dynamicCols]
-  }, [properties, lifecycleStages])
+    const ownerOptions = owners.map(o => ({ value: o.clerk_user_id || o.id, label: `${o.first_name} ${o.last_name}`.trim() }))
+    const companyOptions = companies.map(c => ({ value: c.id, label: c.name }))
+
+    return [...getCoreColumns(lifecycleStages, properties, ownerOptions, companyOptions), ...dynamicCols]
+  }, [properties, lifecycleStages, owners, companies])
 
   const {
     filters,
@@ -271,13 +276,15 @@ export default function ContactsPage() {
     async function loadUserAndOwners() {
       if (!workspaceId) return
       try {
-        const [{ data: userRes }, { data: profileList }] = await Promise.all([
+        const [{ data: userRes }, { data: profileList }, { data: companyList }] = await Promise.all([
           authService.getCurrentUser(),
-          authService.listProfiles(workspaceId)
+          authService.listProfiles(workspaceId),
+          companiesService.getAll({ workspace_id: workspaceId, limit: 500 })
         ])
         if (!controller.signal.aborted) {
           if (userRes) setCurrentUser(userRes)
           if (profileList) setOwners(profileList)
+          if (companyList) setCompanies(companyList as unknown as Company[])
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -543,16 +550,31 @@ export default function ContactsPage() {
   }
 
   const sidebarConfig = React.useMemo(() => {
+    const ownerOptions = owners
+      .map(o => ({ value: o.clerk_user_id || o.id, label: `${o.first_name || ''} ${o.last_name || ''}`.trim() }))
+      .filter(o => o.label)
+      .map(o => o.value)
+
+    const leadStatusOptions = LEAD_STATUS_OPTIONS.map(o => o.value)
+
     return MORE_FILTERS.map(group => ({
       category: group.category,
-      items: group.items.map(item => ({
-        id: item.id,
-        label: item.name,
-        type: item.type as SidebarFilterConfig['type'],
-        options: (item as { options?: string[] }).options
-      }))
+      items: group.items.map(item => {
+        if (item.id === "contactOwner") {
+          return { id: item.id, label: item.name, type: "property" as const, options: ownerOptions }
+        }
+        if (item.id === "leadStatus") {
+          return { id: item.id, label: item.name, type: "property" as const, options: leadStatusOptions }
+        }
+        return {
+          id: item.id,
+          label: item.name,
+          type: item.type as SidebarFilterConfig['type'],
+          options: (item as { options?: string[] }).options
+        }
+      })
     }))
-  }, [])
+  }, [owners])
 
   const handleUpdateCell = async (contact: Contact, columnId: string, value: string | number | boolean | null) => {
     if (!canEditContact) {
@@ -856,6 +878,7 @@ export default function ContactsPage() {
         config={sidebarConfig}
         onToggleProperty={handleToggleProperty}
         onUpdateNumber={updateNumber}
+        onUpdateDateRange={(propId, val) => updateDateRange(propId, val as any)}
         onClearAll={clearAll}
         onAddAdvancedFilter={addAdvancedFilter}
         onRemoveAdvancedFilter={removeAdvancedFilter}

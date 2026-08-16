@@ -33,6 +33,30 @@ export const COMPANY_FIELD_CONFIG: FieldConfig[] = [
     editable: true,
   },
   {
+    key: "city",
+    label: "City",
+    type: "text",
+    editable: true,
+  },
+  {
+    key: "country",
+    label: "Country/Region",
+    type: "text",
+    editable: true,
+  },
+  {
+    key: "annual_revenue",
+    label: "Annual Revenue",
+    type: "number",
+    editable: true,
+  },
+  {
+    key: "employee_count",
+    label: "Number of Employees",
+    type: "number",
+    editable: true,
+  },
+  {
     key: "address",
     label: "Address",
     type: "text",

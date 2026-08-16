@@ -31,7 +31,7 @@ export function EditDefaultCardView({ card, onClose, onSave }: EditDefaultCardVi
   const handleObjectTypeSelect = (type: string) => {
     setObjectType(type)
     setObjectTypeOpen(false)
-    setProperties(prev => prev.filter(p => p.id.startsWith('1') || p.id.startsWith('2') || p.id.startsWith('3')))
+    setProperties(AVAILABLE_PROPERTIES[type]?.slice(0, 4) || [])
     setAddPropertiesOpen(false)
   }
 

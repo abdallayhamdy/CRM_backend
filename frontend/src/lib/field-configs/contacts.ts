@@ -13,6 +13,18 @@ export interface FieldConfig {
 
 export const CONTACT_FIELD_CONFIG: FieldConfig[] = [
   {
+    key: "first_name",
+    label: "First Name",
+    type: "text",
+    editable: true,
+  },
+  {
+    key: "last_name",
+    label: "Last Name",
+    type: "text",
+    editable: true,
+  },
+  {
     key: "email",
     label: "Email",
     type: "email",
@@ -21,6 +33,12 @@ export const CONTACT_FIELD_CONFIG: FieldConfig[] = [
   {
     key: "phone",
     label: "Phone",
+    type: "phone",
+    editable: true,
+  },
+  {
+    key: "mobile_phone",
+    label: "Mobile Phone",
     type: "phone",
     editable: true,
   },
@@ -35,20 +53,32 @@ export const CONTACT_FIELD_CONFIG: FieldConfig[] = [
     key: "lead_status",
     label: "Lead Status",
     type: "select",
-    editable: false,
+    editable: true,
     options: LEAD_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value, color: o.color })),
-  },
-  {
-    key: "source",
-    label: "Source",
-    type: "text",
-    editable: false,
   },
   {
     key: "owner_id",
     label: "Owner",
     type: "owner",
     editable: true,
+  },
+  {
+    key: "company_id",
+    label: "Company",
+    type: "text",
+    editable: true,
+  },
+  {
+    key: "job_title",
+    label: "Job Title",
+    type: "text",
+    editable: true,
+  },
+  {
+    key: "source",
+    label: "Source",
+    type: "text",
+    editable: false,
   },
   {
     key: "created_at",

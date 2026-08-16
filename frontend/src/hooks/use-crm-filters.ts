@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-export type DateRangeFilter = "all" | "today" | "this_week" | "this_month" | "last_30" | "last_90" | "custom"
+export type DateRangeFilter = "all" | "today" | "yesterday" | "this_week" | "last_7_days" | "last_30_days" | "last_90_days" | "this_month" | "last_month" | "custom"
 
 export interface AdvancedFilter {
   id: string
