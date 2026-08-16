@@ -292,6 +292,7 @@ export interface Deal {
   line_items?: { product_id: string; quantity: number }[]
   tasks?: Task[]
   notes?: Note[]
+  custom_fields?: Record<string, unknown>
 }
 
 export interface LineItem {

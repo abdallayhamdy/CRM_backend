@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatChangedDate, type PropertyHistoryEntityType } from "@/lib/property-history-format"
 import { getPropertyHistory, type PropertyHistoryEntry } from "@/services/property-history"
+import { useProperties } from "@/hooks/use-properties"
 
 interface PropertyHistoryDialogProps {
   open: boolean
@@ -34,12 +35,20 @@ export function PropertyHistoryDialog({
   const [entries, setEntries] = React.useState<PropertyHistoryEntry[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
 
+  const objectTypeMap: Record<string, string> = {
+    contact: "contact", company: "company", deal: "deal",
+    product: "product", order: "order", ticket: "ticket",
+  }
+  const { properties } = useProperties(
+    (objectTypeMap[entityType] ?? entityType) as any
+  )
+
   React.useEffect(() => {
     let cancelled = false
     if (open && entityId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag mirrors the accepted repo-wide fetch-in-effect pattern
       setIsLoading(true)
-      getPropertyHistory(entityType, entityId).then((data) => {
+      getPropertyHistory(entityType, entityId, 100, properties).then((data) => {
         if (!cancelled) {
           setEntries(data)
           setIsLoading(false)
@@ -51,7 +60,7 @@ export function PropertyHistoryDialog({
     return () => {
       cancelled = true
     }
-  }, [open, entityType, entityId])
+  }, [open, entityType, entityId, properties])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
