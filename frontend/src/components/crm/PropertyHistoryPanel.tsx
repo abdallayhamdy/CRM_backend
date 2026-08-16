@@ -39,6 +39,7 @@ import {
   type PropertyHistoryEntityType,
 } from "@/lib/property-history-format"
 import { getPropertyHistory, type PropertyHistoryEntry } from "@/services/property-history"
+import { useProperties } from "@/hooks/use-properties"
 
 interface PropertyHistoryPanelProps {
   entityType: PropertyHistoryEntityType
@@ -113,14 +114,26 @@ export function PropertyHistoryPanel({
   const [dateFilter, setDateFilter] = React.useState("all")
   const [page, setPage] = React.useState(1)
 
+  const objectTypeMap: Record<string, string> = {
+    contact: "contact", company: "company", deal: "deal",
+    product: "product", order: "order", ticket: "ticket",
+  }
+  const { properties } = useProperties(
+    (objectTypeMap[entityType] ?? entityType) as any
+  )
+
   const propertyOptions = React.useMemo(() => {
-    return getTrackedFieldOptions(entityType)
-  }, [entityType])
+    const standard = getTrackedFieldOptions(entityType)
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ value: `custom_${p.name}`, label: p.label }))
+    return [...standard, ...custom]
+  }, [entityType, properties])
 
   React.useEffect(() => {
     let cancelled = false
     if (open && entityId) {
-      getPropertyHistory(entityType, entityId).then((data) => {
+      getPropertyHistory(entityType, entityId, 100, properties).then((data) => {
         if (!cancelled) {
           setEntries(data)
           setPage(1)
@@ -134,7 +147,7 @@ export function PropertyHistoryPanel({
     return () => {
       cancelled = true
     }
-  }, [open, entityType, entityId])
+  }, [open, entityType, entityId, properties])
 
   const filteredEntries = React.useMemo(() => {
     return entries.filter((entry) => {
