@@ -32,6 +32,7 @@ const CompaniesBoardView = dynamic(
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { COMPANY_MORE_FILTERS } from "@/lib/filter-data"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
 import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
@@ -670,14 +671,16 @@ export default function CompaniesPage() {
     
     // Add owner manually as it's often missing or differently named in static data
     const ownerFilter = { id: "owner", label: "Company owner", type: "property" as const, options: allOwners.map(o => o.value) }
+    const propertyFilters = buildPropertySidebarFilters(properties)
     
     return [
       { id: "company-name", label: "Company name", type: "text" as const },
       ownerFilter,
       { id: "createDate", label: "Create date", type: "date" as const },
-      ...flattened.filter(f => !["company-name", "owner", "createDate"].includes(f.id))
+      ...flattened.filter(f => !["company-name", "owner", "createDate"].includes(f.id)),
+      ...propertyFilters
     ]
-  }, [allOwners])
+  }, [allOwners, properties])
 
   const handleToggleProperty = React.useCallback((propId: string, value: string) => {
     if (propId === "owner" || propId === "company-owner") {

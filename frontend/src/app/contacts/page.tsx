@@ -10,6 +10,7 @@ const ContactsBoardView = dynamic(
   { ssr: false }
 )
 import { MORE_FILTERS } from "@/lib/filter-data"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { CreateContactSheet } from "./create-contact-sheet"
 import dynamic from "next/dynamic"
 const RecordPreviewPanel = dynamic(
@@ -557,24 +558,29 @@ export default function ContactsPage() {
 
     const leadStatusOptions = LEAD_STATUS_OPTIONS.map(o => o.value)
 
-    return MORE_FILTERS.map(group => ({
-      category: group.category,
-      items: group.items.map(item => {
-        if (item.id === "contactOwner") {
-          return { id: item.id, label: item.name, type: "property" as const, options: ownerOptions }
-        }
-        if (item.id === "leadStatus") {
-          return { id: item.id, label: item.name, type: "property" as const, options: leadStatusOptions }
-        }
-        return {
-          id: item.id,
-          label: item.name,
-          type: item.type as SidebarFilterConfig['type'],
-          options: (item as { options?: string[] }).options
-        }
-      })
-    }))
-  }, [owners])
+    const propertyFilters = buildPropertySidebarFilters(properties)
+
+    return [
+      ...MORE_FILTERS.map(group => ({
+        category: group.category,
+        items: group.items.map(item => {
+          if (item.id === "contactOwner") {
+            return { id: item.id, label: item.name, type: "property" as const, options: ownerOptions }
+          }
+          if (item.id === "leadStatus") {
+            return { id: item.id, label: item.name, type: "property" as const, options: leadStatusOptions }
+          }
+          return {
+            id: item.id,
+            label: item.name,
+            type: item.type as SidebarFilterConfig['type'],
+            options: (item as { options?: string[] }).options
+          }
+        })
+      })),
+      ...(propertyFilters.length > 0 ? [{ category: "Custom Properties", items: propertyFilters }] : [])
+    ]
+  }, [owners, properties])
 
   const handleUpdateCell = async (contact: Contact, columnId: string, value: string | number | boolean | null) => {
     if (!canEditContact) {
