@@ -176,10 +176,14 @@ export function propertiesToColumnDefs<TData>(
 ): ColumnDef<TData, unknown>[] {
   return properties.map(prop => ({
     id: prop.name,
-    accessorKey: prop.name,
+    accessorFn: (row: any) => {
+      const topVal = row[prop.name]
+      if (topVal !== undefined && topVal !== null) return topVal
+      return row.custom_fields?.[prop.name]
+    },
     header: prop.label,
-    cell: ({ row }) => {
-      const value = (row.original as any)[prop.name]
+    cell: ({ getValue }) => {
+      const value = getValue()
       if (value === null || value === undefined)
         return <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Empty</span>
       if (prop.field_type === "number" || prop.field_type === "currency")

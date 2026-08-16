@@ -87,6 +87,8 @@ import { useRealtime } from "@/hooks/use-realtime"
 import { LifecycleBadge } from "@/components/crm/LifecycleBadge"
 import { useAuth } from "@/hooks/use-auth"
 import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDialog"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 
 function QuickEditContactPopover({ contact, onUpdate }: { contact: Contact, onUpdate: (data: Partial<Contact>) => Promise<void> }) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -222,6 +224,13 @@ export default function ContactDetailPage() {
   const [mergeOpen, setMergeOpen] = React.useState(false)
   const [mergeTargetId, setMergeTargetId] = React.useState<string>('')
   const [mergeConfirmOpen, setMergeConfirmOpen] = React.useState(false)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const contactAboutFields: EditFieldConfig[] = [
+    { name: "email", label: "Email", type: "email" },
+    { name: "phone", label: "Phone", type: "tel" },
+    { name: "source", label: "Source", type: "text" },
+  ]
   const [mergeSearch, setMergeSearch] = React.useState('')
   const [mergeCandidates, setMergeCandidates] = React.useState<Contact[]>([])
   const [associationChangeLog, setAssociationChangeLog] = React.useState<any[]>([])
@@ -892,10 +901,10 @@ export default function ContactDetailPage() {
                 Actions <ChevronDown className="h-3.5 w-3.5 ml-0.5" />
               </button>
               <button
-                onClick={() => router.push(`/contacts/${id}/settings?edit=about`)}
+                onClick={() => setAboutEditOpen(true)}
                 className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
               >
-                <Settings className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -939,6 +948,8 @@ export default function ContactDetailPage() {
                 {contact.source || "Unknown"}
               </div>
             </div>
+
+            <CustomFieldsDisplay objectType="contact" values={contact.custom_fields || {}} />
           </div>
         </div>
 
@@ -1770,6 +1781,17 @@ export default function ContactDetailPage() {
         entityId={id as string}
         workspaceId={contact?.workspace_id ?? ""}
       />
+
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="contact"
+        title="Contact"
+        fields={contactAboutFields}
+        initialValues={contact || {}}
+        onSave={handleUpdateContact}
+      />
+
       <EmailEditorSheet
         open={activeEditor === 'email'}
         onClose={() => setActiveEditor(null)}

@@ -84,6 +84,8 @@ import { cn } from "@/lib/utils"
 import { useRealtime } from "@/hooks/use-realtime"
 import { useAuth } from "@/hooks/use-auth"
 import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDialog"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 
 function QuickEditCompanyPopover({ company, onUpdate }: { company: Company, onUpdate: (data: Partial<Company>) => Promise<void> }) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -211,6 +213,15 @@ export default function CompanyDetailPage() {
   const [mergeTargetId, setMergeTargetId] = React.useState<string>('')
   const [candidateCompanies, setCandidateCompanies] = React.useState<Company[]>([])
   const [mergeConfirmOpen, setMergeConfirmOpen] = React.useState(false)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const companyAboutFields: EditFieldConfig[] = [
+    { name: "name", label: "Company name", type: "text" },
+    { name: "domain", label: "Domain", type: "text" },
+    { name: "industry", label: "Industry", type: "text" },
+    { name: "phone", label: "Phone", type: "tel" },
+    { name: "address", label: "City", type: "text" },
+  ]
   const [mergeSearch, setMergeSearch] = React.useState('')
   const [associationChangeLog, setAssociationChangeLog] = React.useState<any[]>([])
   const [associationSearch, setAssociationSearch] = React.useState('')
@@ -717,10 +728,10 @@ export default function CompanyDetailPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push(`/companies/${id}/settings?edit=about`)}
+                onClick={() => setAboutEditOpen(true)}
                 className="w-8 h-8 rounded border border-input flex items-center justify-center hover:bg-muted text-muted-foreground"
               >
-                <Settings className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -771,6 +782,8 @@ export default function CompanyDetailPage() {
                 {company.address || "--"}
               </div>
             </div>
+
+            <CustomFieldsDisplay objectType="company" values={company.custom_fields || {}} />
           </div>
         </div>
 
@@ -1266,6 +1279,17 @@ export default function CompanyDetailPage() {
         entityId={id as string}
         workspaceId={company?.workspace_id ?? ""}
       />
+
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="company"
+        title="Company"
+        fields={companyAboutFields}
+        initialValues={company || {}}
+        onSave={handleUpdateCompany}
+      />
+
       <EmailEditorSheet
         open={activeEditor === 'email'}
         onClose={() => setActiveEditor(null)}
