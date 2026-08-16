@@ -178,17 +178,6 @@ export function TicketPreviewSheet({ ticket: initialTicket, open, onOpenChange, 
               )}
             </div>
           </div>
-
-          {/* Quick Actions Row */}
-          <div className="flex items-center gap-2 mt-2">
-            <Button variant="default" size="sm" className="bg-[var(--color-hs-teal)] hover:bg-[var(--color-hs-teal)]/90 text-[var(--color-hs-card-bg)] font-semibold rounded-sm tracking-wide px-4 h-8 flex-1">
-              Reply
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Check className="h-[14px] w-[14px]" />
-              Close ticket
-            </Button>
-          </div>
         </div>
 
         {/* Scrollable Content */}

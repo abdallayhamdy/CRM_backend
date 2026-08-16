@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { 
-  Search, X, ChevronsUpDown, Plus, Settings2, 
-  SlidersHorizontal, MoreHorizontal, ArrowUpDown 
+  Search, X, ChevronsUpDown
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -99,16 +98,6 @@ export function ActiveUsersTab() {
             )}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-2 pr-4">
-          <Button variant="ghost" size="sm" className="text-xs gap-1">
-            <Plus className="h-3.5 w-3.5" />
-            Add view (4/5)
-          </Button>
-          <span className="text-muted-foreground">|</span>
-          <Button variant="ghost" size="sm" className="text-xs">
-            All views
-          </Button>
-        </div>
       </div>
 
       {/* Filters and Actions Row */}
@@ -149,21 +138,6 @@ export function ActiveUsersTab() {
           <Button variant="ghost" size="sm" className="text-xs h-7" onClick={clearFilters}>
             Clear all
           </Button>
-
-          <Button variant="ghost" size="sm" className="text-xs h-7 gap-1">
-            <Plus className="h-3 w-3" />
-            Add quick filter
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Search className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs gap-1 h-8">
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Advanced filters
-          </Button>
         </div>
       </div>
 
@@ -177,25 +151,6 @@ export function ActiveUsersTab() {
             onChange={e => setSearch(e.target.value)}
             className="pl-9 h-9 text-sm"
           />
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="text-xs gap-1 h-8">
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            Sort
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings2 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs h-8">
-            Edit columns
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs h-8">
-            Export view
-          </Button>
         </div>
       </div>
 

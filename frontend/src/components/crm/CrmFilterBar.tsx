@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import {
-  Search, Settings, ChevronDown, Plus, Filter, ArrowUpDown,
-  Copy, LayoutGrid, Columns2, Sliders, X,
+  Search, Settings, ChevronDown, Plus, Filter,
+  LayoutGrid, Columns2, Sliders, X,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -61,9 +61,6 @@ interface CrmFilterBarProps {
   placeholder?: string
   moreFilters?: { category: string, items: { id: string, name: string, type: string }[] }[]
 
-  // Pipeline filter (only shown in Deals)
-  showPipelineFilter?: boolean
-
   // Table settings
   tableSettings?: TableSettings
   onTableSettingsChange?: (settings: TableSettings) => void
@@ -94,7 +91,6 @@ export function CrmFilterBar({
   className,
   placeholder = "Search",
   moreFilters,
-  showPipelineFilter = false,
   tableSettings,
   onTableSettingsChange,
   onExportClick,
@@ -185,17 +181,6 @@ export function CrmFilterBar({
             Edit columns
           </Button>
 
-          {showPipelineFilter && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-[34px] px-3 font-medium text-[13px] border-border gap-1.5 hidden md:inline-flex"
-            >
-              All Pipelines
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </Button>
-          )}
-
           <Button
             variant="secondary"
             size="sm"
@@ -223,16 +208,7 @@ export function CrmFilterBar({
               sortDir={sortDir}
               onSortChange={onSortChange}
             />
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-[34px] px-3 font-medium text-[13px] border-border gap-1.5"
-            >
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              Sort
-            </Button>
-          )}
+          ) : null}
 
           <Button
             variant="outline"
@@ -241,19 +217,6 @@ export function CrmFilterBar({
             onClick={onExportClick}
           >
             Export
-          </Button>
-
-          <Button variant="outline" size="icon" className="h-[34px] w-[34px] border-border hidden sm:inline-flex">
-            <Copy className="h-4 w-4 text-muted-foreground" />
-          </Button>
-
-          <Button
-            disabled
-            variant="outline"
-            size="sm"
-            className="h-[34px] px-4 font-medium text-[13px] border-border text-muted-foreground hidden sm:inline-flex"
-          >
-            Save
           </Button>
         </div>
       </div>

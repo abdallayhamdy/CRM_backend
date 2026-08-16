@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet"
 import { Contact } from "@/lib/types/crm"
 import { Button } from "@/components/ui/button"
-import { X, Mail, Phone, ExternalLink, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2 } from "lucide-react"
+import { X, MoreHorizontal, Pencil, Building, User, Check, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { contactsService } from "@/services/contacts"
 import { authService } from "@/services/auth"
@@ -202,25 +202,6 @@ export function ContactPreviewSheet({ contact: initialContact, open, onOpenChang
                 </DropdownMenu>
               )}
             </div>
-          </div>
-
-          {/* Quick Actions Row */}
-          <div className="flex items-center gap-2 mt-2">
-            <Button variant="default" size="sm" className="bg-[var(--color-hs-teal)] hover:bg-[var(--color-hs-teal)]/90 text-[var(--color-hs-card-bg)] font-semibold rounded-sm tracking-wide px-4 h-8 flex-1">
-              Create note
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Mail className="h-[14px] w-[14px]" />
-              Email
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Phone className="h-[14px] w-[14px]" />
-              Call
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Calendar className="h-[14px] w-[14px]" />
-              Meeting
-            </Button>
           </div>
         </div>
 

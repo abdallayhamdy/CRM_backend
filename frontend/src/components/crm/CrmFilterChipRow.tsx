@@ -144,7 +144,7 @@ export function CrmFilterChipRow({
           )
         })}
 
-        {showMoreButton && (
+        {showMoreButton && onAddPinnedFilter && (
           <Popover onOpenChange={(open) => {
             if (!open) {
               setEditFiltersView(false)

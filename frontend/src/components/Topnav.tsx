@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Search, Plus, Phone,
+  Search, Phone,
   Bell, Clock, Menu, Shield,
   Loader2, Users, Building2, DollarSign, Package,
   ClipboardCheck, Activity, StickyNote, Ticket, AlertCircle,
@@ -183,9 +183,6 @@ function GlobalSearch() {
             ⌘K
           </kbd>
         </button>
-        <Button variant="ghost" size="icon" aria-label="Create new" className="h-[28px] w-[28px] rounded-full text-white/70 hover:text-white hover:bg-sidebar-accent">
-          <Plus className="h-4 w-4" aria-hidden="true" />
-        </Button>
       </div>
 
       <CommandDialog open={open} onOpenChange={handleOpenChange} title="Global Search" description="Search across your entire CRM">

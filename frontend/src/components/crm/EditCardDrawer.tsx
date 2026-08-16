@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Pencil, Info, MoreHorizontal } from "lucide-react"
+import { Pencil, Info } from "lucide-react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { CardPreview } from "./CardPreview"
 import { PropertyRow } from "./PropertyRow"
@@ -130,9 +130,6 @@ export function EditCardDrawer({ open, onClose, onSave, cardId, initialTitle, in
                     aria-label="Card title"
                     className="flex-1 border border-border rounded px-3 py-1.5 text-[14px] text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
-                  <button aria-label="More options" className="px-3 border border-border rounded flex items-center justify-center hover:bg-accent">
-                    <MoreHorizontal className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  </button>
                 </div>
                 <div className="text-[12px] text-muted-foreground/60 flex items-center gap-1 mt-1">
                   Internal name <Info className="w-3 h-3" />: {title} updated at 1775071... <Pencil className="w-3 h-3 ml-1 cursor-pointer hover:text-foreground" />

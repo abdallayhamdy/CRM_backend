@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
   Building2, Mail, Phone, Calendar, CheckSquare, AlignLeft, Building,
-  ChevronLeft, ChevronDown, Settings, Copy, ExternalLink,
+  ChevronLeft, ChevronDown, Settings, ExternalLink,
   User, Repeat, Search, Plus,
   FileText, Paperclip, CheckCircle, Settings2, Columns, Sparkles, Pencil,
   RefreshCw, Ticket
@@ -874,12 +874,6 @@ export default function ContactDetailPage() {
                   <a href={`mailto:${contact.email}`} className="text-[14px] font-bold text-primary hover:underline underline-offset-2 truncate">
                     {contact.email || "--"}
                   </a>
-                  {contact.email && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Copy className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-                      <ExternalLink className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

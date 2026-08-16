@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MoreHorizontal, Pencil, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   DndContext,
@@ -81,15 +81,6 @@ function SortableCardInner<T extends { id: string }>({
       )}
     >
       {renderCard(item)}
-
-      <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-        <button aria-label="Card options" className="p-1 hover:bg-muted rounded-sm transition-colors">
-          <MoreHorizontal className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button aria-label="Edit card" className="p-1 hover:bg-muted rounded-sm transition-colors">
-          <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </button>
-      </div>
     </div>
   )
 }

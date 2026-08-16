@@ -4,7 +4,7 @@ import * as React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { getCompanyColumns } from "./columns"
-import { ChevronDown, Search, LayoutGrid, Building2, MoreVertical, Upload, Download } from "lucide-react"
+import { ChevronDown, Search, LayoutGrid, Building2, Upload, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
@@ -948,9 +948,6 @@ export default function CompaniesPage() {
         icon={<Building2 className="h-5 w-5" />}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-muted-foreground">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
             {canCreateCompany && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

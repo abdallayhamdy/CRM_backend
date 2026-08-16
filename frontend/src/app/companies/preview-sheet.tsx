@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet"
 import { Company, Profile } from "@/lib/types/crm"
 import { Button } from "@/components/ui/button"
-import { X, Globe, Phone, ExternalLink, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2, Mail } from "lucide-react"
+import { X, ExternalLink, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2, Mail } from "lucide-react"
 import { useState, useEffect } from "react"
 import { companiesService } from "@/services/companies"
 import { useAuth } from "@/hooks/use-auth"
@@ -182,21 +182,6 @@ export function CompanyPreviewSheet({ company: initialCompany, open, onOpenChang
                 </DropdownMenu>
               )}
             </div>
-          </div>
-
-          {/* Quick Actions Row */}
-          <div className="flex items-center gap-2 mt-2">
-            <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-sm tracking-wide px-4 h-8 flex-1">
-              Create note
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Globe className="h-[14px] w-[14px]" />
-              Website
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Phone className="h-[14px] w-[14px]" />
-              Call
-            </Button>
           </div>
         </div>
 

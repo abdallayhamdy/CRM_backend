@@ -2,7 +2,7 @@
 
 import { Contact, Profile } from "@/lib/types/crm"
 import { Button } from "@/components/ui/button"
-import { X, Mail, Phone, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2 } from "lucide-react"
+import { X, MoreHorizontal, Pencil, Building, User, Check, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { contactsService } from "@/services/contacts"
 import { authService } from "@/services/auth"
@@ -159,25 +159,6 @@ export function ContactPreviewPanel({ contact: initialContact, onClose, onSucces
             <X className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="flex items-center gap-2 px-5 py-3 border-b border-border shrink-0">
-        <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-md px-3 h-7 flex-1 text-[12px]">
-          Create note
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 rounded-md flex-1 text-[12px] gap-1.5">
-          <Mail className="h-3 w-3" />
-          Email
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 rounded-md flex-1 text-[12px] gap-1.5">
-          <Phone className="h-3 w-3" />
-          Call
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 rounded-md flex-1 text-[12px] gap-1.5">
-          <Calendar className="h-3 w-3" />
-          Meeting
-        </Button>
       </div>
 
       {/* Scrollable Content */}

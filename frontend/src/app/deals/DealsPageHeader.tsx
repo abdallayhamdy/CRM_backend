@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Handshake, MoreVertical, ChevronDown, Package, ShoppingCart, Download, Upload } from "lucide-react"
+import { Handshake, ChevronDown, Package, ShoppingCart, Download, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -223,9 +223,6 @@ export function DealsPageHeader({
         icon={<Handshake className="h-5 w-5" />}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-muted-foreground">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
             <Link href="/orders" className="h-9 inline-flex items-center gap-1.5 px-3 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors">
               <ShoppingCart className="h-4 w-4" />
               <span className="hidden sm:inline">View Orders</span>

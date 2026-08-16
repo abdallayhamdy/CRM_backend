@@ -22,8 +22,6 @@ import {
   StickyNote,
   PhoneCall,
   ListTodo,
-  MoreHorizontal,
-  Copy,
   Trash2,
   Pencil,
   Plus,
@@ -582,19 +580,12 @@ function getActionsForType(recordType: RecordType): { label: string; icon: React
     case "note":
       return [
         { label: "Comment", icon: MessageSquare, key: "comment" },
-        { label: "More", icon: MoreHorizontal, key: "more" },
       ]
     case "call":
-      return [
-        { label: "Email", icon: Mail, key: "email" },
-        { label: "More", icon: MoreHorizontal, key: "more" },
-      ]
+      return []
     case "order":
     case "product":
-      return [
-        { label: "Duplicate", icon: Copy, key: "duplicate" },
-        { label: "More", icon: MoreHorizontal, key: "more" },
-      ]
+      return []
     default:
       return []
   }

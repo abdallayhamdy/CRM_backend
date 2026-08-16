@@ -3,7 +3,7 @@
 import * as React from "react"
 import { columns } from "./columns"
 import { DEAL_STAGES } from "./data"
-import { Handshake, MoreVertical, ChevronDown, Package, ShoppingCart } from "lucide-react"
+import { Handshake, ChevronDown, Package, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -746,7 +746,6 @@ export default function DealsPage() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onEditColumnsClick={() => setColumnEditorOpen(true)}
-        showPipelineFilter
         onExportClick={() => setExportOpen(true)}
         tableSettings={tableSettings}
         onTableSettingsChange={saveTableSettings}

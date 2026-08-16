@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet"
 import { Deal, Profile } from "@/lib/types/crm"
 import { Button } from "@/components/ui/button"
-import { X, Handshake, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2, DollarSign, Target } from "lucide-react"
+import { X, Handshake, Calendar, MoreHorizontal, Pencil, Building, User, Check, Loader2, DollarSign } from "lucide-react"
 import { useState, useEffect } from "react"
 import { dealsService } from "@/services/deals"
 import { pipelinesService, Pipeline, PipelineStage } from "@/services/pipelines"
@@ -189,17 +189,6 @@ export function DealPreviewSheet({ deal: initialDeal, open, onOpenChange, onSucc
                 </DropdownMenu>
               )}
             </div>
-          </div>
-
-          {/* Quick Actions Row */}
-          <div className="flex items-center gap-2 mt-2">
-            <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-sm tracking-wide px-4 h-8 flex-1">
-              Create note
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-sm bg-background flex-1 text-muted-foreground gap-1.5 font-medium">
-              <Target className="h-[14px] w-[14px]" />
-              Update stage
-            </Button>
           </div>
         </div>
 
