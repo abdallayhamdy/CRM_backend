@@ -208,7 +208,7 @@ export function OverdueCard() {
   const totalCount = overdueTasks.length
 
   return (
-    <Card className="border border-border shadow-sm flex flex-col h-full">
+    <Card className="border border-border shadow-sm flex flex-col">
       <CardHeader>
         <CardTitle className="text-[16px] font-bold text-foreground flex items-center gap-2">
           Overdue
@@ -219,7 +219,7 @@ export function OverdueCard() {
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0 overflow-hidden flex flex-col">
+      <CardContent className="min-h-0 overflow-hidden flex flex-col">
         <Tabs defaultValue={tabs[0]?.key} className="flex flex-col min-h-0">
           <TabsList className="mb-3 h-auto min-h-8 bg-transparent p-0 flex-wrap gap-1">
             {/* Total tab */}
@@ -247,7 +247,7 @@ export function OverdueCard() {
           </TabsList>
 
           {/* Total tab content */}
-          <TabsContent value="__total__" className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
+          <TabsContent value="__total__" className="overflow-y-auto max-h-[280px]">
             <DataTable
               columns={columns}
               data={overdueTasks}
@@ -259,7 +259,7 @@ export function OverdueCard() {
 
           {/* Per-type tab content */}
           {tabs.map((tab) => (
-            <TabsContent key={tab.key} value={tab.key} className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
+            <TabsContent key={tab.key} value={tab.key} className="overflow-y-auto max-h-[280px]">
               <DataTable
                 columns={columns}
                 data={groups.get(tab.key) || []}
