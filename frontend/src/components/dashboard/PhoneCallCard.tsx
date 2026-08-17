@@ -12,8 +12,25 @@ import { useAuth } from "@/hooks/use-auth"
 import { activitiesService } from "@/services/activities"
 import type { Activity } from "@/lib/types/crm"
 
-const ANSWERS_COLOR = "var(--color-chart-1)"
-const NO_ANSWERS_COLOR = "var(--color-chart-2)"
+const COLORS = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+]
+
+const ENTITY_LABELS: Record<string, string> = {
+  Contact: "Contacts",
+  Deal: "Deals",
+  Ticket: "Tickets",
+  Company: "Companies",
+  Task: "Tasks",
+  Note: "Notes",
+  Document: "Documents",
+  Order: "Orders",
+  Product: "Products",
+}
 
 export function PhoneCallCardSkeleton() {
   return (
@@ -37,16 +54,15 @@ export function PhoneCallCardSkeleton() {
 }
 
 export function PhoneCallCard() {
-  const { workspaceId, user } = useAuth()
+  const { workspaceId } = useAuth()
   const [calls, setCalls] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
-  const profileId = user?.profileId
 
   useEffect(() => {
     const controller = new AbortController()
 
     async function loadCalls() {
-      if (!workspaceId || !profileId) {
+      if (!workspaceId) {
         setLoading(false)
         return
       }
@@ -54,7 +70,6 @@ export function PhoneCallCard() {
         const { data } = await activitiesService.getAll({
           workspace_id: workspaceId!,
           type: "call",
-          owner_id: profileId!,
           limit: 1000,
         })
         if (!controller.signal.aborted && data) setCalls(data)
@@ -66,20 +81,21 @@ export function PhoneCallCard() {
     }
     loadCalls()
     return () => controller.abort()
-  }, [workspaceId, profileId])
+  }, [workspaceId])
 
   const { total, donutData } = useMemo(() => {
-    const a = calls.filter(
-      (c) => c.call_outcome?.toLowerCase() === "connected"
-    )
-    const na = calls.length - a.length
-    return {
-      total: calls.length,
-      donutData: [
-        { name: "Answers", value: a.length, color: ANSWERS_COLOR },
-        { name: "No answers", value: na, color: NO_ANSWERS_COLOR },
-      ],
+    const byEntity: Record<string, number> = {}
+    for (const call of calls) {
+      const rawType = call.entity_type || "Other"
+      byEntity[rawType] = (byEntity[rawType] || 0) + 1
     }
+    const sorted = Object.entries(byEntity).sort((a, b) => b[1] - a[1])
+    const donut = sorted.map(([name, value], i) => ({
+      name: ENTITY_LABELS[name] || name,
+      value,
+      color: COLORS[i % COLORS.length],
+    }))
+    return { total: calls.length, donutData: donut }
   }, [calls])
 
   if (loading) {
@@ -90,7 +106,7 @@ export function PhoneCallCard() {
     <Card className="border border-border shadow-sm h-full">
       <CardHeader>
         <CardTitle className="text-[16px] font-bold text-foreground">
-          Phone Call
+          Phone Calls
         </CardTitle>
       </CardHeader>
       <CardContent>

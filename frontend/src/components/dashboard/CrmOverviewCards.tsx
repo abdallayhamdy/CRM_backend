@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Users, Handshake, CheckSquare, Headset, Phone, Maximize2, Minimize2 } from "lucide-react"
+import { Users, Handshake, CheckSquare, Headset, Maximize2, Minimize2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { contactsService } from "@/services/contacts"
 import { companiesService } from "@/services/companies"
@@ -20,7 +20,7 @@ export function CrmOverviewCardsSkeleton() {
     <LoadingSkeleton
       count={5}
       height="10rem"
-      containerClassName="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8"
+      containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       className="rounded-xl bg-background border border-border"
     />
   )
@@ -52,7 +52,7 @@ export function CrmOverviewCards() {
 
     async function loadCounts() {
       try {
-        const [contactsRes, companiesRes, dealsRes, tasksRes, ticketsRes, allContactsRes, allTicketsRes, allTasksRes] =
+        const [contactsRes, companiesRes, dealsRes, tasksRes, ticketsRes, allContactsRes, allDealsRes, allTicketsRes, allTasksRes] =
           await Promise.all([
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             companiesService.getAll({ workspace_id: workspaceId!, limit: 1 }),
@@ -60,6 +60,7 @@ export function CrmOverviewCards() {
             tasksService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1000, sortBy: "created_at", sortDir: "desc" }),
+            dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1000 }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
             tasksService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
           ])
@@ -86,11 +87,11 @@ export function CrmOverviewCards() {
           companies: companiesRes.meta?.total ?? 0,
           deals: dealsRes.meta?.total ?? 0,
           tasks: tasksRes.meta?.total ?? 0,
-          tickets: ticketsRes.count ?? 0,
+          tickets: ticketsRes.meta?.total ?? 0,
           duplicatedNumbers,
         })
 
-        const allDeals = dealsRes.data ?? []
+        const allDeals = allDealsRes.data ?? []
         const stages: Record<string, number> = {}
         for (const deal of allDeals) {
           const stage = deal.stage || "new"
@@ -148,7 +149,7 @@ export function CrmOverviewCards() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <Link href="/contacts">
           <Card className="border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-card cursor-pointer h-full">
             <CardContent className="p-4">
@@ -256,38 +257,6 @@ export function CrmOverviewCards() {
                     <span className="text-[13px] font-bold text-foreground">{ticketPriorities[p] || 0}</span>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/calls">
-          <Card className="border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-card cursor-pointer h-full">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-status-warning" />
-                  <span className="text-[13px] font-bold text-muted-foreground uppercase tracking-wider">Call Outcomes</span>
-                </div>
-              </div>
-              <div className={contentClass}>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Incoming</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Outgoing</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="border-t border-border/50 my-1" />
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Answer</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">No Answer</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
               </div>
             </CardContent>
           </Card>
