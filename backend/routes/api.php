@@ -104,6 +104,7 @@ Route::middleware(['auth:sanctum', 'set.workspace', 'check.impersonation.expiry'
     Route::apiResource('documents', DocumentController::class);
     Route::apiResource('tickets', TicketController::class);
     Route::apiResource('properties', PropertyController::class);
+    Route::get('/properties/stats', [PropertyController::class, 'stats']);
     Route::get('/properties/{property}/rules', [PropertyController::class, 'getRules']);
     Route::patch('/properties/{property}/rules', [PropertyController::class, 'updateRules']);
     Route::get('/properties/{property}/access', [PropertyController::class, 'getAccess']);

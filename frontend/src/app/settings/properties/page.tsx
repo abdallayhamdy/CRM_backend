@@ -98,6 +98,8 @@ interface Property {
   options: any[];
   created_at: string;
   updated_at: string;
+  usedIn?: number;
+  fillRate?: number;
 }
 
 interface PropertyGroup {
@@ -127,6 +129,7 @@ export default function PropertiesPage() {
   });
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [propertyStats, setPropertyStats] = useState<Record<string, { usedIn: number; fillRate: number }>>({});
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [dataQualityOn, setDataQualityOn] = useState(false);
@@ -232,9 +235,26 @@ export default function PropertiesPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const { data, error } = await laravelApi.get<{ data: any[]; total_entities: number }>('/properties/stats', { object_type: objectType });
+      if (!error && data) {
+        const statsArr = (data as any)?.data || [];
+        const map: Record<string, { usedIn: number; fillRate: number }> = {};
+        for (const s of statsArr) {
+          map[s.id] = { usedIn: s.used_in, fillRate: s.fill_rate };
+        }
+        setPropertyStats(map);
+      }
+    } catch (err) {
+      console.error('Failed to fetch property stats:', err);
+    }
+  };
+
   useEffect(() => {
     fetchProperties();
     fetchGroups();
+    fetchStats();
     fetchFieldTypes();
     const obj = OBJECT_TYPES.find(o => o.value === objectType);
     setObjectLabel(obj?.label || 'Contact properties');
@@ -328,6 +348,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success('Property archived successfully', { id: toastId });
         fetchProperties();
+        fetchStats();
         clearPropertiesCache();
         window.dispatchEvent(new Event('properties-count-changed'));
       } else {
@@ -348,6 +369,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success(current ? 'Property marked as optional' : 'Property marked as required', { id: toastId });
         fetchProperties();
+        fetchStats();
         clearPropertiesCache();
       } else {
         toast.error(error || 'Failed to update property', { id: toastId });
@@ -365,6 +387,7 @@ export default function PropertiesPage() {
       if (!error) {
         toast.success('Property restored successfully', { id: toastId });
         fetchProperties();
+        fetchStats();
         clearPropertiesCache();
         window.dispatchEvent(new Event('properties-count-changed'));
       } else {
@@ -628,12 +651,12 @@ export default function PropertiesPage() {
                     </TableCell>
                     <TableCell className="px-4" style={{ width: columnWidths.usedIn }} onClick={(e) => e.stopPropagation()}>
                       <span className="text-[13px] text-primary cursor-pointer hover:underline font-medium">
-                        0
+                        {propertyStats[prop.id]?.usedIn ?? 0}
                       </span>
                     </TableCell>
                     <TableCell className="px-4" style={{ width: columnWidths.fillRate }}>
                       <span className="text-[13px] text-muted-foreground">
-                        —
+                        {propertyStats[prop.id] != null ? `${propertyStats[prop.id].fillRate}%` : '—'}
                       </span>
                     </TableCell>
                     <TableCell className="px-4" style={{ width: columnWidths.actions }} onClick={(e) => e.stopPropagation()}>
@@ -885,6 +908,7 @@ export default function PropertiesPage() {
         onCreated={() => {
           fetchProperties();
           fetchGroups();
+          fetchStats();
           clearPropertiesCache();
           window.dispatchEvent(new Event('properties-count-changed'));
         }}

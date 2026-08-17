@@ -458,6 +458,47 @@ class PropertyController extends Controller
         }
     }
 
+    public function stats(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Property::class);
+
+        $objectType = $request->input('object_type');
+        if (!$objectType) {
+            return response()->json(['data' => []]);
+        }
+
+        $modelClass = $this->resolveModelClass($objectType);
+        if (!$modelClass) {
+            return response()->json(['data' => []]);
+        }
+
+        $table = (new $modelClass)->getTable();
+        $totalCount = DB::table($table)->count();
+
+        $properties = Property::where('object_type', $objectType)
+            ->where('is_archived', false)
+            ->get(['id', 'name']);
+
+        $stats = [];
+        foreach ($properties as $prop) {
+            $usedCount = $totalCount > 0
+                ? DB::table($table)
+                    ->whereNotNull('custom_data')
+                    ->whereRaw("JSON_EXTRACT(custom_data, '$.{$prop->name}') IS NOT NULL")
+                    ->count()
+                : 0;
+
+            $stats[] = [
+                'id' => $prop->id,
+                'name' => $prop->name,
+                'used_in' => $usedCount,
+                'fill_rate' => $totalCount > 0 ? round(($usedCount / $totalCount) * 100) : 0,
+            ];
+        }
+
+        return response()->json(['data' => $stats, 'total_entities' => $totalCount]);
+    }
+
     protected function resolveModelClass(string $objectType): ?string
     {
         return match ($objectType) {

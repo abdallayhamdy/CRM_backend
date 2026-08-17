@@ -15,22 +15,22 @@ import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
 /* ── Helpers ──────────────────────────────────────────────── */
 
-const ENTITY_KEYS = ["contact", "deal", "company"] as const
+const STATUS_KEYS = ["pending", "in_progress"] as const
 
-const ENTITY_LABELS: Record<string, string> = {
-  contact: "Contacts",
-  deal: "Deals",
-  company: "Companies",
+const STATUS_LABELS: Record<string, string> = {
+  pending: "To Do",
+  in_progress: "In Progress",
 }
 
-function entityKey(raw?: string | null): string {
-  if (!raw) return "other"
-  return raw.replace("App\\Models\\", "").toLowerCase()
+const ENTITY_LABELS: Record<string, string> = {
+  contact: "Contact",
+  deal: "Deal",
+  company: "Company",
 }
 
 function entityLabel(raw?: string | null): string {
   if (!raw) return "Other"
-  const key = entityKey(raw)
+  const key = raw.replace("App\\Models\\", "").toLowerCase()
   return ENTITY_LABELS[key] || key
 }
 
@@ -95,12 +95,12 @@ export function OverdueCard() {
     return () => controller.abort()
   }, [workspaceId])
 
-  /* ── Group by related entity type ──────────────────────────── */
+  /* ── Group by status ────────────────────────────────────── */
 
   const groups = useMemo(() => {
     const map = new Map<string, Task[]>()
     for (const task of overdueTasks) {
-      const key = entityKey(task.taskable_type)
+      const key = task.status || "pending"
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(task)
     }
@@ -110,9 +110,9 @@ export function OverdueCard() {
   /* ── Tab config ─────────────────────────────────────────── */
 
   const tabs = useMemo(() => {
-    return ENTITY_KEYS.map((key) => ({
+    return STATUS_KEYS.map((key) => ({
       key,
-      label: ENTITY_LABELS[key],
+      label: STATUS_LABELS[key],
       count: groups.get(key)?.length ?? 0,
     }))
   }, [groups])
@@ -176,7 +176,7 @@ export function OverdueCard() {
       header: "Status",
       cell: ({ row }: CellContext<Task, any>) => (
         <span className="text-muted-foreground text-[13px] capitalize">
-          {row.original.status || "pending"}
+          {STATUS_LABELS[row.original.status || "pending"] || row.original.status || "To Do"}
         </span>
       ),
     },
@@ -257,7 +257,7 @@ export function OverdueCard() {
             />
           </TabsContent>
 
-          {/* Per-type tab content */}
+          {/* Per-status tab content */}
           {tabs.map((tab) => (
             <TabsContent key={tab.key} value={tab.key} className="overflow-y-auto max-h-[280px]">
               <DataTable
