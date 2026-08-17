@@ -75,9 +75,6 @@ export function ProfileSlider({ open, onOpenChange }: ProfileSliderProps) {
             <div className="flex-1 min-w-0 pt-0.5">
               <h2 className="font-semibold text-foreground truncate">{userName}</h2>
               <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
-              {user?.profileId && (
-                <p className="text-xs text-muted-foreground mt-0.5">{user.profileId}</p>
-              )}
             </div>
           </div>
         </div>

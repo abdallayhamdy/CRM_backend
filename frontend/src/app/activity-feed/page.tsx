@@ -3,6 +3,7 @@
 import Link from "next/link"
 import * as React from "react"
 import { activitiesService } from "@/services/activities"
+import { authService } from "@/services/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Activity, ActivityType } from "@/lib/types/crm"
@@ -68,6 +69,7 @@ export default function ActivityFeedPage() {
   const [perPage] = React.useState(25)
   const { workspaceId } = useAuth()
   const { canDeleteActivity } = usePermissions()
+  const [nameMap, setNameMap] = React.useState<Record<string, string>>({})
 
   const totalPages = Math.ceil(totalCount / perPage)
   const from = (currentPage - 1) * perPage
@@ -102,6 +104,20 @@ export default function ActivityFeedPage() {
   React.useEffect(() => {
     setCurrentPage(1)
   }, [search, typeFilter])
+
+  React.useEffect(() => {
+    if (!workspaceId) return
+    authService.listProfiles(workspaceId).then(({ data }) => {
+      if (data) {
+        const map: Record<string, string> = {}
+        for (const p of data) {
+          const name = [p.first_name, p.last_name].filter(Boolean).join(" ").trim()
+          if (name) map[p.id] = name
+        }
+        setNameMap(map)
+      }
+    })
+  }, [workspaceId])
 
   useRealtime(async () => {
     if (!workspaceId) return
@@ -222,6 +238,7 @@ export default function ActivityFeedPage() {
                         activity={activity}
                         onDelete={handleDelete}
                         canDelete={canDeleteActivity}
+                        nameMap={nameMap}
                       />
                     ))}
                   </div>
@@ -270,10 +287,12 @@ function ActivityCard({
   activity,
   onDelete,
   canDelete,
+  nameMap,
 }: {
   activity: Activity
   onDelete: (id: string) => void
   canDelete: boolean
+  nameMap?: Record<string, string>
 }) {
   const ownerName = activity.owner
     ? `${activity.owner.first_name} ${activity.owner.last_name || ""}`
@@ -282,7 +301,7 @@ function ActivityCard({
   const isUpdate = (activity.type as string) === "updated" && isChangeDescription(activity.description)
   const isCreate = (activity.type as string) === "created"
   const isDelete = (activity.type as string) === "deleted"
-  const changes = isUpdate ? parseChanges(activity.description || "") : []
+  const changes = isUpdate ? parseChanges(activity.description || "", nameMap) : []
 
   const getIcon = () => {
     switch (activity.type as string) {

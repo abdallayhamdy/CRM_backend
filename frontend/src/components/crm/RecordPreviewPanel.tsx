@@ -189,7 +189,7 @@ export function RecordPreviewPanel({
             result = await ticketsService.getById(recordId!, workspaceId!)
             break
           case "product":
-            result = await productsService.getById(recordId!)
+            result = await productsService.getById(recordId!, workspaceId!)
             break
           case "order":
             result = await ordersService.get(recordId!, workspaceId!)

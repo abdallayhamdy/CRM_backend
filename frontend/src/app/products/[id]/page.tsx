@@ -50,7 +50,7 @@ export default function ProductDetailPage() {
   const fetchData = React.useCallback(async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await productsService.getById(id)
+      const { data, error } = await productsService.getById(id, workspaceId ?? undefined)
       if (error) throw error
       setProduct(data)
     } catch {

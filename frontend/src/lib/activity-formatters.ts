@@ -164,7 +164,7 @@ export interface ChangeDetail {
   newValue: string
 }
 
-export function parseChanges(description: string): ChangeDetail[] {
+export function parseChanges(description: string, nameMap?: Record<string, string>): ChangeDetail[] {
   const changeSet = parseChangeSet(description)
   if (!changeSet) return []
 
@@ -183,11 +183,18 @@ export function parseChanges(description: string): ChangeDetail[] {
 
     const fieldLabel = FIELD_LABELS[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 
+    const resolveValue = (val: unknown): string => {
+      if (nameMap && ENTITY_NAME_FIELDS.has(key) && typeof val === "string" && nameMap[val]) {
+        return nameMap[val]
+      }
+      return formatFieldValue(key, val)
+    }
+
     changes.push({
       field: key,
       fieldLabel,
-      oldValue: formatFieldValue(key, oldVal),
-      newValue: formatFieldValue(key, newVal),
+      oldValue: resolveValue(oldVal),
+      newValue: resolveValue(newVal),
     })
   }
 
