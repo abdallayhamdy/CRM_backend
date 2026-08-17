@@ -57,11 +57,11 @@ export function CrmOverviewCards() {
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             companiesService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1 }),
-            tasksService.getAll({ workspace_id: workspaceId!, status: "pending", limit: 1 }),
+            tasksService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1000, sortBy: "created_at", sortDir: "desc" }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
-            tasksService.getAll({ workspace_id: workspaceId!, status: "pending", limit: 1000 }),
+            tasksService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
           ])
 
         if (signal.aborted) return
@@ -107,11 +107,16 @@ export function CrmOverviewCards() {
 
         const allTasks = allTasksRes.data ?? []
         const tTypes: Record<string, number> = {}
+        let completedTasks = 0
         for (const t of allTasks) {
-          const subtype = t.task_subtype || "to_do"
-          tTypes[subtype] = (tTypes[subtype] || 0) + 1
+          if (t.status === "completed") {
+            completedTasks++
+          } else {
+            const subtype = t.task_subtype || "to_do"
+            tTypes[subtype] = (tTypes[subtype] || 0) + 1
+          }
         }
-        setTaskTypes(tTypes)
+        setTaskTypes({ ...tTypes, _completed: completedTasks })
 
         const allTickets = allTicketsRes.data ?? []
         const tStages: Record<string, number> = {}
@@ -228,6 +233,11 @@ export function CrmOverviewCards() {
                     <span className="text-[13px] font-bold text-foreground">{taskTypes[t.value] || 0}</span>
                   </div>
                 ))}
+                <div className="border-t border-border/50 my-1" />
+                <div className="flex justify-between items-center">
+                  <span className="text-[12px] text-muted-foreground font-medium">Completed</span>
+                  <span className="text-[13px] font-bold text-status-success">{taskTypes._completed || 0}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
