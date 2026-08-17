@@ -343,11 +343,20 @@ export interface Task {
   workspace_id?: string | null
 }
 
+export interface ActivityChange {
+  key: string
+  old: unknown
+  new: unknown
+  old_label?: string | null
+  new_label?: string | null
+}
+
 export interface Activity {
   id: string
   type: ActivityType
   title: string
   description?: string
+  formatted_description?: string | null
   contact_id?: string | null
   deal_id?: string | null
   ticket_id?: string | null
@@ -362,6 +371,9 @@ export interface Activity {
   entity_name?: string | null
   entity_route?: string | null
   activity_date?: string | null
+  changes?: ActivityChange[]
+  has_changes?: boolean
+  resolved_changes?: ActivityChange[]
   
   // Task specific
   task_subtype?: string

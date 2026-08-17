@@ -8,6 +8,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ActivityResource extends JsonResource
 {
+    public $nameMap;
+
+    /**
+     * @param  mixed  $resource
+     * @param  array<string, string>|null  $nameMap  UUID → display name for entity resolution
+     */
+    public function __construct($resource, $nameMap = null)
+    {
+        parent::__construct($resource);
+        $this->nameMap = is_array($nameMap) ? $nameMap : [];
+    }
+
     public function toArray(Request $request): array
     {
         $contactId = null;
@@ -74,11 +86,18 @@ class ActivityResource extends JsonResource
             }
         }
 
+        $resolvedChanges = $changes !== []
+            ? ActivityChangeParser::resolveChanges($changes, $this->nameMap)
+            : [];
+
+        $formattedDescription = $this->buildFormattedDescription($changes, $resolvedChanges, $entityName);
+
         return [
             'id' => $this->id,
             'type' => $this->type,
             'title' => $this->subject,
             'description' => $this->description,
+            'formatted_description' => $formattedDescription,
             'contact_id' => $contactId,
             'deal_id' => $dealId,
             'ticket_id' => $ticketId,
@@ -89,6 +108,7 @@ class ActivityResource extends JsonResource
             'entity_id' => $this->activitable_id,
             'changes' => $changes,
             'has_changes' => $changes !== [],
+            'resolved_changes' => $resolvedChanges,
             'owner_id' => $this->user_id,
             'owner' => $this->whenLoaded('user', function () {
                 return [
@@ -102,5 +122,27 @@ class ActivityResource extends JsonResource
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * Build a human-readable description for display.
+     */
+    private function buildFormattedDescription(array $changes, array $resolvedChanges, ?string $entityName): ?string
+    {
+        if ($changes !== [] && $resolvedChanges !== []) {
+            return ActivityChangeParser::formatChangeSummary($resolvedChanges);
+        }
+
+        if ($this->description && !$this->isJsonDiff($this->description)) {
+            return $this->description;
+        }
+
+        return null;
+    }
+
+    private function isJsonDiff(string $description): bool
+    {
+        $data = json_decode($description, true);
+        return is_array($data) && isset($data['new']);
     }
 }

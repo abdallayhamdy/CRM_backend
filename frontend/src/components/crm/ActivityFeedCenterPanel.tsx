@@ -674,7 +674,7 @@ export function ActivityFeedCenterPanel({
                                             isLifecycle ? <RefreshCw className="w-5 h-5 text-status-purple" /> :
                                               <Repeat className="w-5 h-5" />
                                     }
-                                    content={item.description || item.title}
+                                    content={item.formatted_description || item.description || item.title}
                                     isExpanded={!isCollapsedAll}
                                     associations={getAssociations()}
                                     callDirection={isCall ? item.call_direction : undefined}

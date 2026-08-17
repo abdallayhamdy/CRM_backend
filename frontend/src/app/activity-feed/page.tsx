@@ -298,10 +298,19 @@ function ActivityCard({
     ? `${activity.owner.first_name} ${activity.owner.last_name || ""}`
     : "System"
 
-  const isUpdate = (activity.type as string) === "updated" && isChangeDescription(activity.description)
+  const isUpdate = (activity.type as string) === "updated" && (isChangeDescription(activity.description) || (activity.resolved_changes?.length ?? 0) > 0)
   const isCreate = (activity.type as string) === "created"
   const isDelete = (activity.type as string) === "deleted"
-  const changes = isUpdate ? parseChanges(activity.description || "", nameMap) : []
+  const changes = isUpdate
+    ? (activity.resolved_changes?.length ?? 0) > 0
+      ? activity.resolved_changes!.map((rc) => ({
+          field: rc.key,
+          fieldLabel: rc.key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          oldValue: rc.old_label ?? String(rc.old ?? "—"),
+          newValue: rc.new_label ?? String(rc.new ?? "—"),
+        }))
+      : parseChanges(activity.description || "", nameMap)
+    : []
 
   const getIcon = () => {
     switch (activity.type as string) {
@@ -438,9 +447,9 @@ function ActivityCard({
             </div>
           )}
 
-          {!isUpdate && activity.description && !isChangeDescription(activity.description) && (
+          {!isUpdate && (activity.formatted_description || (activity.description && !isChangeDescription(activity.description))) && (
             <div className="text-[13px] text-muted-foreground mt-1.5 line-clamp-2">
-              {activity.description}
+              {activity.formatted_description || activity.description}
             </div>
           )}
 

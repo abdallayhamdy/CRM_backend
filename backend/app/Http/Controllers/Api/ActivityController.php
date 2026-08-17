@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Http\Resources\ActivityResource;
+use App\Http\Resources\ActivityCollection;
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
+use App\Support\ActivityChangeParser;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -87,10 +89,11 @@ class ActivityController extends Controller
 
         $activities = $query->paginate($this->paginationLimit($request, 20));
 
+        $nameMap = $this->buildNameMap($activities->items());
 
         return response()->json([
             'status' => 'success',
-            'data' => ActivityResource::collection($activities),
+            'data' => new ActivityCollection($activities, $nameMap),
             'meta' => [
                 'page' => $activities->currentPage(),
                 'limit' => $activities->perPage(),
@@ -134,12 +137,13 @@ class ActivityController extends Controller
             'activitable_id' => $activitableId,
         ]);
 
-        $activity->load('user');
+        $activity->load('user', 'activitable');
+        $nameMap = $this->buildNameMap([$activity]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Activity created successfully',
-            'data' => new ActivityResource($activity),
+            'data' => new ActivityResource($activity, $nameMap),
         ], 201);
     }
 
@@ -147,11 +151,12 @@ class ActivityController extends Controller
     {
         $this->authorize('view', $activity);
 
-        $activity->load('user');
+        $activity->load('user', 'activitable');
+        $nameMap = $this->buildNameMap([$activity]);
 
         return response()->json([
             'status' => 'success',
-            'data' => new ActivityResource($activity),
+            'data' => new ActivityResource($activity, $nameMap),
         ]);
     }
 
@@ -184,12 +189,13 @@ class ActivityController extends Controller
         }
 
         $activity->update($data);
-        $activity->load('user');
+        $activity->load('user', 'activitable');
+        $nameMap = $this->buildNameMap([$activity]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Activity updated successfully',
-            'data' => new ActivityResource($activity),
+            'data' => new ActivityResource($activity, $nameMap),
         ]);
     }
 
@@ -204,5 +210,106 @@ class ActivityController extends Controller
             'message' => 'Activity deleted successfully',
             'data' => null,
         ]);
+    }
+
+    /**
+     * Collect all UUIDs from activity changes and bulk-fetch referenced entities.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Activity>  $activities
+     * @return array<string, string>  UUID → display name
+     */
+    private function buildNameMap($activities): array
+    {
+        $allUuids = [];
+
+        foreach ($activities as $activity) {
+            $changes = ActivityChangeParser::parse($activity->description);
+            if ($changes === []) {
+                continue;
+            }
+            $uuidsByField = ActivityChangeParser::collectEntityUuids($changes);
+            foreach ($uuidsByField as $field => $uuids) {
+                foreach ($uuids as $uuid) {
+                    $allUuids[$uuid] = $field;
+                }
+            }
+        }
+
+        if ($allUuids === []) {
+            return [];
+        }
+
+        $uuidsByModel = [
+            \App\Models\User::class => [],
+            \App\Models\Contact::class => [],
+            \App\Models\Company::class => [],
+            \App\Models\Deal::class => [],
+            \App\Models\Ticket::class => [],
+        ];
+
+        $userFields = ['assigned_to', 'owner_id', 'assignee_id', 'user_id'];
+
+        foreach ($allUuids as $uuid => $field) {
+            if (in_array($field, $userFields, true)) {
+                $uuidsByModel[\App\Models\User::class][] = $uuid;
+            } elseif ($field === 'contact_id') {
+                $uuidsByModel[\App\Models\Contact::class][] = $uuid;
+            } elseif ($field === 'company_id') {
+                $uuidsByModel[\App\Models\Company::class][] = $uuid;
+            } elseif ($field === 'deal_id') {
+                $uuidsByModel[\App\Models\Deal::class][] = $uuid;
+            } elseif ($field === 'ticket_id') {
+                $uuidsByModel[\App\Models\Ticket::class][] = $uuid;
+            }
+        }
+
+        $nameMap = [];
+
+        // Users
+        $userUuids = array_unique($uuidsByModel[\App\Models\User::class]);
+        if ($userUuids !== []) {
+            $users = \App\Models\User::whereIn('id', $userUuids)->get(['id', 'name']);
+            foreach ($users as $user) {
+                $nameMap[$user->id] = $user->name;
+            }
+        }
+
+        // Contacts
+        $contactUuids = array_unique($uuidsByModel[\App\Models\Contact::class]);
+        if ($contactUuids !== []) {
+            $contacts = \App\Models\Contact::whereIn('id', $contactUuids)->get(['id', 'first_name', 'last_name']);
+            foreach ($contacts as $contact) {
+                $nameMap[$contact->id] = trim("{$contact->first_name} {$contact->last_name}");
+            }
+        }
+
+        // Companies
+        $companyUuids = array_unique($uuidsByModel[\App\Models\Company::class]);
+        if ($companyUuids !== []) {
+            $companies = \App\Models\Company::whereIn('id', $companyUuids)->get(['id', 'name']);
+            foreach ($companies as $company) {
+                $nameMap[$company->id] = $company->name;
+            }
+        }
+
+        // Deals
+        $dealUuids = array_unique($uuidsByModel[\App\Models\Deal::class]);
+        if ($dealUuids !== []) {
+            $deals = \App\Models\Deal::whereIn('id', $dealUuids)->get(['id', 'title']);
+            foreach ($deals as $deal) {
+                $nameMap[$deal->id] = $deal->title;
+            }
+        }
+
+        // Tickets
+        $ticketUuids = array_unique($uuidsByModel[\App\Models\Ticket::class]);
+        if ($ticketUuids !== []) {
+            $tickets = \App\Models\Ticket::whereIn('id', $ticketUuids)->get(['id', 'subject']);
+            foreach ($tickets as $ticket) {
+                $nameMap[$ticket->id] = $ticket->subject;
+            }
+        }
+
+        return $nameMap;
     }
 }

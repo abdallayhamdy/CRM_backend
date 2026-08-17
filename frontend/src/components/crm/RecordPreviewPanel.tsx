@@ -1372,7 +1372,7 @@ function PreviewRecentActivities({
                                     type="Note"
                                     author={item.author?.first_name ? `${item.author.first_name} ${item.author.last_name || ""}` : "System"}
                                     date={item.created_at ? format(new Date(item.created_at), "MMM d, yyyy 'at' h:mm a") + " GMT+2" : ""}
-                                    content={item.content || item.description || ""}
+                                    content={item.formatted_description || item.content || item.description || ""}
                                     isExpanded={!isCollapsedAll}
                                     compact
                                     associations={associations}

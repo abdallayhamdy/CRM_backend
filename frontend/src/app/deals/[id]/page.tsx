@@ -789,7 +789,7 @@ export default function DealDetailPage() {
                                             item.type === 'ticket_activity' ? <Ticket className="w-5 h-5 text-status-warning" /> :
                                               <Repeat className="w-5 h-5" />
                                 }
-                                content={item.description || item.title}
+                                content={item.formatted_description || item.description || item.title}
                                 isExpanded={!isCollapsedAll}
                                 associations={getAssociations()}
                               />
