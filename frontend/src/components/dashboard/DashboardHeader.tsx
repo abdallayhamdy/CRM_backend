@@ -5,7 +5,11 @@ import { Settings } from "lucide-react"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useAuth } from "@/hooks/use-auth"
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onCustomize?: () => void
+}
+
+export function DashboardHeader({ onCustomize }: DashboardHeaderProps) {
   const { user } = useAuth()
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const displayName = user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'User' : 'User'
@@ -15,7 +19,10 @@ export function DashboardHeader() {
       title={`Hi, ${displayName}`}
       subtitle={currentDate}
       actions={
-        <button className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={onCustomize}
+          className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
           <Settings className="h-4 w-4" />
           Customize
         </button>
