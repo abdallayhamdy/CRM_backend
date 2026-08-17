@@ -8,21 +8,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
-import { activitiesService } from "@/services/activities"
-import { contactsService } from "@/services/contacts"
-import { activityCommentsService } from "@/services/activity-comments"
+import { tasksService } from "@/services/tasks"
 import { DataTable } from "@/components/shared/DataTable"
-import type { Activity, Contact } from "@/lib/types/crm"
+import type { Task } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
-import DOMPurify from "dompurify"
 
 /* ── Helpers ──────────────────────────────────────────────── */
-
-function stripHtml(html: string): string {
-  const tmp = document.createElement("div")
-  tmp.innerHTML = DOMPurify.sanitize(html)
-  return tmp.textContent || tmp.innerText || ""
-}
 
 const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call"] as const
 
@@ -35,22 +26,13 @@ const SUBTYPE_LABELS: Record<string, string> = {
 
 function subtypeKey(raw?: string | null): string {
   if (!raw) return "other"
-  const lower = raw.toLowerCase().replace(/\s+/g, "_")
-  return lower
+  return raw.toLowerCase().replace(/\s+/g, "_")
 }
 
 function subtypeLabel(raw?: string | null): string {
   if (!raw) return "Other"
   const key = subtypeKey(raw)
   return SUBTYPE_LABELS[key] || raw
-}
-
-/* ── Types ────────────────────────────────────────────────── */
-
-interface OverdueRow {
-  task: Activity
-  contact: Contact | null
-  lastComment: string
 }
 
 /* ── Skeleton ─────────────────────────────────────────────── */
@@ -76,73 +58,33 @@ export function OverdueCardSkeleton() {
 /* ── Component ────────────────────────────────────────────── */
 
 export function OverdueCard() {
-  const { workspaceId, user } = useAuth()
+  const { workspaceId } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [overdueTasks, setOverdueTasks] = useState<OverdueRow[]>([])
-  const profileId = user?.profileId
+  const [overdueTasks, setOverdueTasks] = useState<Task[]>([])
 
   useEffect(() => {
     const controller = new AbortController()
 
     async function loadData() {
-      if (!workspaceId || !profileId) {
+      if (!workspaceId) {
         setLoading(false)
         return
       }
 
       try {
-        // Fetch all tasks for current user (unfiltered, we filter client-side to match tasks/page.tsx)
-        const { data: tasks } = await activitiesService.getAll({
+        const { data: tasks } = await tasksService.getAll({
           workspace_id: workspaceId!,
-          type: "task",
-          owner_id: profileId!,
           limit: 1000,
         })
 
         if (controller.signal.aborted || !tasks) return
 
-        // Overdue filter: same logic as src/app/tasks/page.tsx line 222
         const now = new Date()
         const overdue = tasks.filter(
-          (t) => !t.completed && t.due_date && new Date(t.due_date) < now && t.contact_id
+          (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now
         )
 
-        if (overdue.length === 0) {
-          setOverdueTasks([])
-          return
-        }
-
-        // Build contact lookup from all contacts (since search may not match by ID directly)
-        const allContactsRes = await contactsService.getAll({ workspace_id: workspaceId!, limit: 1000 })
-        const contactMap = new Map<string, Contact>()
-        for (const c of allContactsRes.data ?? []) {
-          contactMap.set(c.id, c)
-        }
-
-        if (controller.signal.aborted) return
-
-        // Fetch last comment for each task
-        const commentResults = await Promise.all(
-          overdue.map((t) =>
-            activityCommentsService.getByTarget(t.id, "activity", workspaceId!)
-          )
-        )
-
-        if (controller.signal.aborted) return
-
-        const rows: OverdueRow[] = overdue.map((task, i) => {
-          const contact = contactMap.get(task.contact_id!) ?? null
-          const comments = commentResults[i].data
-          let lastComment = "—"
-          if (comments && comments.length > 0) {
-            // First item is most recent (sorted created_at DESC)
-            const text = stripHtml(comments[0].content)
-            lastComment = text.length > 80 ? text.slice(0, 80) + "…" : text
-          }
-          return { task, contact, lastComment }
-        })
-
-        setOverdueTasks(rows)
+        setOverdueTasks(overdue)
       } catch {
         // Expected in standalone mode
       } finally {
@@ -152,16 +94,16 @@ export function OverdueCard() {
 
     loadData()
     return () => controller.abort()
-  }, [workspaceId, profileId])
+  }, [workspaceId])
 
   /* ── Group by task_subtype ──────────────────────────────── */
 
   const groups = useMemo(() => {
-    const map = new Map<string, OverdueRow[]>()
-    for (const row of overdueTasks) {
-      const key = subtypeKey(row.task.task_subtype)
+    const map = new Map<string, Task[]>()
+    for (const task of overdueTasks) {
+      const key = subtypeKey(task.task_subtype)
       if (!map.has(key)) map.set(key, [])
-      map.get(key)!.push(row)
+      map.get(key)!.push(task)
     }
     return map
   }, [overdueTasks])
@@ -178,11 +120,11 @@ export function OverdueCard() {
 
   /* ── Table columns ──────────────────────────────────────── */
 
-  const columns = useMemo<ColumnDef<OverdueRow, any>[]>(() => [
+  const columns = useMemo<ColumnDef<Task, any>[]>(() => [
     {
       accessorKey: "contact",
       header: "Lead Name",
-      cell: ({ row }: CellContext<OverdueRow, any>) => {
+      cell: ({ row }: CellContext<Task, any>) => {
         const c = row.original.contact
         if (!c) return <span className="text-muted-foreground">—</span>
         return (
@@ -196,22 +138,19 @@ export function OverdueCard() {
       },
     },
     {
-      accessorKey: "phone",
-      header: "Mobile",
-      cell: ({ row }: CellContext<OverdueRow, any>) => {
-        const c = row.original.contact
-        return (
-          <span className="text-muted-foreground">
-            {c?.mobile_phone || c?.phone || "—"}
-          </span>
-        )
-      },
+      accessorKey: "title",
+      header: "Task",
+      cell: ({ row }: CellContext<Task, any>) => (
+        <span className="text-foreground font-medium truncate max-w-[180px] block">
+          {row.original.title}
+        </span>
+      ),
     },
     {
       accessorKey: "due_date",
-      header: "Stage Date",
-      cell: ({ row }: CellContext<OverdueRow, any>) => {
-        const d = row.original.task.due_date
+      header: "Due Date",
+      cell: ({ row }: CellContext<Task, any>) => {
+        const d = row.original.due_date
         if (!d) return "—"
         return (
           <span className="text-destructive font-medium">
@@ -227,29 +166,34 @@ export function OverdueCard() {
     {
       accessorKey: "taskType",
       header: "Task Type",
-      cell: ({ row }: CellContext<OverdueRow, any>) => (
+      cell: ({ row }: CellContext<Task, any>) => (
         <span className="text-muted-foreground text-[13px]">
-          {subtypeLabel(row.original.task.task_subtype)}
+          {subtypeLabel(row.original.task_subtype)}
         </span>
       ),
     },
     {
-      accessorKey: "lastComment",
-      header: "Last Comment",
-      cell: ({ row }: CellContext<OverdueRow, any>) => (
-        <span className="text-muted-foreground text-[13px] max-w-[200px] truncate block">
-          {row.original.lastComment}
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }: CellContext<Task, any>) => (
+        <span className="text-muted-foreground text-[13px] capitalize">
+          {row.original.status || "pending"}
         </span>
       ),
     },
     {
       id: "preview",
       header: "",
-      cell: ({ row }: CellContext<OverdueRow, any>) => {
-        const t = row.original.task
+      cell: ({ row }: CellContext<Task, any>) => {
+        const t = row.original
+        const href = t.contact?.id
+          ? `/contacts/${t.contact.id}`
+          : t.taskable_type === "App\\Models\\Contact" && t.taskable_id
+            ? `/contacts/${t.taskable_id}`
+            : `/tasks`
         return (
           <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-[12px]">
-            <Link href={t.contact_id ? `/contacts/${t.contact_id}` : `/tasks`}>View</Link>
+            <Link href={href}>View</Link>
           </Button>
         )
       },
