@@ -201,6 +201,7 @@ export interface Order {
   created_at: string
   updated_at: string
   metadata: Record<string, unknown>
+  custom_fields?: Record<string, unknown>
 }
 
 export interface ContactAnalytics {
@@ -454,6 +455,7 @@ export interface Product {
   billing_frequency?: string | null
   url?: string | null
   owner_id?: string | null
+  custom_fields?: Record<string, unknown>
 }
 
 declare module "@tanstack/react-table" {

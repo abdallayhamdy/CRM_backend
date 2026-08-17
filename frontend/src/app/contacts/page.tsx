@@ -494,12 +494,16 @@ export default function ContactsPage() {
       lifecycle_stage: "Lifecycle Stage", lead_status: "Lead Status",
       owner: "Owner", createDate: "Created", updated_at: "Updated"
     }
-    return DEFAULT_CONTACT_COLUMNS.filter(id => id !== "select").map(id => ({
+    const standard = DEFAULT_CONTACT_COLUMNS.filter(id => id !== "select").map(id => ({
       id,
       label: labels[id] || id,
       visible: visibleColumnIds.includes(id),
     }))
-  }, [visibleColumnIds])
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [visibleColumnIds, properties])
 
   const handleExportSlideOver = (format: ExportFormat, columnIds: string[], scope: ExportScope) => {
     if (!canExportContacts) {
@@ -526,6 +530,12 @@ export default function ContactsPage() {
       owner: (c) => c.owner ? `${c.owner.first_name ?? ""} ${c.owner.last_name ?? ""}`.trim() : "",
       createDate: (c) => c.created_at,
       updated_at: (c) => c.updated_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(p => [
+          `cf_${p.name}`,
+          (c: Contact) => c.custom_fields?.[p.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((c) => {
       const row: Record<string, unknown> = {}

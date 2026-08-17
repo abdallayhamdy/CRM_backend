@@ -23,6 +23,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useProperties } from "@/hooks/use-properties"
 
 import { CreateTicketSheet } from "./create-ticket-sheet"
 import { TicketPreviewSheet } from "./preview-sheet"
@@ -126,6 +127,7 @@ export default function TicketsPage() {
   const router = useRouter()
   const { workspaceId, user, loading: authLoading } = useAuth()
   const { canCreateTicket, canEditTicket, canDeleteTicket, canCreateTask } = usePermissions()
+  const { properties } = useProperties("ticket")
   const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
   const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
     setTableSettings(s)
@@ -276,16 +278,22 @@ export default function TicketsPage() {
   const allStatuses = ["open", "pending", "resolved", "closed"]
   const TICKET_PRIORITIES = ["low", "medium", "high", "urgent"]
 
-  const exportColumns = React.useMemo<ExportColumn[]>(() => [
-    { id: "subject", label: "Subject", visible: true },
-    { id: "status", label: "Status", visible: true },
-    { id: "priority", label: "Priority", visible: true },
-    { id: "assignee", label: "Assignee", visible: true },
-    { id: "contact", label: "Contact", visible: true },
-    { id: "company", label: "Company", visible: true },
-    { id: "created_at", label: "Created", visible: true },
-    { id: "updated_at", label: "Updated", visible: true },
-  ], [])
+  const exportColumns = React.useMemo<ExportColumn[]>(() => {
+    const standard = [
+      { id: "subject", label: "Subject", visible: true },
+      { id: "status", label: "Status", visible: true },
+      { id: "priority", label: "Priority", visible: true },
+      { id: "assignee", label: "Assignee", visible: true },
+      { id: "contact", label: "Contact", visible: true },
+      { id: "company", label: "Company", visible: true },
+      { id: "created_at", label: "Created", visible: true },
+      { id: "updated_at", label: "Updated", visible: true },
+    ]
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [properties])
 
   const tabItems = tabsConfig.map(tab => ({
     ...tab,
@@ -432,6 +440,12 @@ export default function TicketsPage() {
       company: (t) => t.contact?.company?.name ?? "",
       created_at: (t) => t.created_at,
       updated_at: (t) => t.updated_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(p => [
+          `cf_${p.name}`,
+          (t: Ticket) => t.custom_fields?.[p.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((t) => {
       const row: Record<string, unknown> = {}

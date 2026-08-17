@@ -80,7 +80,14 @@ export function BulkEditSheet({
               {field.type === "select" ? (
                 <Select
                   value={values[field.id] || ""}
-                  onValueChange={(v) => setValues(prev => ({ ...prev, [field.id]: v || undefined }))}
+                  onValueChange={(v) => setValues(prev => {
+                    if (v === "__no_change__") {
+                      const next = { ...prev }
+                      delete next[field.id]
+                      return next
+                    }
+                    return { ...prev, [field.id]: v }
+                  })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="No change" />

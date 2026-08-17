@@ -10,7 +10,7 @@ import { activitiesService } from "@/services/activities"
 import { notesService } from "@/services/notes"
 import { logAudit } from "@/lib/audit"
 import { DetailPageSkeleton } from "@/components/crm/Skeletons"
-import { ShoppingCart, ChevronLeft, ChevronDown, Settings, Search, Users } from "lucide-react"
+import { ShoppingCart, ChevronLeft, ChevronDown, Settings, Search, Users, Pencil } from "lucide-react"
 import { getBadgeClasses } from "@/lib/badge-colors"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -23,6 +23,8 @@ import { ALL_ACTIVITY_TYPES } from "@/components/activity/ActivityFilterPopover"
 import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDialog"
 import { DeleteConfirmDialog } from "@/components/crm/detail/DeleteConfirmDialog"
 import { CustomCardsRenderer } from "@/components/crm/detail/CustomCardsRenderer"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 import dynamic from "next/dynamic"
 const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
 import {
@@ -56,6 +58,13 @@ export default function OrderDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [propertyHistoryOpen, setPropertyHistoryOpen] = React.useState(false)
   const [isNoteSheetOpen, setIsNoteSheetOpen] = React.useState(false)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const orderAboutFields: EditFieldConfig[] = [
+    { name: "order_number", label: "Order number", type: "text" },
+    { name: "status", label: "Status", type: "text" },
+    { name: "amount", label: "Amount", type: "number" },
+  ]
 
   React.useEffect(() => {
     if (!authLoading && !workspaceId) {
@@ -113,6 +122,17 @@ export default function OrderDetailPage() {
     if (!order) return
     setDeleteDialogOpen(true)
   }, [order])
+
+  const handleUpdateOrder = React.useCallback(async (data: Partial<typeof order>) => {
+    if (!order || !workspaceId) return
+    try {
+      await ordersService.update(order.id, data as any, workspaceId)
+      setOrder(prev => prev ? { ...prev, ...data } : null)
+      toast.success("Order updated")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update order")
+    }
+  }, [order, workspaceId])
 
   const execDeleteOrder = React.useCallback(async () => {
     if (!order || !workspaceId) return
@@ -359,10 +379,10 @@ export default function OrderDetailPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push(`/orders/${id}/settings?edit=about`)}
+                onClick={() => setAboutEditOpen(true)}
                 className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
               >
-                <Settings className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -412,6 +432,8 @@ export default function OrderDetailPage() {
                 {new Date(order.created_at).toLocaleDateString()}
               </div>
             </div>
+
+            <CustomFieldsDisplay objectType="order" values={order.custom_fields || {}} />
           </div>
         </div>
 
@@ -569,7 +591,17 @@ export default function OrderDetailPage() {
         onSaved={fetchData}
         entityType="order"
         entityId={id as string}
-        workspaceId={order?.workspace_id ?? ""}
+        workspaceId={workspaceId}
+      />
+
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="order"
+        title="Order"
+        fields={orderAboutFields}
+        initialValues={order || {}}
+        onSave={handleUpdateOrder}
       />
 
       <PropertyHistoryDialog

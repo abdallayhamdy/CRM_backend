@@ -22,6 +22,7 @@ import { TableSettings, loadTableSettings, saveTableSettings as persistTableSett
 import { notesService } from "@/services/notes"
 import { Note } from "@/lib/types/crm"
 import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
 import { exportToCSV } from "@/lib/utils"
 import { logAudit } from "@/lib/audit"
@@ -49,6 +50,7 @@ export default function NotesPage() {
   const [summaryFilter, setSummaryFilter] = React.useState<string | null>(null)
   const [exportOpen, setExportOpen] = React.useState(false)
   const { workspaceId, user } = useAuth()
+  const router = useRouter()
   const { canCreateNote } = usePermissions()
   const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
   const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
@@ -343,8 +345,7 @@ export default function NotesPage() {
                     columns={columns}
                     data={summaryFilteredData}
                     onRowClick={(note) => {
-                      setSelectedNote(note)
-                      setPreviewOpen(true)
+                      router.push(`/notes/${note.id}`)
                     }}
                     entityName="note"
                     tableSettings={tableSettings}

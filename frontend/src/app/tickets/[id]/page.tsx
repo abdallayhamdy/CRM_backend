@@ -26,8 +26,10 @@ import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDi
 import { DeleteConfirmDialog } from "@/components/crm/detail/DeleteConfirmDialog"
 import { RecordAccessDialog } from "@/components/crm/detail/RecordAccessDialog"
 import { CustomCardsRenderer } from "@/components/crm/detail/CustomCardsRenderer"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 import {
-  LifeBuoy, ChevronLeft, ChevronDown, Settings, Search, Plus, Users
+  LifeBuoy, ChevronLeft, ChevronDown, Settings, Search, Plus, Users, Pencil
 } from "lucide-react"
 import dynamic from "next/dynamic"
 const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
@@ -74,6 +76,12 @@ export default function TicketDetailPage() {
   const [summarizeOpen, setSummarizeOpen] = React.useState(false)
   const [recordAccessOpen, setRecordAccessOpen] = React.useState(false)
   const [isNoteSheetOpen, setIsNoteSheetOpen] = React.useState(false)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const ticketAboutFields: EditFieldConfig[] = [
+    { name: "subject", label: "Subject", type: "text" },
+    { name: "description", label: "Description", type: "textarea" },
+  ]
 
   React.useEffect(() => {
     if (!authLoading && !workspaceId) {
@@ -131,6 +139,18 @@ export default function TicketDetailPage() {
     if (!ticket) return
     setDeleteDialogOpen(true)
   }, [ticket])
+
+  const handleUpdateTicket = React.useCallback(async (data: Partial<Ticket>) => {
+    if (!ticket || !workspaceId) return
+    try {
+      const res = await ticketsService.update(ticket.id, data, workspaceId)
+      if (res.error) throw res.error
+      setTicket(prev => prev ? { ...prev, ...data } : null)
+      toast.success("Ticket updated")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update ticket")
+    }
+  }, [ticket, workspaceId])
 
   const execDeleteTicket = React.useCallback(async () => {
     if (!ticket || !workspaceId) return
@@ -411,10 +431,10 @@ export default function TicketDetailPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push(`/tickets/${id}/settings?edit=about`)}
+                onClick={() => setAboutEditOpen(true)}
                 className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
               >
-                <Settings className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -459,6 +479,8 @@ export default function TicketDetailPage() {
                 {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : "--"}
               </div>
             </div>
+
+            <CustomFieldsDisplay objectType="ticket" values={ticket.custom_fields || {}} />
           </div>
         </div>
 
@@ -645,6 +667,16 @@ export default function TicketDetailPage() {
         entityType="ticket"
         entityId={id}
         workspaceId={workspaceId}
+      />
+
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="ticket"
+        title="Ticket"
+        fields={ticketAboutFields}
+        initialValues={ticket || {}}
+        onSave={handleUpdateTicket}
       />
 
       <PropertyHistoryDialog

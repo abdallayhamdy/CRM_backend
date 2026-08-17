@@ -46,6 +46,16 @@ export const dealsService = {
     if (filters?.search) params.q = filters.search
     if (filters?.pipeline_id) params.pipeline_id = filters.pipeline_id
 
+    // Custom property filters
+    if (filters?.properties) {
+      for (const [key, values] of Object.entries(filters.properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
+    }
+
     const { data, error } = await laravelApi.get<{ data: Deal[]; meta: { page: number; limit: number; total: number } }>(
       '/deals',
       params

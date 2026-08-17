@@ -835,12 +835,16 @@ export default function CompaniesPage() {
       size: "Size", owner: "Owner", phone: "Phone",
       lifecycle_stage: "Lifecycle Stage", createDate: "Created"
     }
-    return DEFAULT_COMPANY_COLUMNS.filter(id => id !== "select").map(id => ({
+    const standard = DEFAULT_COMPANY_COLUMNS.filter(id => id !== "select").map(id => ({
       id,
       label: labels[id] || id,
       visible: visibleColumnIds.includes(id),
     }))
-  }, [visibleColumnIds])
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [visibleColumnIds, properties])
 
   const handleExportSlideOver = (format: ExportFormat, columnIds: string[], scope: ExportScope) => {
     if (format !== "csv") {
@@ -860,6 +864,12 @@ export default function CompaniesPage() {
       phone: (c) => c.phone,
       lifecycle_stage: (c) => c.lifecycle_stage,
       createDate: (c) => c.created_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(p => [
+          `cf_${p.name}`,
+          (c: Company) => c.custom_fields?.[p.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((c) => {
       const row: Record<string, unknown> = {}

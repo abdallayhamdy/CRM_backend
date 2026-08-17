@@ -6,44 +6,91 @@ import { CrmDetailLayout, CrmDetailLeftPanel, CrmDetailCenterPanel, CrmDetailRig
 import { productsService } from "@/services/products"
 import { Product } from "@/lib/types/crm"
 import { DetailPageSkeleton } from "@/components/crm/Skeletons"
-import { Package, Mail, Phone, Calendar, AlignLeft } from "lucide-react"
+import { Package, AlignLeft, Pencil, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getBadgeClasses } from "@/lib/badge-colors"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
-import dynamic from "next/dynamic"
-const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
-const CallEditorSheet = dynamic(() => import("@/components/activities/CallEditorSheet").then(m => ({ default: m.CallEditorSheet })), { ssr: false })
-const EmailEditorSheet = dynamic(() => import("@/components/activities/EmailEditorSheet").then(m => ({ default: m.EmailEditorSheet })), { ssr: false })
-const TaskEditorSheet = dynamic(() => import("@/components/activities/TaskEditorSheet").then(m => ({ default: m.TaskEditorSheet })), { ssr: false })
-const MeetingEditorSheet = dynamic(() => import("@/components/activities/MeetingEditorSheet").then(m => ({ default: m.MeetingEditorSheet })), { ssr: false })
+import { usePermissions } from "@/hooks/use-permissions"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
+import { DeleteConfirmDialog } from "@/components/crm/detail/DeleteConfirmDialog"
+import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 
 export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
   const { workspaceId } = useAuth()
+  const { canDeleteProduct } = usePermissions()
   const [product, setProduct] = React.useState<Product | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
-  const [activeEditor, setActiveEditor] = React.useState<'note' | 'call' | 'email' | 'task' | 'meeting' | null>(null)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [propertyHistoryOpen, setPropertyHistoryOpen] = React.useState(false)
+
+  const productAboutFields: EditFieldConfig[] = [
+    { name: "name", label: "Name", type: "text" },
+    { name: "sku", label: "SKU", type: "text" },
+    { name: "unit_price", label: "Price", type: "number" },
+    { name: "product_type", label: "Type", type: "text" },
+    { name: "product_description", label: "Description", type: "text" },
+  ]
+
+  const fetchData = React.useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await productsService.getById(id)
+      if (error) throw error
+      setProduct(data)
+    } catch {
+      toast.error("Failed to load product details")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [id])
 
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true)
-      try {
-        const { data, error } = await productsService.getById(id)
-        if (error) throw error
-        setProduct(data)
-      } catch (err) {
-        toast.error("Failed to load product details")
-      } finally {
-        setIsLoading(false)
-      }
+    fetchData()
+  }, [fetchData])
+
+  const handleUpdateProduct = React.useCallback(async (data: Partial<Product>) => {
+    if (!product || !workspaceId) return
+    try {
+      await productsService.update(product.id, data, workspaceId)
+      setProduct(prev => prev ? { ...prev, ...data } : null)
+      toast.success("Product updated")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update product")
     }
-    loadData()
-  }, [id])
+  }, [product, workspaceId])
+
+  const handleDeleteProduct = React.useCallback(() => {
+    if (!product) return
+    setDeleteDialogOpen(true)
+  }, [product])
+
+  const execDeleteProduct = React.useCallback(async () => {
+    if (!product || !workspaceId) return
+    try {
+      const { error } = await productsService.delete(product.id, workspaceId)
+      if (error) throw error
+      toast.success("Product deleted")
+      router.push("/products")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete product")
+    }
+  }, [product, workspaceId, router])
 
   if (isLoading) {
     return <DetailPageSkeleton />
@@ -76,6 +123,27 @@ export default function ProductDetailPage() {
     <CrmDetailLayout backLine="Products" backHref="/products">
       <CrmDetailLeftPanel>
         <div className="p-6 border-b border-border flex flex-col items-center text-center relative">
+          <div className="absolute top-4 right-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setPropertyHistoryOpen(true)}>
+                  View history
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {canDeleteProduct && (
+                  <DropdownMenuItem className="text-destructive" onClick={handleDeleteProduct}>
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           <div className="w-20 h-20 bg-muted/50 border border-border rounded mb-4 flex items-center justify-center shadow-sm">
             <Package className="w-10 h-10 text-primary" />
           </div>
@@ -83,30 +151,17 @@ export default function ProductDetailPage() {
           <Badge className={`capitalize ${getStatusColor(product.status)}`}>
             {product.status}
           </Badge>
-
-          <div className="flex w-full items-center justify-center gap-2 mt-6">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-full border-border bg-background text-muted-foreground hover:bg-accent flex-1"
-              onClick={() => setActiveEditor('note')}
-            >
-              <AlignLeft className="h-3.5 w-3.5 mr-1.5 text-primary" /> Note
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-full border-border bg-background text-muted-foreground hover:bg-accent flex-1"
-              onClick={() => setActiveEditor('call')}
-            >
-              <Phone className="h-3.5 w-3.5 mr-1.5 text-primary" /> Call
-            </Button>
-          </div>
         </div>
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-4 group">
             <h3 className="font-semibold text-sm text-foreground tracking-wide">About this product</h3>
+            <button
+              onClick={() => setAboutEditOpen(true)}
+              className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -153,6 +208,15 @@ export default function ProductDetailPage() {
                 {new Date(product.created_at).toLocaleDateString()}
               </div>
             </div>
+
+            <div className="group relative">
+              <label className="text-[12px] text-muted-foreground uppercase tracking-wider font-semibold block mb-1">Updated</label>
+              <div className="text-sm font-medium text-foreground border border-transparent group-hover:bg-accent group-hover:border-border rounded px-2 -mx-2 py-1 min-h-[30px] flex items-center">
+                {product.updated_at ? new Date(product.updated_at).toLocaleDateString() : "—"}
+              </div>
+            </div>
+
+            <CustomFieldsDisplay objectType="product" values={product.custom_fields || {}} />
           </div>
         </div>
       </CrmDetailLeftPanel>
@@ -174,11 +238,32 @@ export default function ProductDetailPage() {
         </div>
       </CrmDetailRightPanel>
 
-      <NoteEditorSheet open={activeEditor === 'note'} onClose={() => setActiveEditor(null)} onSaved={() => {}} entityType="contact" entityId={id} workspaceId={workspaceId} />
-      <CallEditorSheet open={activeEditor === 'call'} onClose={() => setActiveEditor(null)} onSaved={() => {}} entityType="contact" entityId={id} workspaceId={workspaceId} />
-      <EmailEditorSheet open={activeEditor === 'email'} onClose={() => setActiveEditor(null)} onSaved={() => {}} entityType="contact" entityId={id} workspaceId={workspaceId} />
-      <TaskEditorSheet open={activeEditor === 'task'} onClose={() => setActiveEditor(null)} onSaved={() => {}} entityType="contact" entityId={id} workspaceId={workspaceId} />
-      <MeetingEditorSheet open={activeEditor === 'meeting'} onClose={() => setActiveEditor(null)} onSaved={() => {}} entityType="contact" entityId={id} workspaceId={workspaceId} />
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="product"
+        title="Product"
+        fields={productAboutFields}
+        initialValues={product || {}}
+        onSave={handleUpdateProduct}
+      />
+
+      <PropertyHistoryDialog
+        open={propertyHistoryOpen}
+        onOpenChange={setPropertyHistoryOpen}
+        entityType="product"
+        entityId={id}
+        entityLabel="product"
+        entityTitle={product.name || ""}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        entityLabel="product"
+        entityDisplayName={product.name || "this product"}
+        onConfirm={execDeleteProduct}
+      />
     </CrmDetailLayout>
   )
 }

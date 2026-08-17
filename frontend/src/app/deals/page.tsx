@@ -174,19 +174,6 @@ export default function DealsPage() {
   const [pipelines, setPipelines] = React.useState<Pipeline[]>([])
   const [selectedPipelineId, setSelectedPipelineId] = React.useState<string>('')
 
-  const exportColumns = React.useMemo<ExportColumn[]>(() => {
-    const labels: Record<string, string> = {
-      select: "Select", title: "Deal Name", stage: "Stage",
-      amount: "Amount", closeDate: "Close Date", owner: "Owner",
-      createDate: "Created"
-    }
-    return visibleColumnIds.filter(id => id !== "select").map(id => ({
-      id,
-      label: labels[id] || id,
-      visible: true,
-    }))
-  }, [visibleColumnIds])
-
   const router = useRouter()
   const { workspaceId, user, loading: authLoading } = useAuth()
   const { canCreateDeal, canEditDeal, canExportDeals, canDeleteDeal, canCreateTask } = usePermissions()
@@ -198,6 +185,23 @@ export default function DealsPage() {
       router.replace("/login")
     }
   }, [authLoading, workspaceId, router])
+
+  const exportColumns = React.useMemo<ExportColumn[]>(() => {
+    const labels: Record<string, string> = {
+      select: "Select", title: "Deal Name", stage: "Stage",
+      amount: "Amount", closeDate: "Close Date", owner: "Owner",
+      createDate: "Created"
+    }
+    const standard = visibleColumnIds.filter(id => id !== "select").map(id => ({
+      id,
+      label: labels[id] || id,
+      visible: true,
+    }))
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [visibleColumnIds, properties])
 
   // Use the generic CRM filters hook with pinned filter support
   const {
@@ -617,6 +621,12 @@ export default function DealsPage() {
       closeDate: (d) => d.close_date,
       owner: (d) => d.owner ? `${d.owner.first_name ?? ""} ${d.owner.last_name ?? ""}`.trim() : "",
       createDate: (d) => d.created_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(p => [
+          `cf_${p.name}`,
+          (d: Deal) => d.custom_fields?.[p.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((d) => {
       const row: Record<string, unknown> = {}

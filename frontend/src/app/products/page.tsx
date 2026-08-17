@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useProperties } from "@/hooks/use-properties"
 
 // Generic CRM Components
 import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/CrmPageLayout"
@@ -88,6 +89,7 @@ export default function ProductsPage() {
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
   const { workspaceId, user } = useAuth()
   const { canCreateProduct, canDeleteProduct, canEditProduct, canCreateTask } = usePermissions()
+  const { properties } = useProperties("product")
   const [tableSettings, setTableSettingsState] = React.useState<TableSettings>(() => loadTableSettings())
   const handleTableSettingsChange = React.useCallback((settings: TableSettings) => {
     setTableSettingsState(settings)
@@ -327,8 +329,12 @@ export default function ProductsPage() {
       status: "Status", product_folder: "Folder", created_at: "Created",
     }
     const ids = ["name", "sku", "unit_price", "status", "product_folder", "created_at"]
-    return ids.map(id => ({ id, label: labels[id] || id, visible: true }))
-  }, [])
+    const standard = ids.map(id => ({ id, label: labels[id] || id, visible: true }))
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [properties])
 
   const handleExportSlideOver = (format: ExportFormat, columnIds: string[], scope: ExportScope) => {
     if (format !== "csv") {
@@ -347,6 +353,12 @@ export default function ProductsPage() {
       status: (p) => p.status,
       product_folder: (p) => p.product_folder || "",
       created_at: (p) => p.created_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(prop => [
+          `cf_${prop.name}`,
+          (p: any) => p.custom_fields?.[prop.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((p) => {
       const row: Record<string, unknown> = {}

@@ -19,6 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { laravelApi } from '@/lib/laravel-api';
+import { clearPropertiesCache } from '@/hooks/use-properties';
 
 interface PropertyGroup {
   id: string;
@@ -121,6 +122,7 @@ export default function GroupsPage() {
           ? { ...g, name: renameValue.trim() } : g)
       );
       toast.success('Group renamed');
+      clearPropertiesCache();
       setRenameDialogOpen(false);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Unknown error');
@@ -140,6 +142,7 @@ export default function GroupsPage() {
       }
       setGroups(prev => prev.filter(g => g.id !== id));
       toast.success('Group deleted');
+      clearPropertiesCache();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Unknown error');
     }

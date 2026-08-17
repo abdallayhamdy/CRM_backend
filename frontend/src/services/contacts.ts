@@ -113,6 +113,14 @@ export const contactsService = {
       if (contactOwner?.length) {
         params['filter[assigned_to]'] = contactOwner.join(',')
       }
+
+      // Custom properties (prefixed with "custom_" by buildPropertySidebarFilters)
+      for (const [key, values] of Object.entries(filters.properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
     }
 
     // --- Date range filters ---

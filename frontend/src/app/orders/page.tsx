@@ -218,6 +218,22 @@ export default function OrdersPage() {
     fetchOrders()
   }, [fetchOrders])
 
+  const handleUpdateCell = React.useCallback(async (order: Order, field: string, value: any) => {
+    if (!canEditOrder) {
+      toast.error("You don't have permission to edit orders")
+      return
+    }
+    if (!workspaceId) return
+    try {
+      const { error } = await ordersService.update(order.id, { [field]: value }, workspaceId)
+      if (error) throw error
+      toast.success("Order updated")
+      fetchOrders()
+    } catch (err) {
+      toast.error("Failed to update order")
+    }
+  }, [canEditOrder, workspaceId, fetchOrders])
+
   const propertyGroups = React.useMemo(() => propertiesToGroups(properties), [properties])
 
   const baseColumns: ColumnDef<Order>[] = React.useMemo(() => [
@@ -487,12 +503,16 @@ export default function OrdersPage() {
       select: "Select", title: "Order Name", stage: "Status",
       amount: "Amount", created_at: "Created"
     }
-    return DEFAULT_ORDER_COLUMNS.filter(id => id !== "select").map(id => ({
+    const standard = DEFAULT_ORDER_COLUMNS.filter(id => id !== "select").map(id => ({
       id,
       label: labels[id] || id,
       visible: visibleColumnIds.includes(id),
     }))
-  }, [visibleColumnIds])
+    const custom = properties
+      .filter(p => !p.is_archived)
+      .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
+    return [...standard, ...custom]
+  }, [visibleColumnIds, properties])
 
   const handleBulkDelete = async () => {
     if (!canDeleteOrder) return
@@ -549,6 +569,12 @@ export default function OrdersPage() {
       stage: (o) => o.stage,
       amount: (o) => o.amount,
       created_at: (o) => o.created_at,
+      ...Object.fromEntries(
+        properties.filter(p => !p.is_archived).map(p => [
+          `cf_${p.name}`,
+          (o: Order) => (o as any).custom_fields?.[p.name] ?? ""
+        ])
+      ),
     }
     const exportData = source.map((o) => {
       const row: Record<string, unknown> = {}
@@ -699,6 +725,7 @@ export default function OrdersPage() {
                     selectedIds={selectedIds}
                     onToggleOne={toggleOne}
                     onRowClick={handleRowClick}
+                    onUpdateCell={handleUpdateCell}
                     onHistoryClick={(item) => {
                       setHistoryOrder(item)
                       setHistoryOpen(true)

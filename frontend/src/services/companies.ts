@@ -100,6 +100,14 @@ export const companiesService = {
       if (lifecycleStage?.length) {
         params['filter[lifecycle_stage]'] = lifecycleStage.join(',')
       }
+
+      // Custom properties (prefixed with "custom_" by buildPropertySidebarFilters)
+      for (const [key, values] of Object.entries(filters.properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
     }
 
     if (filters?.dateRanges) {

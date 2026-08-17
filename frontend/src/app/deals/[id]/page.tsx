@@ -23,6 +23,8 @@ import {
 import { ActivityTaskCard } from "@/components/activity/ActivityTaskCard"
 import { ActivityLogCard } from "@/components/activity/ActivityLogCard"
 import { ActivityFilterPopover, ALL_ACTIVITY_TYPES } from "@/components/activity/ActivityFilterPopover"
+import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
+import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 
 import dynamic from "next/dynamic"
 const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
@@ -78,6 +80,13 @@ export default function DealDetailPage() {
   const [showAddContact, setShowAddContact] = React.useState(false)
   const [showAddCompany, setShowAddCompany] = React.useState(false)
   const [isTicketSheetOpen, setIsTicketSheetOpen] = React.useState(false)
+
+  const [aboutEditOpen, setAboutEditOpen] = React.useState(false)
+  const dealAboutFields: EditFieldConfig[] = [
+    { name: "title", label: "Deal name", type: "text" },
+    { name: "amount", label: "Amount", type: "number" },
+    { name: "close_date", label: "Close Date", type: "date" },
+  ]
 
   const fetchData = React.useCallback(async () => {
     if (!workspaceId) {
@@ -473,10 +482,10 @@ export default function DealDetailPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push(`/deals/${id}/settings?edit=about`)}
+                onClick={() => setAboutEditOpen(true)}
                 className="w-8 h-8 rounded border border-border flex items-center justify-center hover:bg-muted text-muted-foreground"
               >
-                <Settings className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -526,6 +535,8 @@ export default function DealDetailPage() {
                 {deal.pipeline || "--"}
               </div>
             </div>
+
+            <CustomFieldsDisplay objectType="deal" values={deal.custom_fields || {}} />
           </div>
         </div>
 
@@ -1007,6 +1018,16 @@ export default function DealDetailPage() {
         entityType="deal"
         entityId={id as string}
         workspaceId={deal?.workspace_id ?? ""}
+      />
+
+      <EditRecordSheet
+        open={aboutEditOpen}
+        onOpenChange={setAboutEditOpen}
+        objectType="deal"
+        title="Deal"
+        fields={dealAboutFields}
+        initialValues={deal || {}}
+        onSave={handleUpdateDeal}
       />
       <EmailEditorSheet
         open={activeEditor === 'email'}
