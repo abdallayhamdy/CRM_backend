@@ -15,24 +15,23 @@ import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
 /* ── Helpers ──────────────────────────────────────────────── */
 
-const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call"] as const
+const ENTITY_KEYS = ["contact", "deal", "company"] as const
 
-const SUBTYPE_LABELS: Record<string, string> = {
-  to_do: "To Do",
-  follow_up: "Follow Up",
-  follow_up_after_meeting: "Follow Up After Meeting",
-  call: "Call",
+const ENTITY_LABELS: Record<string, string> = {
+  contact: "Contacts",
+  deal: "Deals",
+  company: "Companies",
 }
 
-function subtypeKey(raw?: string | null): string {
+function entityKey(raw?: string | null): string {
   if (!raw) return "other"
-  return raw.toLowerCase().replace(/\s+/g, "_")
+  return raw.replace("App\\Models\\", "").toLowerCase()
 }
 
-function subtypeLabel(raw?: string | null): string {
+function entityLabel(raw?: string | null): string {
   if (!raw) return "Other"
-  const key = subtypeKey(raw)
-  return SUBTYPE_LABELS[key] || raw
+  const key = entityKey(raw)
+  return ENTITY_LABELS[key] || key
 }
 
 /* ── Skeleton ─────────────────────────────────────────────── */
@@ -96,12 +95,12 @@ export function OverdueCard() {
     return () => controller.abort()
   }, [workspaceId])
 
-  /* ── Group by task_subtype ──────────────────────────────── */
+  /* ── Group by related entity type ──────────────────────────── */
 
   const groups = useMemo(() => {
     const map = new Map<string, Task[]>()
     for (const task of overdueTasks) {
-      const key = subtypeKey(task.task_subtype)
+      const key = entityKey(task.taskable_type)
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(task)
     }
@@ -111,9 +110,9 @@ export function OverdueCard() {
   /* ── Tab config ─────────────────────────────────────────── */
 
   const tabs = useMemo(() => {
-    return TASK_TYPE_KEYS.map((key) => ({
+    return ENTITY_KEYS.map((key) => ({
       key,
-      label: SUBTYPE_LABELS[key],
+      label: ENTITY_LABELS[key],
       count: groups.get(key)?.length ?? 0,
     }))
   }, [groups])
@@ -164,11 +163,11 @@ export function OverdueCard() {
       },
     },
     {
-      accessorKey: "taskType",
-      header: "Task Type",
+      accessorKey: "relatedTo",
+      header: "Related To",
       cell: ({ row }: CellContext<Task, any>) => (
         <span className="text-muted-foreground text-[13px]">
-          {subtypeLabel(row.original.task_subtype)}
+          {entityLabel(row.original.taskable_type)}
         </span>
       ),
     },
