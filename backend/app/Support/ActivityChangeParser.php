@@ -228,6 +228,10 @@ class ActivityChangeParser
             return $value ? 'Yes' : 'No';
         }
 
+        if (is_array($value)) {
+            return implode(', ', array_map(fn($v) => (string) $v, $value));
+        }
+
         return (string) $value;
     }
 
