@@ -157,7 +157,7 @@ class CompanyController extends Controller
     {
         $this->authorize('update', $company);
 
-        $data = $this->mapRequestFields($request->validated());
+        $data = $this->mapRequestFields($request->validated(), $company->custom_data ?? []);
 
         $this->handleContactsAssociation($request, $company);
 
@@ -183,7 +183,7 @@ class CompanyController extends Controller
         ]);
     }
 
-    private function mapRequestFields(array $validated): array
+    private function mapRequestFields(array $validated, array $existingCustomData = []): array
     {
         $user = auth('sanctum')->user();
         $workspaceId = $user->workspace_id;
@@ -220,9 +220,9 @@ class CompanyController extends Controller
         }
 
         if (isset($validated['custom_fields'])) {
-            $mapped['custom_data'] = array_merge($validated['custom_fields'], $extraFields);
+            $mapped['custom_data'] = array_merge($existingCustomData, $validated['custom_fields'], $extraFields);
         } elseif (!empty($extraFields)) {
-            $mapped['custom_data'] = $extraFields;
+            $mapped['custom_data'] = array_merge($existingCustomData, $extraFields);
         }
 
         return $mapped;

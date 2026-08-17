@@ -138,14 +138,14 @@ export default function DealDetailPage() {
   const handleUpdateDeal = React.useCallback(async (data: Partial<Deal>) => {
     if (!deal) return
     try {
-      const res = await dealsService.update(deal.id, data)
+      const res = await dealsService.update(deal.id, data, workspaceId ?? undefined)
       if (res.error) throw res.error
       setDeal(prev => prev ? { ...prev, ...data } : null)
       toast.success("Deal updated")
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to update deal")
     }
-  }, [deal])
+  }, [deal, workspaceId])
 
   const handleDeleteDeal = React.useCallback(async () => {
     if (!deal) return

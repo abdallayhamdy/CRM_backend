@@ -122,7 +122,7 @@ class DealController extends Controller
     {
         $this->authorize('update', $deal);
 
-        $data = $this->mapRequestFields($request->validated());
+        $data = $this->mapRequestFields($request->validated(), $deal->custom_data ?? []);
 
         $deal->update($data);
 
@@ -221,7 +221,7 @@ class DealController extends Controller
         return response()->json(['status' => 'success']);
     }
 
-    protected function mapRequestFields(array $data): array
+    protected function mapRequestFields(array $data, array $existingCustomData = []): array
     {
         $user = auth('sanctum')->user();
         $mapped = [
@@ -233,8 +233,11 @@ class DealController extends Controller
         if (isset($data['company_id'])) $mapped['company_id'] = $data['company_id'];
         if (isset($data['contact_id'])) $mapped['contact_id'] = $data['contact_id'];
         if (isset($data['status'])) $mapped['status'] = $data['status'];
-        if (isset($data['custom_data'])) $mapped['custom_data'] = $data['custom_data'];
-        if (isset($data['custom_fields'])) $mapped['custom_data'] = $data['custom_fields'];
+        if (isset($data['custom_fields'])) {
+            $mapped['custom_data'] = array_merge($existingCustomData, $data['custom_fields']);
+        } elseif (isset($data['custom_data'])) {
+            $mapped['custom_data'] = array_merge($existingCustomData, $data['custom_data']);
+        }
 
         // owner_id -> assigned_to
         if (isset($data['owner_id'])) {

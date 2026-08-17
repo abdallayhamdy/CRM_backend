@@ -125,7 +125,7 @@ class OrderController extends Controller
         unset($validated['line_items']);
 
         if (isset($validated['custom_fields'])) {
-            $validated['custom_data'] = $validated['custom_fields'];
+            $validated['custom_data'] = array_merge($order->custom_data ?? [], $validated['custom_fields']);
         }
         unset($validated['custom_fields']);
 
