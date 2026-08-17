@@ -32,13 +32,6 @@ export default function DashboardPage() {
 
         {(isVisible("overdue") || isVisible("integrations")) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-8">
-            {isVisible("overdue") && (
-              <div>
-                <Suspense fallback={<OverdueCardSkeleton />}>
-                  <OverdueCard />
-                </Suspense>
-              </div>
-            )}
             {isVisible("integrations") && (
               <div>
                 <Suspense fallback={
@@ -58,38 +51,39 @@ export default function DashboardPage() {
                 </Suspense>
               </div>
             )}
+            {(isVisible("overdue") || isVisible("phoneCalls")) && (
+              <div className="flex flex-col gap-3">
+                {isVisible("overdue") && (
+                  <Suspense fallback={<OverdueCardSkeleton />}>
+                    <OverdueCard />
+                  </Suspense>
+                )}
+                {isVisible("phoneCalls") && (
+                  <Suspense fallback={<PhoneCallCardSkeleton />}>
+                    <PhoneCallCard />
+                  </Suspense>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {(isVisible("recentActivity") || isVisible("phoneCalls")) && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {isVisible("recentActivity") && (
-              <div className="lg:col-span-2">
-                <Suspense fallback={
-                  <div className="mb-8 space-y-3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Skeleton className="h-4 w-4" />
-                      <Skeleton className="h-4 w-32" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {[1, 2, 3, 4].map(i => (
-                        <Skeleton key={i} className="h-32 rounded-lg border border-border" />
-                      ))}
-                    </div>
-                  </div>
-                }>
-                  <RecentActivityCard />
-                </Suspense>
+        {isVisible("recentActivity") && (
+          <Suspense fallback={
+            <div className="mb-8 space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
               </div>
-            )}
-            {isVisible("phoneCalls") && (
-              <div>
-                <Suspense fallback={<PhoneCallCardSkeleton />}>
-                  <PhoneCallCard />
-                </Suspense>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} className="h-32 rounded-lg border border-border" />
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          }>
+            <RecentActivityCard />
+          </Suspense>
         )}
       </div>
 
