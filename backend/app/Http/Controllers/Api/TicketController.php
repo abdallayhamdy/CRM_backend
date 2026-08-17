@@ -97,7 +97,7 @@ class TicketController extends Controller
     public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
         $this->authorize('update', $ticket);
-        $data = $this->mapRequestFields($request->validated());
+        $data = $this->mapRequestFields($request->validated(), $ticket->custom_data ?? []);
         $ticket->update($data);
 
         return response()->json([
@@ -113,7 +113,7 @@ class TicketController extends Controller
         return response()->json(['status' => 'success', 'data' => null]);
     }
 
-    protected function mapRequestFields(array $data): array
+    protected function mapRequestFields(array $data, array $existingCustomData = []): array
     {
         $user = auth('sanctum')->user();
         $mapped = [
@@ -135,7 +135,7 @@ class TicketController extends Controller
         }
 
         if (isset($data['custom_fields'])) {
-            $mapped['custom_data'] = $data['custom_fields'];
+            $mapped['custom_data'] = array_merge($existingCustomData, $data['custom_fields']);
         }
 
         return $mapped;

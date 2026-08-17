@@ -32,8 +32,6 @@ export default function TaskDetailPage() {
   const taskAboutFields: EditFieldConfig[] = [
     { name: "title", label: "Title", type: "text" },
     { name: "status", label: "Status", type: "text" },
-    { name: "type", label: "Type", type: "text" },
-    { name: "task_priority", label: "Priority", type: "text" },
     { name: "due_date", label: "Due Date", type: "date" },
   ]
 
@@ -255,7 +253,7 @@ export default function TaskDetailPage() {
       <EditRecordSheet
         open={aboutEditOpen}
         onOpenChange={setAboutEditOpen}
-        objectType="contact"
+        objectType="deal"
         title="Task"
         fields={taskAboutFields}
         initialValues={task || {}}

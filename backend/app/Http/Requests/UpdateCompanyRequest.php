@@ -38,6 +38,7 @@ class UpdateCompanyRequest extends FormRequest
             ],
             'lifecycle_stage' => 'nullable|string|max:255',
             'custom_fields' => 'nullable|array',
+            'address' => 'nullable|string|max:255',
             'size' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'contacts' => 'nullable|array',

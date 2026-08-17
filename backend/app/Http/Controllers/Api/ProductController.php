@@ -97,10 +97,23 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         $data = $request->validated();
+
+        $existingCustomData = $product->custom_data ?? [];
         if (isset($data['custom_fields'])) {
-            $data['custom_data'] = $data['custom_fields'];
+            $existingCustomData = array_merge($existingCustomData, $data['custom_fields']);
         }
         unset($data['custom_fields']);
+
+        foreach (['product_type', 'product_description'] as $field) {
+            if (isset($data[$field])) {
+                $existingCustomData[$field] = $data[$field];
+                unset($data[$field]);
+            }
+        }
+
+        if (!empty($existingCustomData)) {
+            $data['custom_data'] = $existingCustomData;
+        }
 
         $product->update($data);
 

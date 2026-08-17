@@ -63,7 +63,6 @@ export default function OrderDetailPage() {
   const orderAboutFields: EditFieldConfig[] = [
     { name: "order_number", label: "Order number", type: "text" },
     { name: "status", label: "Status", type: "text" },
-    { name: "amount", label: "Amount", type: "number" },
   ]
 
   React.useEffect(() => {

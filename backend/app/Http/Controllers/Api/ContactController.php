@@ -284,7 +284,11 @@ class ContactController extends Controller
             $customData['email_opt_out'] = (bool) $validated['emailOptOut'];
         }
 
-        if (isset($validated['custom_fields']) || isset($validated['emailOptOut']) || !empty($customData)) {
+        if (isset($validated['source'])) {
+            $customData['source'] = $validated['source'];
+        }
+
+        if (isset($validated['custom_fields']) || isset($validated['emailOptOut']) || isset($validated['source']) || !empty($customData)) {
             $mapped['custom_data'] = $customData;
         }
 

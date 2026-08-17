@@ -213,7 +213,7 @@ class CompanyController extends Controller
         }
 
         $extraFields = [];
-        foreach (['size', 'description'] as $field) {
+        foreach (['size', 'description', 'address'] as $field) {
             if (isset($validated[$field])) {
                 $extraFields[$field] = $validated[$field];
             }

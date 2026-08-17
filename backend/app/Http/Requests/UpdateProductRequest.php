@@ -27,6 +27,8 @@ class UpdateProductRequest extends FormRequest
             'unit_price' => 'nullable|numeric|min:0',
             'status' => 'nullable|in:Active,Archived',
             'product_folder' => 'nullable|string|max:255',
+            'product_type' => 'nullable|string|max:255',
+            'product_description' => 'nullable|string',
             'custom_fields' => 'nullable|array',
         ];
     }
