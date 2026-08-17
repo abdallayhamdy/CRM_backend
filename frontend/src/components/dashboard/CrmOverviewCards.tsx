@@ -106,17 +106,12 @@ export function CrmOverviewCards() {
         setLeadStatuses(statuses)
 
         const allTasks = allTasksRes.data ?? []
-        const tTypes: Record<string, number> = {}
-        let completedTasks = 0
+        const taskStatuses: Record<string, number> = {}
         for (const t of allTasks) {
-          if (t.status === "completed") {
-            completedTasks++
-          } else {
-            const subtype = t.task_subtype || "to_do"
-            tTypes[subtype] = (tTypes[subtype] || 0) + 1
-          }
+          const status = t.status || "pending"
+          taskStatuses[status] = (taskStatuses[status] || 0) + 1
         }
-        setTaskTypes({ ...tTypes, _completed: completedTasks })
+        setTaskTypes(taskStatuses)
 
         const allTickets = allTicketsRes.data ?? []
         const tStages: Record<string, number> = {}
@@ -223,21 +218,15 @@ export function CrmOverviewCards() {
               </div>
               <div className={contentClass}>
                 {[
-                  { value: "to_do", label: "To-do" },
-                  { value: "call", label: "Call" },
-                  { value: "follow_up", label: "Follow up" },
-                  { value: "follow_up_after_meeting", label: "Follow up after meeting" },
+                  { value: "pending", label: "Pending" },
+                  { value: "in_progress", label: "In Progress" },
+                  { value: "completed", label: "Completed", color: "text-status-success" },
                 ].map((t) => (
                   <div key={t.value} className="flex justify-between items-center">
                     <span className="text-[12px] text-muted-foreground font-medium">{t.label}</span>
-                    <span className="text-[13px] font-bold text-foreground">{taskTypes[t.value] || 0}</span>
+                    <span className={cn("text-[13px] font-bold", t.color || "text-foreground")}>{taskTypes[t.value] || 0}</span>
                   </div>
                 ))}
-                <div className="border-t border-border/50 my-1" />
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Completed</span>
-                  <span className="text-[13px] font-bold text-status-success">{taskTypes._completed || 0}</span>
-                </div>
               </div>
             </CardContent>
           </Card>
