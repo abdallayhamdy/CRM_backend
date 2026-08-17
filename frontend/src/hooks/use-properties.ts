@@ -55,7 +55,7 @@ export function useProperties(objectType: ObjectType) {
   const [properties, setProperties] = useState<PropertyFromDB[]>([])
   const [loading, setLoading] = useState(true)
   const { workspaceId } = useAuth()
-  const cacheVersion = useSyncExternalStore(subscribeCacheVersion, getCacheVersion)
+  const cacheVersion = useSyncExternalStore(subscribeCacheVersion, getCacheVersion, getCacheVersion)
 
   useEffect(() => {
     if (!workspaceId) return
