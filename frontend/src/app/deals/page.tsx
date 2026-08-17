@@ -31,6 +31,7 @@ const DealsBoardView = dynamic(
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { DEAL_MORE_FILTERS } from "@/lib/filter-data"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { CreateDealSheet } from "./create-deal-sheet"
 import dynamic from "next/dynamic"
 const RecordPreviewPanel = dynamic(
@@ -401,15 +402,22 @@ export default function DealsPage() {
   })
 
   // Sidebar Configurations
-  const sidebarConfig: SidebarFilterConfig[] = [
-    { id: "name", label: "Deal name", type: "text" },
-    { id: "owner", label: "Deal owner", type: "property", options: allOwners },
-    { id: "stage", label: "Deal stage", type: "property", options: [...DEAL_STAGES] },
-    { id: "amount", label: "Amount", type: "number" },
-    { id: "closeDate", label: "Close date", type: "date" },
-    { id: "createDate", label: "Create date", type: "date" },
-    { id: "lastActivityDate", label: "Last activity date", type: "date" },
-  ]
+  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
+    const base: SidebarFilterConfig[] = [
+      { id: "name", label: "Deal name", type: "text" },
+      { id: "owner", label: "Deal owner", type: "property", options: allOwners },
+      { id: "stage", label: "Deal stage", type: "property", options: [...DEAL_STAGES] },
+      { id: "amount", label: "Amount", type: "number" },
+      { id: "closeDate", label: "Close date", type: "date" },
+      { id: "createDate", label: "Create date", type: "date" },
+      { id: "lastActivityDate", label: "Last activity date", type: "date" },
+    ]
+    const propertyFilters = buildPropertySidebarFilters(properties)
+    if (propertyFilters.length > 0) {
+      return [...base, ...propertyFilters]
+    }
+    return base
+  }, [allOwners, properties])
 
   const currentBoardColumns = React.useMemo(() => {
     const currentPipeline = pipelines.find(p => p.id === selectedPipelineId) || pipelines[0]

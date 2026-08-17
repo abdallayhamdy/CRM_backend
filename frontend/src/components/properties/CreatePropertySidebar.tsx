@@ -568,7 +568,6 @@ export default function CreatePropertySidebar({
         description: form.description.trim() || null,
         is_required: form.isRequired,
         show_in_forms: form.showInForms,
-        display_order: 0,
         options: choiceOptions,
         settings: {
           default_value: form.default_value?.trim() || null,

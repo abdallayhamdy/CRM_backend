@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\QueryFilters\ContactLeadStatusFilter;
 use App\QueryFilters\ContactLifecycleStageFilter;
+use App\Traits\HasCustomDataFilter;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
@@ -20,7 +21,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ContactController extends Controller
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests, HasCustomDataFilter;
 
     protected ContactStageService $contactStageService;
 
@@ -83,14 +84,7 @@ class ContactController extends Controller
                         $query->whereDate('contacts.updated_at', $value);
                     }
                 }),
-                AllowedFilter::callback('source', function (Builder $query, $value) {
-                    $sources = is_array($value) ? $value : array_map('trim', explode(',', $value));
-                    $query->where(function (Builder $q) use ($sources) {
-                        foreach ($sources as $source) {
-                            $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.source')) = ?", [$source]);
-                        }
-                    });
-                }),
+                ...$this->customDataFilters('contact', 'contacts'),
                 AllowedFilter::callback('last_activity_at', function (Builder $query, $value) {
                     if (is_array($value)) {
                         if (!empty($value['from'])) {

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\Property;
 use App\Http\Requests\StoreDealRequest;
 use App\Http\Requests\UpdateDealRequest;
 use App\Http\Resources\DealResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -57,6 +59,8 @@ class DealController extends Controller
         if ($request->owner_id) {
             $query->where('assigned_to', $request->owner_id);
         }
+
+        $this->applyCustomDataFilters($query, $request, 'deal');
 
         $sortBy = in_array($request->sort_by, ['title', 'amount', 'status', 'created_at', 'updated_at', 'expected_close_date']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
@@ -287,6 +291,26 @@ class DealController extends Controller
         }
 
         return $mapped;
+    }
+
+    protected function applyCustomDataFilters(Builder $query, Request $request, string $objectType): void
+    {
+        $propertyNames = Property::where('object_type', $objectType)
+            ->where('is_archived', false)
+            ->pluck('name')
+            ->toArray();
+
+        foreach ($propertyNames as $propName) {
+            $value = $request->input("filter.{$propName}");
+            if ($value === null) continue;
+
+            $values = is_array($value) ? $value : array_map('trim', explode(',', $value));
+            $query->where(function (Builder $q) use ($values, $propName) {
+                foreach ($values as $val) {
+                    $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.{$propName}')) = ?", [$val]);
+                }
+            });
+        }
     }
 
     protected function resolvePipelineStageId(string $stageSlug): ?string

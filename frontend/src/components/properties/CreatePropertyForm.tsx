@@ -198,7 +198,6 @@ const CreatePropertyForm = forwardRef<CreatePropertyFormRef, CreatePropertyFormP
         group_name: form.group_name,
         is_required: form.is_required,
         show_in_forms: form.show_in_forms,
-        display_order: 0,
         options: form.options,
         settings: {
           default_value: form.default_value,

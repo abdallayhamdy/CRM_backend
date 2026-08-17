@@ -19,6 +19,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useProperties } from "@/hooks/use-properties"
 import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
 import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { CreateOrderSheet } from "@/components/orders/CreateOrderSheet"
@@ -195,6 +196,7 @@ export default function OrdersPage() {
         sort_by: sortBy || undefined,
         sort_dir: sortDir,
         limit: 100,
+        properties: filters.properties,
       })
       if (!result.error) {
         const mapped = (result.data || []).map(o => ({
@@ -212,7 +214,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false)
     }
-  }, [workspaceId, filters.search, activeTab, sortBy, sortDir])
+  }, [workspaceId, filters.search, filters.properties, activeTab, sortBy, sortDir])
 
   React.useEffect(() => {
     fetchOrders()
@@ -491,12 +493,19 @@ export default function OrdersPage() {
     },
   ]
 
-  const sidebarConfig: SidebarFilterConfig[] = [
-    { id: "name", label: "Order Name", type: "text" },
-    { id: "createdAt", label: "Create date", type: "date" },
-    { id: "pipeline", label: "Pipeline", type: "property", options: allPipelines },
-    { id: "stage", label: "Order stage", type: "property", options: allStages },
-  ]
+  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
+    const base: SidebarFilterConfig[] = [
+      { id: "name", label: "Order Name", type: "text" },
+      { id: "createdAt", label: "Create date", type: "date" },
+      { id: "pipeline", label: "Pipeline", type: "property", options: allPipelines },
+      { id: "stage", label: "Order stage", type: "property", options: allStages },
+    ]
+    const propertyFilters = buildPropertySidebarFilters(properties)
+    if (propertyFilters.length > 0) {
+      return [...base, ...propertyFilters]
+    }
+    return base
+  }, [allPipelines, allStages, properties])
 
   const exportColumns = React.useMemo<ExportColumn[]>(() => {
     const labels: Record<string, string> = {

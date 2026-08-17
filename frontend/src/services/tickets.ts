@@ -9,6 +9,7 @@ interface TicketFilters {
   contact_id?: string
   deal_id?: string
   company_id?: string
+  properties?: Record<string, string[]>
   workspace_id: string
   limit?: number
   offset?: number
@@ -33,6 +34,15 @@ export const ticketsService = {
     if (filters?.contact_id) params.contact_id = filters.contact_id
     if (filters?.deal_id) params.deal_id = filters.deal_id
     if (filters?.company_id) params.company_id = filters.company_id
+
+    if (filters?.properties) {
+      for (const [key, values] of Object.entries(filters.properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
+    }
 
     const { data, error } = await laravelApi.get<{ data: Ticket[]; meta: { page: number; limit: number; total: number } }>(
       '/tickets',

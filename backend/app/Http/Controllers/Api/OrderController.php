@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Order;
+use App\Models\Property;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class OrderController extends Controller
@@ -38,6 +40,8 @@ class OrderController extends Controller
         if ($request->status) {
             $query->where('status', $request->status);
         }
+
+        $this->applyCustomDataFilters($query, $request, 'order');
 
         $sortBy = in_array($request->sort_by, ['title', 'order_number', 'status', 'total', 'created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
@@ -279,6 +283,26 @@ class OrderController extends Controller
         return response()->json([
             'status' => 'success',
         ]);
+    }
+
+    protected function applyCustomDataFilters(Builder $query, Request $request, string $objectType): void
+    {
+        $propertyNames = Property::where('object_type', $objectType)
+            ->where('is_archived', false)
+            ->pluck('name')
+            ->toArray();
+
+        foreach ($propertyNames as $propName) {
+            $value = $request->input("filter.{$propName}");
+            if ($value === null) continue;
+
+            $values = is_array($value) ? $value : array_map('trim', explode(',', $value));
+            $query->where(function (Builder $q) use ($values, $propName) {
+                foreach ($values as $val) {
+                    $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.{$propName}')) = ?", [$val]);
+                }
+            });
+        }
     }
 
     protected function computeItemTotal(array $item): float

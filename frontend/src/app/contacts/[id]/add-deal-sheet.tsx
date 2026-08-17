@@ -8,6 +8,8 @@ import { CreateDealSheet } from "@/app/deals/create-deal-sheet"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { DatePicker } from "@/components/ui/date-picker"
+import { CustomFieldsForm } from "@/components/properties/CustomFieldsForm"
+import type { CustomFieldError } from "@/components/properties/CustomFieldsForm"
 
 type Tab = "create" | "existing"
 
@@ -375,9 +377,16 @@ function InlineCreateDealForm({
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   )
   const [saving, setSaving] = React.useState(false)
+  const [customValues, setCustomValues] = React.useState<Record<string, unknown>>({})
+  const [customFieldErrors, setCustomFieldErrors] = React.useState<CustomFieldError | null>(null)
+
+  const handleCustomChange = (name: string, value: unknown) => {
+    setCustomValues(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleCreate = async (addAnother = false) => {
     if (!title.trim()) { toast.error("Deal name is required"); return }
+    if (customFieldErrors) { toast.error("Please fix custom field errors"); return }
     setSaving(true)
     const { error } = await dealsService.create({
       title: title.trim(),
@@ -387,12 +396,13 @@ function InlineCreateDealForm({
       contact_id: contactId,
       company_id: companyId,
       workspace_id: workspaceId,
+      custom_fields: Object.keys(customValues).length > 0 ? customValues : undefined,
     })
     setSaving(false)
     if (error) { toast.error("Failed to create deal"); return }
     toast.success("Deal created")
     if (addAnother) {
-      setTitle(""); setAmount("")
+      setTitle(""); setAmount(""); setCustomValues({})
     } else {
       onSuccess()
     }
@@ -482,6 +492,16 @@ function InlineCreateDealForm({
           </div>
         </div>
       )}
+
+      {/* Custom Fields */}
+      <div className="border-t border-border pt-4">
+        <CustomFieldsForm
+          objectType="deal"
+          values={customValues}
+          onChange={handleCustomChange}
+          onValidationChange={setCustomFieldErrors}
+        />
+      </div>
 
       {/* Footer buttons */}
       <div className="pt-2 flex items-center gap-3 border-t border-border">

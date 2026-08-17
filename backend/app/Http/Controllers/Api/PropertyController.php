@@ -11,6 +11,7 @@ use App\Services\AuditService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PropertyController extends Controller
 {
@@ -115,6 +116,12 @@ class PropertyController extends Controller
             $data['workspace_id'] = $user->currentWorkspace?->id ?? $user->workspace_id;
         }
 
+        if (!isset($data['display_order'])) {
+            $data['display_order'] = Property::where('workspace_id', $data['workspace_id'])
+                ->where('object_type', $data['object_type'])
+                ->max('display_order') + 1;
+        }
+
         $property = Property::create($data);
         $property->load('creator');
 
@@ -153,6 +160,8 @@ class PropertyController extends Controller
         $user = $request->user();
 
         $original = $property->getOriginal();
+        $oldName = $property->name;
+        $newName = $request->input('name', $oldName);
 
         if ($request->restore) {
             $property->update(['is_archived' => false]);
@@ -163,6 +172,10 @@ class PropertyController extends Controller
         $property->refresh();
         $property->load('creator');
         $changed = $property->getChanges();
+
+        if (isset($changed['name']) && $changed['name'] !== $oldName) {
+            $this->migrateCustomDataKeys($property->object_type, $oldName, $changed['name']);
+        }
 
         if (!empty($changed)) {
             $oldValues = [];
@@ -384,6 +397,7 @@ class PropertyController extends Controller
         $user = request()->user();
 
         if (request()->query('force')) {
+            $this->cleanupCustomDataKey($property->object_type, $property->name);
             $property->forceDelete();
         } else {
             $property->update(['is_archived' => true]);
@@ -403,5 +417,57 @@ class PropertyController extends Controller
         return response()->json([
             'message' => request()->query('force') ? 'Property permanently deleted.' : 'Property archived.',
         ]);
+    }
+
+    protected function migrateCustomDataKeys(string $objectType, string $oldName, string $newName): void
+    {
+        $modelClass = $this->resolveModelClass($objectType);
+        if (!$modelClass) return;
+
+        $table = (new $modelClass)->getTable();
+        $results = DB::table($table)
+            ->whereNotNull('custom_data')
+            ->whereRaw("JSON_EXTRACT(custom_data, '$.{$oldName}') IS NOT NULL")
+            ->get(['id', 'custom_data']);
+
+        foreach ($results as $row) {
+            $data = json_decode($row->custom_data, true) ?? [];
+            if (!array_key_exists($oldName, $data)) continue;
+            $value = $data[$oldName];
+            unset($data[$oldName]);
+            $data[$newName] = $value;
+            DB::table($table)->where('id', $row->id)->update(['custom_data' => $data]);
+        }
+    }
+
+    protected function cleanupCustomDataKey(string $objectType, string $propertyName): void
+    {
+        $modelClass = $this->resolveModelClass($objectType);
+        if (!$modelClass) return;
+
+        $table = (new $modelClass)->getTable();
+        $results = DB::table($table)
+            ->whereNotNull('custom_data')
+            ->whereRaw("JSON_EXTRACT(custom_data, '$.{$propertyName}') IS NOT NULL")
+            ->get(['id', 'custom_data']);
+
+        foreach ($results as $row) {
+            $data = json_decode($row->custom_data, true) ?? [];
+            unset($data[$propertyName]);
+            DB::table($table)->where('id', $row->id)->update(['custom_data' => $data]);
+        }
+    }
+
+    protected function resolveModelClass(string $objectType): ?string
+    {
+        return match ($objectType) {
+            'contact' => \App\Models\Contact::class,
+            'company' => \App\Models\Company::class,
+            'deal' => \App\Models\Deal::class,
+            'ticket' => \App\Models\Ticket::class,
+            'order' => \App\Models\Order::class,
+            'product' => \App\Models\Product::class,
+            default => null,
+        };
     }
 }

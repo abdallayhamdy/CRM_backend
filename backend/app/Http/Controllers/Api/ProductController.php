@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Product;
+use App\Models\Property;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ProductController extends Controller
@@ -27,6 +29,9 @@ class ProductController extends Controller
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('sku', 'like', "%{$search}%");
                 });
+            })
+            ->when(true, function ($query) use ($request) {
+                $this->applyCustomDataFilters($query, $request, 'product');
             })
             ->orderBy($sortBy, $sortDir)
             ->paginate($this->paginationLimit($request));
@@ -122,6 +127,26 @@ class ProductController extends Controller
             'message' => 'Product updated successfully',
             'data' => new ProductResource($product)
         ]);
+    }
+
+    protected function applyCustomDataFilters(Builder $query, Request $request, string $objectType): void
+    {
+        $propertyNames = Property::where('object_type', $objectType)
+            ->where('is_archived', false)
+            ->pluck('name')
+            ->toArray();
+
+        foreach ($propertyNames as $propName) {
+            $value = $request->input("filter.{$propName}");
+            if ($value === null) continue;
+
+            $values = is_array($value) ? $value : array_map('trim', explode(',', $value));
+            $query->where(function (Builder $q) use ($values, $propName) {
+                foreach ($values as $val) {
+                    $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.{$propName}')) = ?", [$val]);
+                }
+            });
+        }
     }
 
     public function destroy(Product $product)

@@ -9,6 +9,7 @@ export const productsService = {
     page = 1,
     sortBy = 'created_at',
     sortDir = 'desc',
+    properties,
   }: {
     search?: string
     workspace_id: string
@@ -16,6 +17,7 @@ export const productsService = {
     page?: number
     sortBy?: string
     sortDir?: 'asc' | 'desc'
+    properties?: Record<string, string[]>
   }) {
     if (!workspace_id) throw new Error('workspace_id is required')
 
@@ -26,6 +28,15 @@ export const productsService = {
       sort_dir: sortDir,
     }
     if (search) params.q = search
+
+    if (properties) {
+      for (const [key, values] of Object.entries(properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
+    }
 
     const { data, error } = await laravelApi.get<{ data: Product[]; meta: { current_page: number; per_page: number; total: number } }>(
       '/products',

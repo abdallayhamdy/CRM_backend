@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useProperties } from "@/hooks/use-properties"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
+import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
 
 import { CreateTicketSheet } from "./create-ticket-sheet"
 import { TicketPreviewSheet } from "./preview-sheet"
@@ -243,7 +245,8 @@ export default function TicketsPage() {
           status: apiStatusFilter,
           priority: priorityFilter,
           workspace_id: workspaceId,
-          limit: 100
+          limit: 100,
+          properties: filters.properties,
         })
 
         if (error) throw error
@@ -294,6 +297,24 @@ export default function TicketsPage() {
       .map(p => ({ id: `cf_${p.name}`, label: p.label || p.name, visible: false }))
     return [...standard, ...custom]
   }, [properties])
+
+  const propertyGroups = React.useMemo(() => propertiesToGroups(properties), [properties])
+
+  const allPossibleColumns = React.useMemo(() => {
+    const map = new Map<string, typeof columns[number]>()
+    columns.forEach(col => {
+      const id = col.id || (col as any).accessorKey
+      if (id) map.set(id, col)
+    })
+    propertiesToColumnDefs<Ticket>(properties).forEach(col => {
+      if (col.id && !map.has(col.id)) map.set(col.id, col as typeof columns[number])
+    })
+    return map
+  }, [properties])
+
+  const tableColumns = React.useMemo(() => {
+    return [...allPossibleColumns.values()]
+  }, [allPossibleColumns])
 
   const tabItems = tabsConfig.map(tab => ({
     ...tab,
@@ -371,13 +392,20 @@ export default function TicketsPage() {
     },
   ]
 
-  const sidebarConfig: SidebarFilterConfig[] = [
-    { id: "name", label: "Ticket name", type: "text" },
-    { id: "owner", label: "Ticket owner", type: "property", options: allOwners },
-    { id: "priority", label: "Priority", type: "property", options: TICKET_PRIORITIES },
-    { id: "status", label: "Ticket status", type: "property", options: allStatuses },
-    { id: "createDate", label: "Create date", type: "date" },
-  ]
+  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
+    const base: SidebarFilterConfig[] = [
+      { id: "name", label: "Ticket name", type: "text" },
+      { id: "owner", label: "Ticket owner", type: "property", options: allOwners },
+      { id: "priority", label: "Priority", type: "property", options: TICKET_PRIORITIES },
+      { id: "status", label: "Ticket status", type: "property", options: allStatuses },
+      { id: "createDate", label: "Create date", type: "date" },
+    ]
+    const propertyFilters = buildPropertySidebarFilters(properties)
+    if (propertyFilters.length > 0) {
+      return [...base, ...propertyFilters]
+    }
+    return base
+  }, [allOwners, properties])
 
   const handleBulkDelete = async () => {
     if (!canDeleteTicket) {
@@ -656,7 +684,7 @@ export default function TicketsPage() {
                   onFilterChange={setSummaryFilter}
                 />
                 <CrmDataTable 
-                  columns={columns} 
+                  columns={tableColumns} 
                   data={summaryFilteredData} 
                   onRowClick={handleRowClick}
                   onUpdateCell={handleUpdateCell}

@@ -9,6 +9,9 @@ import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useProperties } from "@/hooks/use-properties"
+import { buildPropertySidebarFilters } from "@/lib/filter-data"
+import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
+import { ColumnDef } from "@tanstack/react-table"
 
 // Generic CRM Components
 import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/CrmPageLayout"
@@ -144,6 +147,7 @@ export default function ProductsPage() {
           sortBy,
           sortDir,
           limit: 100,
+          properties: filters.properties,
         })
         setProducts(data || [])
       } catch {
@@ -153,7 +157,7 @@ export default function ProductsPage() {
       }
     }
     loadProducts()
-  }, [refreshKey, workspaceId, filters.search, activeTab, sortBy, sortDir])
+  }, [refreshKey, workspaceId, filters.search, filters.properties, activeTab, sortBy, sortDir])
 
   const allStatuses = React.useMemo(
     () => Array.from(new Set(products.map((p) => p.status))).sort(),
@@ -188,6 +192,24 @@ export default function ProductsPage() {
     if (!stat) return filteredData
     return filteredData.filter(stat.filterFn)
   }, [filteredData, summaryFilter, productStats])
+
+  const propertyGroups = React.useMemo(() => propertiesToGroups(properties), [properties])
+
+  const allPossibleColumns = React.useMemo(() => {
+    const map = new Map<string, ColumnDef<any>>()
+    columns.forEach(col => {
+      const id = col.id || (col as any).accessorKey
+      if (id) map.set(id, col)
+    })
+    propertiesToColumnDefs(properties as any).forEach(col => {
+      if (col.id && !map.has(col.id)) map.set(col.id, col)
+    })
+    return map
+  }, [properties])
+
+  const tableColumns = React.useMemo(() => {
+    return [...allPossibleColumns.values()] as ColumnDef<any>[]
+  }, [allPossibleColumns])
 
   const {
     selectedIds, selectedItems, toggleOne,
@@ -257,13 +279,20 @@ export default function ProductsPage() {
     },
   ]
 
-  const sidebarConfig: SidebarFilterConfig[] = [
-    { id: "name", label: "Product name", type: "text" },
-    { id: "sku", label: "SKU", type: "text" },
-    { id: "status", label: "Status", type: "property", options: allStatuses },
-    { id: "productFolder", label: "Product folder", type: "property", options: PRODUCT_FOLDERS },
-    { id: "createDate", label: "Create date", type: "date" },
-  ]
+  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
+    const base: SidebarFilterConfig[] = [
+      { id: "name", label: "Product name", type: "text" },
+      { id: "sku", label: "SKU", type: "text" },
+      { id: "status", label: "Status", type: "property", options: allStatuses },
+      { id: "productFolder", label: "Product folder", type: "property", options: PRODUCT_FOLDERS },
+      { id: "createDate", label: "Create date", type: "date" },
+    ]
+    const propertyFilters = buildPropertySidebarFilters(properties)
+    if (propertyFilters.length > 0) {
+      return [...base, ...propertyFilters]
+    }
+    return base
+  }, [allStatuses, properties])
 
   const handleUpdateCell = async (product: any, columnId: string, value: any) => {
     if (!canEditProduct) { toast.error("You don't have permission to edit products"); return }
@@ -514,7 +543,7 @@ export default function ProductsPage() {
                </div>
              ) : (
                 <CrmDataTable 
-                 columns={columns} 
+                 columns={tableColumns} 
                  data={summaryFilteredData} 
                  onUpdateCell={handleUpdateCell}
                  selectedIds={selectedIds}

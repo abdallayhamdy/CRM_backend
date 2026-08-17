@@ -9,6 +9,7 @@ use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
 use App\Http\Resources\CompanyResource;
 use App\Services\CompanyStageService;
+use App\Traits\HasCustomDataFilter;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class CompanyController extends Controller
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests, HasCustomDataFilter;
 
     protected CompanyStageService $companyStageService;
 
@@ -79,6 +80,7 @@ class CompanyController extends Controller
                         });
                     }
                 }),
+                ...$this->customDataFilters('company', 'companies'),
             )
             ->allowedSorts(
                 AllowedSort::field('name', 'companies.name'),

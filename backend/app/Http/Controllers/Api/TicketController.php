@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Ticket;
+use App\Models\Property;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Http\Resources\TicketResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TicketController extends Controller
@@ -56,6 +58,8 @@ class TicketController extends Controller
                 });
             });
         }
+
+        $this->applyCustomDataFilters($query, $request, 'ticket');
 
         $query->latest();
 
@@ -111,6 +115,26 @@ class TicketController extends Controller
         $this->authorize('delete', $ticket);
         $ticket->delete();
         return response()->json(['status' => 'success', 'data' => null]);
+    }
+
+    protected function applyCustomDataFilters(Builder $query, Request $request, string $objectType): void
+    {
+        $propertyNames = Property::where('object_type', $objectType)
+            ->where('is_archived', false)
+            ->pluck('name')
+            ->toArray();
+
+        foreach ($propertyNames as $propName) {
+            $value = $request->input("filter.{$propName}");
+            if ($value === null) continue;
+
+            $values = is_array($value) ? $value : array_map('trim', explode(',', $value));
+            $query->where(function (Builder $q) use ($values, $propName) {
+                foreach ($values as $val) {
+                    $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.{$propName}')) = ?", [$val]);
+                }
+            });
+        }
     }
 
     protected function mapRequestFields(array $data, array $existingCustomData = []): array

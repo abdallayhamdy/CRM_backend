@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { laravelApi } from "@/lib/laravel-api"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -30,10 +30,32 @@ export interface PropertyFromDB {
 const propertiesCache: Record<string, PropertyFromDB[]> = {}
 const pendingPromises: Record<string, Promise<PropertyFromDB[]> | null> = {}
 
+let _cacheVersion = 0
+let _listeners: Array<() => void> = []
+
+function getCacheVersion() {
+  return _cacheVersion
+}
+
+function subscribeCacheVersion(callback: () => void) {
+  _listeners.push(callback)
+  return () => {
+    _listeners = _listeners.filter(l => l !== callback)
+  }
+}
+
+function emitCacheVersionChange() {
+  _cacheVersion++
+  for (const listener of _listeners) {
+    listener()
+  }
+}
+
 export function useProperties(objectType: ObjectType) {
   const [properties, setProperties] = useState<PropertyFromDB[]>([])
   const [loading, setLoading] = useState(true)
   const { workspaceId } = useAuth()
+  const cacheVersion = useSyncExternalStore(subscribeCacheVersion, getCacheVersion)
 
   useEffect(() => {
     if (!workspaceId) return
@@ -77,7 +99,7 @@ export function useProperties(objectType: ObjectType) {
 
     fetchProperties()
     return () => { cancelled = true }
-  }, [objectType, workspaceId])
+  }, [objectType, workspaceId, cacheVersion])
 
   return { properties, loading }
 }
@@ -89,4 +111,5 @@ export function clearPropertiesCache() {
   for (const key in pendingPromises) {
     delete pendingPromises[key]
   }
+  emitCacheVersionChange()
 }

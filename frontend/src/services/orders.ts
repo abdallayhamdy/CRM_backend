@@ -67,6 +67,7 @@ export const ordersService = {
     sort_dir,
     limit = 25,
     page = 1,
+    properties,
   }: {
     workspace_id: string
     search?: string
@@ -75,6 +76,7 @@ export const ordersService = {
     sort_dir?: "asc" | "desc"
     limit?: number
     page?: number
+    properties?: Record<string, string[]>
   }) {
     if (!workspace_id) throw new Error('workspace_id is required')
 
@@ -83,6 +85,15 @@ export const ordersService = {
     if (status) params.status = status
     if (sort_by) params.sort_by = sort_by
     if (sort_dir) params.sort_dir = sort_dir
+
+    if (properties) {
+      for (const [key, values] of Object.entries(properties)) {
+        if (key.startsWith('custom_') && values?.length) {
+          const propName = key.slice('custom_'.length)
+          params[`filter[${propName}]`] = values.join(',')
+        }
+      }
+    }
 
     const { data, error } = await laravelApi.get<{ data: OrderFromApi[]; meta: { page: number; limit: number; total: number; last_page: number } }>(
       '/orders',
