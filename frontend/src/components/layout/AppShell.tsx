@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", check)
   }, [])
 
-  const isFullScreenPage = pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname?.match(/^\/(login|register|sign-in|sign-up|create-workspace|forgot-password|reset-password|auth-callback|accept-invite|super-admin|settings\/properties\/create|(companies|deals|products|orders|tickets)\/settings\/form|(companies|deals|tickets)\/[^\/]+\/settings|contacts\/[^\/]+\/settings(\/form)?|contacts\/settings(\/[^\/]+)?|contacts\/settings\/form)/)
+  const isFullScreenPage = pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname === '/pricing' || pathname?.match(/^\/(login|register|sign-in|sign-up|create-workspace|forgot-password|reset-password|auth-callback|accept-invite|super-admin|settings\/properties\/create|(companies|deals|products|orders|tickets)\/settings\/form|(companies|deals|tickets)\/[^\/]+\/settings|contacts\/[^\/]+\/settings(\/form)?|contacts\/settings(\/[^\/]+)?|contacts\/settings\/form)/)
   const [shouldRedirect, setShouldRedirect] = React.useState(false)
 
   React.useEffect(() => {
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       <div
-        style={{ paddingLeft: isMobile ? 0 : `${sidebarWidth}px` }}
+        style={{ paddingLeft: `${sidebarWidth}px` }}
         className="flex-1 flex flex-col min-h-0 transition-[padding-left] duration-200 ease-in-out"
       >
         {/* Spacer to push content below the fixed TopNav */}

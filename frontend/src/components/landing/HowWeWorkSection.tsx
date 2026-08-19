@@ -2,21 +2,19 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Lightbulb, Rocket, BarChart3, Maximize2 } from 'lucide-react'
+import { Search, BarChart3, Rocket } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import type { Locale } from './landing-data'
 
 const ShootingStarsGrid = dynamic(
-  () => import('@/components/ui/shooting-stars-grid').then((m) => ({ default: m.ShootingStarsGrid })),
+  () => import('@/components/landing/shooting-stars-grid').then((m) => ({ default: m.ShootingStarsGrid })),
   { ssr: false }
 )
 
 const stageIcons = {
   discover: Search,
-  strategize: Lightbulb,
+  strategize: BarChart3,
   execute: Rocket,
-  optimize: BarChart3,
-  scale: Maximize2,
 }
 
 interface HowWeWorkSectionProps {
@@ -97,7 +95,7 @@ export function HowWeWorkSection({ content, locale }: HowWeWorkSectionProps) {
             />
           </div>
 
-          <div className="relative grid grid-cols-5 gap-2">
+          <div className="relative grid grid-cols-3 gap-2">
             {content.stages.map((stage, index) => {
               const Icon = stageIcons[stage.id as keyof typeof stageIcons]
               const isActive = index === activeIndex

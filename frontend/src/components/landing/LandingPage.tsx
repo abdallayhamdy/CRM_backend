@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Footer4Col from '../ui/footer-column'
+import Footer4Col from './footer-column'
 import { landingContent, type Locale } from './landing-data'
 import { HeroSection } from './HeroSection'
 
@@ -12,7 +12,8 @@ import { HowItWorksSection } from './HowItWorksSection'
 import { FAQSection } from './FAQSection'
 import { ContactSection } from './ContactSection'
 import { CTASection } from './CTASection'
-import { Navbar } from '../ui/Navbar'
+import { ProductPreviewSection } from './ProductPreviewSection'
+import { Navbar } from './Navbar'
 
 export function LandingPage() {
   const [locale, setLocale] = useState<Locale>('ar')
@@ -38,6 +39,7 @@ export function LandingPage() {
 
       {/* Sections */}
       <HeroSection content={content.hero} locale={locale} />
+      <ProductPreviewSection content={content.productPreview} locale={locale} />
 
       <FeaturesSection content={content.features} locale={locale} />
       <ServicesSection content={content.services} locale={locale} />

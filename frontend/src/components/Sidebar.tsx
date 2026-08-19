@@ -31,7 +31,7 @@ function SidebarItem({ item, isActive, isCollapsed }: SidebarItemProps) {
           "w-full justify-start mx-0 h-10 px-3 transition-colors rounded-none",
           isCollapsed && "justify-center px-0",
           isActive
-            ? "bg-sidebar-accent hover:bg-sidebar-accent/80 !text-sidebar-foreground font-semibold"
+            ? "bg-primary/10 hover:bg-primary/15 !text-sidebar-foreground font-semibold"
             : "!text-sidebar-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:!text-sidebar-foreground"
         )}
         asChild
@@ -126,7 +126,7 @@ export function SidebarContent({ pathname, isSuperAdmin }: { pathname: string; i
                 "flex-1 justify-start mx-0 h-9 rounded-lg px-4 transition-colors",
                 isCollapsed && "justify-center px-0",
                 pathname.startsWith('/super-admin')
-                  ? "bg-sidebar-accent hover:bg-sidebar-accent/80 !text-sidebar-foreground font-semibold"
+                  ? "bg-primary/10 hover:bg-primary/15 !text-sidebar-foreground font-semibold"
                   : "!text-sidebar-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:!text-sidebar-foreground"
               )}
               asChild
@@ -144,7 +144,7 @@ export function SidebarContent({ pathname, isSuperAdmin }: { pathname: string; i
                 "flex-1 justify-start mx-0 h-9 rounded-lg px-4 transition-colors",
                 isCollapsed && "justify-center px-0",
                 pathname === '/settings'
-                  ? "bg-sidebar-accent hover:bg-sidebar-accent/80 !text-sidebar-foreground font-semibold"
+                  ? "bg-primary/10 hover:bg-primary/15 !text-sidebar-foreground font-semibold"
                   : "!text-sidebar-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:!text-sidebar-foreground"
               )}
               asChild

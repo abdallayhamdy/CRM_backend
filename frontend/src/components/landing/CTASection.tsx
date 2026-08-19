@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import type { Locale } from './landing-data'
 
 const ShootingStarsGrid = dynamic(
-  () => import('@/components/ui/shooting-stars-grid').then((m) => ({ default: m.ShootingStarsGrid })),
+  () => import('@/components/landing/shooting-stars-grid').then((m) => ({ default: m.ShootingStarsGrid })),
   { ssr: false }
 )
 

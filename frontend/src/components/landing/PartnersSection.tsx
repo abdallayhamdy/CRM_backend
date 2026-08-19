@@ -10,60 +10,48 @@ interface PartnersSectionProps {
   locale: Locale;
 }
 
-const partners = [
-  { name: 'Shopify', en: 'Shopify' },
-  { name: 'Rootline', en: 'Rootline' },
-  { name: 'GoDaddy', en: 'GoDaddy' },
-  { name: 'Zapier', en: 'Zapier' },
-  { name: 'Meta', en: 'Meta' },
-  { name: 'Stripe', en: 'Stripe' },
-  { name: 'Slack', en: 'Slack' },
-  { name: 'Notion', en: 'Notion' },
-]
+const trustItems = {
+  ar: ['بيانات آمنة', 'دعم فني متواصل', 'تحديثات مستمرة', 'واجهة سهلة الاستخدام'],
+  en: ['Secure Data', 'Continuous Support', 'Regular Updates', 'Easy to Use'],
+}
 
 export function PartnersSection({ content, locale }: PartnersSectionProps) {
+  const items = trustItems[locale]
+
   return (
-    <section className="relative py-12 overflow-hidden">
+    <section className="relative py-16 overflow-hidden">
       <div className="relative z-10 max-w-6xl mx-auto px-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8"
+          className="text-center mb-10"
         >
           <p className="text-xs uppercase tracking-[0.2em] text-white/30">
             {content.title}
           </p>
         </motion.div>
 
-        {/* Logos marquee */}
-        <div className="relative">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="flex items-center gap-12 overflow-hidden"
-          >
-            <div className="flex items-center gap-12 animate-scroll">
-              {[...partners, ...partners].map((partner, index) => (
-                <div
-                  key={`${partner.name}-${index}`}
-                  className="flex items-center gap-2 shrink-0 opacity-40 hover:opacity-70 transition-opacity duration-300"
-                >
-                  <span className="text-sm font-medium text-white whitespace-nowrap">
-                    {partner.name}
-                  </span>
-                </div>
-              ))}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-wrap items-center justify-center gap-8 md:gap-14"
+        >
+          {items.map((item) => (
+            <div
+              key={item}
+              className="flex items-center gap-2 text-white/25 hover:text-white/45 transition-colors duration-300"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#00d4ff]/40" />
+              <span className="text-sm font-medium whitespace-nowrap">
+                {item}
+              </span>
             </div>
-          </motion.div>
-        </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   )

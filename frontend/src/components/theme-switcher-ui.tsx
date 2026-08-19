@@ -1,14 +1,34 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Check, ChevronRight } from "lucide-react"
+import {
+  DropdownMenu as ShadcnDropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 
-export function DropdownMenu({ children }: { children: React.ReactNode }) {
+export function DropdownMenu({ children, open, onOpenChange }: { children: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   return (
-    <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[280px] overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
-      <div className="p-1">
-        {children}
-      </div>
-    </div>
+    <ShadcnDropdownMenu open={open} onOpenChange={onOpenChange}>
+      {children}
+    </ShadcnDropdownMenu>
+  )
+}
+
+export function DropdownMenuButton({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) {
+  return (
+    <DropdownMenuTrigger asChild={asChild}>
+      {children}
+    </DropdownMenuTrigger>
+  )
+}
+
+export function DropdownMenuPanel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <DropdownMenuContent align="start" className={cn("min-w-[180px]", className)}>
+      {children}
+    </DropdownMenuContent>
   )
 }
 
@@ -22,19 +42,15 @@ export function DropdownItem({
   children: React.ReactNode
 }) {
   return (
-    <button
-      type="button"
+    <DropdownMenuItem
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-        active
-          ? "bg-primary/10 text-primary font-medium"
-          : "text-foreground hover:bg-muted"
+        active && "bg-primary/10 text-primary font-medium"
       )}
     >
       {children}
       {active && <Check className="h-3.5 w-3.5 ml-auto shrink-0" />}
-    </button>
+    </DropdownMenuItem>
   )
 }
 

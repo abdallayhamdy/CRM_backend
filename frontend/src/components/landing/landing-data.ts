@@ -11,12 +11,23 @@ export const landingContent = {
       subtitle: 'Rootline CRM هو نظام CRM شامل يساعدك على إدارة العملاء، الصفقات، والSBATCH pipelines بكفاءة. تتبع، حلل، ونمو مع أداة واحدة.',
       cta: 'ابدأ رحلة النمو',
     },
+    productPreview: {
+      title: 'اكتشف النظام',
+      subtitle: 'واجهة بسيطة وقوية لإدارة جميع أعمالك',
+      tabs: [
+        { label: 'لوحة التحكم', image: '/screenshots/dashboard-overview.png', alt: 'لوحة التحكم الرئيسية' },
+        { label: 'جدول العملاء', image: '/screenshots/contacts-table.png', alt: 'جدول إدارة العملاء' },
+        { label: 'لوحة الصفقات', image: '/screenshots/deals-board.png', alt: 'لوحة متابعة الصفقات' },
+        { label: 'التقارير', image: '/screenshots/reports-executive.png', alt: 'التقارير التحليلية' },
+      ],
+    },
     stats: {
       items: [
-        { value: '14+', label: 'سنة خبرة' },
-        { value: '230+', label: 'مشروع منجز' },
-        { value: '12', label: 'دولة' },
-        { value: '#1', label: 'في المنطقة' },
+        // TODO: Replace with real metrics — no data source exists for these values
+        { value: '—', label: 'سنوات الخبرة' },
+        { value: '—', label: 'مشاريع منجزة' },
+        { value: '—', label: 'دولة' },
+        { value: '—', label: 'في المنطقة' },
       ],
     },
     partners: {
@@ -71,17 +82,18 @@ export const landingContent = {
           items: [
             {
               title: 'إعداد النظام',
-              description: 'تخصيص Rootline CRM حسب احتياجات شركتك مع إعداد الأدوات والملفات الأساسية.',
+              description: 'تخصيص مراحل الحياة والخصائص المخصصة حسب احتياجات عملك.',
               icon: 'settings',
             },
             {
+              // TODO: CSV import service method exists but no UI — confirm if this should be listed as a feature
               title: 'استيراد البيانات',
-              description: 'نقل بيانات عملائك الحاليين من Excel أو أي نظام آخر بسهولة وأمان.',
+              description: 'نقل بيانات عملائك الحاليين من Excel أو أي نظام آخر.',
               icon: 'upload',
             },
             {
-              title: 'تدريب الفريق',
-              description: 'دورات تدريبية شاملة لفريقك لضمان استخدام النظام بكفاءة قصوى.',
+              title: 'إدارة الفريق',
+              description: 'إضافة أعضاء الفريق وتحديد الصلاحيات والأدوار.',
               icon: 'graduation-cap',
             },
           ],
@@ -111,21 +123,21 @@ export const landingContent = {
         {
           number: '03',
           title: 'الأتمتة',
-          subtitle: 'أتمتة المهام المتكررة ووفّر وقتك',
+          subtitle: 'وفّر وقتك بتقليل العمل اليدوي',
           items: [
             {
-              title: 'سير العمل التلقائي',
-              description: 'إنشاء قواعد وأتمتة للمهام المتكررة لتوفير الوقت والجهد.',
-              icon: 'zap',
-            },
-            {
-              title: 'التذكيرات الذكية',
-              description: 'تذكيرات تلقائية للمهام المهمة ولمتابعة العملاء.',
+              title: 'تذكيرات المهام',
+              description: 'تذكيرات تلقائية قبل الموعد المحدد - 15 دقيقة، 30 دقيقة، أو ساعة - لن تفوتك أي مهمة.',
               icon: 'bell',
             },
             {
-              title: 'الرسائل التلقائية',
-              description: 'إرسال رسائل مخصصة تلقائياً بناءً على سلوك العميل.',
+              title: 'تتبع النشاط',
+              description: 'سجل تلقائي لجميع التفاعلات مع العملاء والصفقات عبر النظام.',
+              icon: 'zap',
+            },
+            {
+              title: 'إشعارات ذكية',
+              description: 'تخصيص قنوات الإشعارات - بريد إلكتروني، متصفح، أو داخل النظام - حسب احتياجك.',
               icon: 'mail',
             },
           ],
@@ -136,18 +148,18 @@ export const landingContent = {
           subtitle: 'احصل على رؤى عميقة لاتخاذ قرارات أفضل',
           items: [
             {
-              title: 'التقارير الذكية',
-              description: 'تقارير تفاعلية بأداء فريقك ومعدلات إغلاق الصفقات.',
+              title: 'التقارير التفاعلية',
+              description: 'تقارير بأداء فريقك ومعدلات إغلاق الصفقات مع تصدير CSV.',
               icon: 'bar-chart-3',
             },
             {
               title: 'تحليل البيانات',
-              description: 'رؤى عميقة لسلوك العملاء واتجاهات السوق لاتخاذ قرارات أفضل.',
+              description: 'رؤى لسلوك العملاء واتجاهات المبيعات لاتخاذ قرارات أفضل.',
               icon: 'trending-up',
             },
             {
-              title: 'تحسين الأداء',
-              description: 'توصيات ذكية لتحسين استراتيجيات المبيعات والتسويق.',
+              title: 'تتبع الأداء',
+              description: 'متابعة مستمرة لأداء فريقك مع تحديثات يومية للنشاطات.',
               icon: 'target',
             },
           ],
@@ -156,72 +168,46 @@ export const landingContent = {
     },
     howWeWork: {
       sectionTitle: 'كيف نعمل',
-      sectionSubtitle: 'إطار عمل مثبت للنمو',
-      description: 'منهجية نظامية من 5 مراحل تحوّل وجودتك الرقمية إلى محرك نمو متوقع.',
+      sectionSubtitle: 'منهجية مبسطة للنمو',
+      description: 'ثلاث مراحل عملية تhelpك تحول بيانات عملائك إلى نتائج حقيقية.',
       cta: 'ابدأ رحلة النمو',
       stages: [
         {
           id: 'discover',
           number: '01',
-          label: 'اكتشف',
-          title: 'تحليل شامل للعملاء',
-          description: 'نحلل قاعدة عملائك وسلوكهم وفرص النمو المتاحة. لا تخمين - فقط بيانات حقيقية تكشف فرص النمو الحقيقية.',
+          label: 'نظّم',
+          title: 'ركّز بياناتك في مكان واحد',
+          description: 'اجمع جميع بيانات العملاء والصفقات في نظام واحد. ملفات تعريف شاملة، تاريخ تفاعلات، ودلالات مخصصة.',
           deliverables: [
-            'تحليل سلوك العملاء',
-            'خريطة فرص النمو',
-            'تقييم رضا العملاء',
-            'تحليل المنافسين',
+            'ملفات تعريف العملاء',
+            'تتبع الصفقات',
+            'إدارة المهام',
+            'سجل النشاطات',
           ],
         },
         {
           id: 'strategize',
           number: '02',
-          label: 'خطط',
-          title: 'وضع استراتيجية المبيعات',
-          description: 'نضع خطة عمل مخصصة تحدد الأهداف والقنوات والموارد اللازمة لتحقيق النمو المطلوب.',
+          label: 'تابع',
+          title: 'راقبأدائك بفواصل بصرية',
+          description: 'تابع تقدم صفقاتك ومهام فريقك مع لوحات بصرية وتقارير تفاعلية.',
           deliverables: [
-            'خطة استراتيجية المبيعات',
-            'تحديد القنوات المناسبة',
-            'جدول زمني للتنفيذ',
-            'مؤشرات الأداء الرئيسية',
+            'لوحات صفقات بصرية',
+            'تقارير الأداء',
+            'متابعة المهام',
+            'تحليل معدلات التحويل',
           ],
         },
         {
           id: 'execute',
           number: '03',
-          label: 'نفّذ',
-          title: 'بناء خطوط الأنابيب',
-          description: 'نُنشئ ونُعد خطوط الأنابيب وتسلسلات المتابعة لتضمن عدم فوات أي فرصة.',
+          label: 'نمو',
+          title: 'وسّع نطاق عملك',
+          description: 'اتخذ قرارات مبنية على بيانات حقيقية لتوسيع عملك وزيادة إنتاجية فريقك.',
           deliverables: [
-            'إعداد خطوط الأنابيب',
-            'تسلسلات المتابعة',
-            'أتمتة الرسائل',
-            'تدريب الفريق',
-          ],
-        },
-        {
-          id: 'optimize',
-          number: '04',
-          label: 'حسّن',
-          title: 'تحسين الأداء المستمر',
-          description: 'نراقب الأداء ونحلل النتائج ونُحسّن العمليات باستمرار لتحقيق أفضل النتائج.',
-          deliverables: [
-            'تقارير الأداء الأسبوعية',
-            'تحليل معدلات التحويل',
-            'تحسين سير العمل',
-            'اختبار A/B',
-          ],
-        },
-        {
-          id: 'scale',
-          number: '05',
-          label: 'توسّع',
-          title: 'توسيع نطاق النمو',
-          description: 'نساعدك على توسيع نطاق عملك وزيادة إنتاجية فريقك بأساليب مستدامة.',
-          deliverables: [
+            'قرارات مبنية على بيانات',
             'توسيع فريق المبيعات',
-            'إضافة قنوات جديدة',
-            'أتمتة متقدمة',
+            'تحسين العمليات',
             'نمو مستدام',
           ],
         },
@@ -253,8 +239,8 @@ export const landingContent = {
       sectionSubtitle: 'إجابات على الأسئلة الأكثر شيوعاً',
       items: [
         {
-          question: 'هل Rootline CRM مجاني؟',
-          answer: 'نعم! نقدم خطة مجانية تشمل المميزات الأساسية. كما نوفر خطط مدفوعة للشركات التي تحتاج مميزات متقدمة.',
+          question: 'هل يمكنني تجربة النظام قبل الشراء؟',
+          answer: 'بالتأكيد! نوفر عرضاً تجريبياً لمدة 14 يوماً مع جميع المميزات. يمكنك أيضاً حجز عرض مباشر مع فريقنا لرؤية النظام بالعمل.',
         },
         {
           question: 'هل يمكنني استيراد بياناتي من نظام آخر؟',
@@ -338,12 +324,23 @@ export const landingContent = {
       subtitle: 'Rootline CRM is a comprehensive CRM that helps you manage contacts, deals, and pipelines efficiently. Track, analyze, and grow with one powerful tool.',
       cta: 'Start Your Growth Journey',
     },
+    productPreview: {
+      title: 'See the Product',
+      subtitle: 'A simple yet powerful interface to manage your entire business',
+      tabs: [
+        { label: 'Dashboard', image: '/screenshots/dashboard-overview.png', alt: 'Main dashboard overview' },
+        { label: 'Contacts', image: '/screenshots/contacts-table.png', alt: 'Contacts table view' },
+        { label: 'Deals Board', image: '/screenshots/deals-board.png', alt: 'Deals kanban board' },
+        { label: 'Reports', image: '/screenshots/reports-executive.png', alt: 'Executive reports' },
+      ],
+    },
     stats: {
       items: [
-        { value: '14+', label: 'Years Experience' },
-        { value: '230+', label: 'Projects Delivered' },
-        { value: '12', label: 'Countries' },
-        { value: '#1', label: 'In The Region' },
+        // TODO: Replace with real metrics — no data source exists for these values
+        { value: '—', label: 'Years Experience' },
+        { value: '—', label: 'Projects Delivered' },
+        { value: '—', label: 'Countries' },
+        { value: '—', label: 'In The Region' },
       ],
     },
     partners: {
@@ -398,17 +395,18 @@ export const landingContent = {
           items: [
             {
               title: 'System Setup',
-              description: 'Customize Rootline CRM to your business needs with tools and profile configuration.',
+              description: 'Customize lifecycle stages and custom fields to match your business needs.',
               icon: 'settings',
             },
             {
+              // TODO: CSV import service method exists but no UI — confirm if this should be listed as a feature
               title: 'Data Import',
-              description: 'Easily and securely migrate your customer data from Excel or any other system.',
+              description: 'Migrate your existing customer data from Excel or other systems.',
               icon: 'upload',
             },
             {
-              title: 'Team Training',
-              description: 'Comprehensive training sessions to ensure your team uses the system efficiently.',
+              title: 'Team Management',
+              description: 'Add team members and configure roles and permissions.',
               icon: 'graduation-cap',
             },
           ],
@@ -438,21 +436,21 @@ export const landingContent = {
         {
           number: '03',
           title: 'Automation',
-          subtitle: 'Automate repetitive tasks and save your time',
+          subtitle: 'Save time by reducing manual work',
           items: [
             {
-              title: 'Workflow Automation',
-              description: 'Create rules and automation for repetitive tasks to save time and effort.',
-              icon: 'zap',
-            },
-            {
-              title: 'Smart Reminders',
-              description: 'Automatic reminders for important tasks and customer follow-ups.',
+              title: 'Task Reminders',
+              description: 'Automatic reminders before deadlines — 15 min, 30 min, or 1 hour — so you never miss a task.',
               icon: 'bell',
             },
             {
-              title: 'Auto Messages',
-              description: 'Send personalized messages automatically based on customer behavior.',
+              title: 'Activity Tracking',
+              description: 'Automatic logging of all customer interactions and deal activities across the system.',
+              icon: 'zap',
+            },
+            {
+              title: 'Smart Notifications',
+              description: 'Customize notification channels — email, browser, or in-app — based on your needs.',
               icon: 'mail',
             },
           ],
@@ -463,18 +461,18 @@ export const landingContent = {
           subtitle: 'Get deep insights to make better decisions',
           items: [
             {
-              title: 'Smart Reports',
-              description: 'Interactive reports on team performance and deal closing rates.',
+              title: 'Interactive Reports',
+              description: 'Reports on team performance and deal closing rates with CSV export.',
               icon: 'bar-chart-3',
             },
             {
               title: 'Data Analysis',
-              description: 'Deep insights into customer behavior and market trends for better decisions.',
+              description: 'Insights into customer behavior and sales trends for better decisions.',
               icon: 'trending-up',
             },
             {
-              title: 'Performance Optimization',
-              description: 'Smart recommendations to improve sales and marketing strategies.',
+              title: 'Performance Tracking',
+              description: 'Continuous monitoring of team performance with daily activity updates.',
               icon: 'target',
             },
           ],
@@ -483,72 +481,46 @@ export const landingContent = {
     },
     howWeWork: {
       sectionTitle: 'How We Work',
-      sectionSubtitle: 'Our Proven Growth Framework',
-      description: 'A systematic 5-stage methodology that transforms your digital presence into a predictable growth engine.',
+      sectionSubtitle: 'A Simple Growth Methodology',
+      description: 'Three practical stages that help you turn customer data into real results.',
       cta: 'Start Your Growth Journey',
       stages: [
         {
           id: 'discover',
           number: '01',
-          label: 'Discover',
-          title: 'Deep Customer Intelligence',
-          description: 'We analyze your customer base, behavior patterns, and growth opportunities. No guesswork — only real data that reveals true growth opportunities.',
+          label: 'Organize',
+          title: 'Centralize Your Data',
+          description: 'Bring all customer and deal data into one system. Comprehensive profiles, interaction history, and custom fields.',
           deliverables: [
-            'Customer Behavior Analysis',
-            'Growth Opportunity Map',
-            'Customer Satisfaction Assessment',
-            'Competitor Analysis',
+            'Customer Profiles',
+            'Deal Tracking',
+            'Task Management',
+            'Activity Logging',
           ],
         },
         {
           id: 'strategize',
           number: '02',
-          label: 'Strategize',
-          title: 'Sales Strategy Planning',
-          description: 'We develop a customized plan that defines goals, channels, and resources needed to achieve the desired growth.',
+          label: 'Track',
+          title: 'Monitor with Visual Boards',
+          description: 'Follow your deal progress and team tasks with visual boards and interactive reports.',
           deliverables: [
-            'Sales Strategy Plan',
-            'Channel Selection',
-            'Implementation Timeline',
-            'Key Performance Indicators',
+            'Visual Deal Boards',
+            'Performance Reports',
+            'Task Follow-up',
+            'Conversion Analysis',
           ],
         },
         {
           id: 'execute',
           number: '03',
-          label: 'Execute',
-          title: 'Pipeline Implementation',
-          description: 'We build and configure your pipelines and follow-up sequences to ensure no opportunity is missed.',
+          label: 'Grow',
+          title: 'Scale Your Business',
+          description: 'Make data-driven decisions to expand your operations and increase team productivity.',
           deliverables: [
-            'Pipeline Setup',
-            'Follow-up Sequences',
-            'Message Automation',
-            'Team Training',
-          ],
-        },
-        {
-          id: 'optimize',
-          number: '04',
-          label: 'Optimize',
-          title: 'Continuous Optimization',
-          description: 'We monitor performance, analyze results, and continuously improve processes to achieve the best outcomes.',
-          deliverables: [
-            'Weekly Performance Reports',
-            'Conversion Rate Analysis',
-            'Workflow Optimization',
-            'A/B Testing',
-          ],
-        },
-        {
-          id: 'scale',
-          number: '05',
-          label: 'Scale',
-          title: 'Growth & Expansion',
-          description: 'We help you expand your business reach and increase team productivity with sustainable methods.',
-          deliverables: [
+            'Data-Driven Decisions',
             'Sales Team Expansion',
-            'New Channel Addition',
-            'Advanced Automation',
+            'Process Optimization',
             'Sustainable Growth',
           ],
         },
@@ -580,8 +552,8 @@ export const landingContent = {
       sectionSubtitle: 'Answers to the most common questions',
       items: [
         {
-          question: 'Is Rootline CRM free?',
-          answer: 'Yes! We offer a free plan that includes all essential features. We also offer paid plans for businesses that need advanced features.',
+          question: 'Can I try it before purchasing?',
+          answer: 'Absolutely! We offer a 14-day free trial with all features included. You can also book a live demo with our team to see Rootline CRM in action.',
         },
         {
           question: 'Can I import my data from another system?',

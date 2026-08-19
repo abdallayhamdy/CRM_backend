@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Circle, Zap } from 'lucide-react'
 import type { Locale } from './landing-data'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const STAR_COLORS = ["#FFFFFF", "#FFFFAA", "#AAAAFF", "#FFAAAA", "#AAFFAA", "#FFAAFF", "#AAFFFF"] as const;
 
@@ -108,6 +109,8 @@ const CARD = 'rounded-2xl border border-[#00d4ff]/30 bg-[#00d4ff]/[0.03] p-6'
 const INPUT = 'w-full px-3 py-2.5 rounded-lg bg-[#00d4ff]/[0.03] border border-[#00d4ff]/30 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#00d4ff]/50 transition-all duration-300'
 
 export function ContactSection({ content, locale }: ContactSectionProps) {
+  const [lookingFor, setLookingFor] = useState('')
+  const [heardAbout, setHeardAbout] = useState('')
   return (
     <section className="relative py-24 overflow-hidden">
       <PixelStarsBackground />
@@ -241,12 +244,16 @@ export function ContactSection({ content, locale }: ContactSectionProps) {
                 </div>
                 <div>
                   <label className="block text-xs text-white/50 mb-2">{content.form.lookingFor} *</label>
-                  <select className={`${INPUT} appearance-none cursor-pointer`}>
-                    <option value="" className="bg-[#0a0a0f] text-white/40">{content.form.lookingForPlaceholder}</option>
-                    {content.form.lookingForOptions.map((opt, i) => (
-                      <option key={i} value={opt} className="bg-[#0a0a0f] text-white">{opt}</option>
-                    ))}
-                  </select>
+                  <Select value={lookingFor} onValueChange={setLookingFor}>
+                    <SelectTrigger className={`${INPUT} appearance-none cursor-pointer`}>
+                      <SelectValue placeholder={content.form.lookingForPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {content.form.lookingForOptions.map((opt, i) => (
+                        <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -258,12 +265,16 @@ export function ContactSection({ content, locale }: ContactSectionProps) {
                 </div>
                 <div>
                   <label className="block text-xs text-white/50 mb-2">{content.form.heardAbout}</label>
-                  <select className={`${INPUT} appearance-none cursor-pointer`}>
-                    <option value="" className="bg-[#0a0a0f] text-white/40">{content.form.heardAboutPlaceholder}</option>
-                    {content.form.heardAboutOptions.map((opt, i) => (
-                      <option key={i} value={opt} className="bg-[#0a0a0f] text-white">{opt}</option>
-                    ))}
-                  </select>
+                  <Select value={heardAbout} onValueChange={setHeardAbout}>
+                    <SelectTrigger className={`${INPUT} appearance-none cursor-pointer`}>
+                      <SelectValue placeholder={content.form.heardAboutPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {content.form.heardAboutOptions.map((opt, i) => (
+                        <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

@@ -6,32 +6,13 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import type { Locale } from './landing-data'
 
-function mulberry32(seed: number) {
-  return function () {
-    let t = (seed += 0x6d2b79f5)
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-const rand = mulberry32(20260202)
-
-const PARTICLES = Array.from({ length: 15 }, (_, i) => ({
-  key: i,
-  left: `${rand() * 100}%`,
-  top: `${rand() * 100}%`,
-  duration: 3 + rand() * 4,
-  delay: rand() * 3,
-}))
-
-const OrbitingCirclesGlobe = dynamic(() => import('@/components/ui/orbiting-circles-02'), {
+const OrbitingCirclesGlobe = dynamic(() => import('@/components/landing/orbiting-circles-02'), {
   ssr: false,
   loading: () => <div className="absolute inset-0" />,
 })
 
 const CircuitBoardBackground = dynamic(
-  () => import('@/components/ui/circuit-board').then((m) => ({ default: m.CircuitBoardBackground })),
+  () => import('@/components/landing/circuit-board').then((m) => ({ default: m.CircuitBoardBackground })),
   {
     ssr: false,
     loading: () => <div className="absolute inset-0" />,
@@ -62,22 +43,22 @@ export function HeroSection({ content, locale }: HeroSectionProps) {
         </div>
 
         {/* Floating particles */}
-        {PARTICLES.map((p) => (
+        {Array.from({ length: 15 }).map((_, i) => (
           <motion.div
-            key={p.key}
+            key={i}
             className="absolute w-1 h-1 bg-[#00d4ff]/30 rounded-full"
             style={{
-              left: p.left,
-              top: p.top,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
             }}
             animate={{
               y: [0, -30, 0],
               opacity: [0.2, 0.6, 0.2],
             }}
             transition={{
-              duration: p.duration,
+              duration: 3 + Math.random() * 4,
               repeat: Infinity,
-              delay: p.delay,
+              delay: Math.random() * 3,
             }}
           />
         ))}
