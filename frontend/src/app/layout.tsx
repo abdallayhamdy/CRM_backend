@@ -11,9 +11,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
 import { ThemeScope } from "@/components/ThemeScope";
-import { GridOverlay } from "@/components/GridOverlay";
-import { MouseGlowEffect } from "@/components/MouseGlowEffect";
-import { ImpersonationBanner } from "@/components/super-admin/ImpersonationBanner";
+
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 const lexend = Lexend_Deca({
@@ -23,20 +21,20 @@ const lexend = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: { default: "SalesHub", template: "%s | SalesHub" },
+  title: { default: "Rootline CRM", template: "%s | Rootline CRM" },
   description: "Your all-in-one CRM for managing contacts, deals, and pipelines.",
   openGraph: {
-    title: "SalesHub",
+    title: "Rootline CRM",
     description: "Your all-in-one CRM.",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SalesHub",
+    title: "Rootline CRM",
     description: "Your all-in-one CRM.",
   },
-  robots: { index: false, follow: false },
+  robots: { index: true, follow: true },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.ico" },
 };
 
@@ -70,12 +68,6 @@ export default function RootLayout({
                   var path = window.location.pathname;
                   var isExempt = ["/", "/login", "/register", "/sign-in", "/sign-up", "/forgot-password", "/reset-password", "/auth-callback"].indexOf(path) !== -1;
                   document.documentElement.setAttribute("data-theme", isExempt ? "none" : colorTheme);
-                  if (localStorage.getItem("app-grid-bg") === "true") {
-                    document.documentElement.classList.add("grid-bg");
-                  }
-                  if (localStorage.getItem("app-mouse-glow") === "true") {
-                    document.documentElement.classList.add("mouse-glow");
-                  }
                   var DEFAULT_APPEARANCE = {
                     style: "nova", baseColor: "taupe",
                     chartColor1: "blue", chartColor2: "emerald", chartColor3: "violet",
@@ -110,7 +102,8 @@ export default function RootLayout({
                     coral:"10 15% 13%",mint:"165 12% 13%",indigo:"235 15% 13%",
                     peach:"20 15% 13%",teal:"175 15% 13%",magenta:"310 15% 13%",
                     olive:"80 10% 13%",sky:"195 15% 13%",copper:"18 12% 13%",
-                    lilac:"280 15% 13%",charcoal:"210 5% 13%",gold:"45 15% 13%"
+                    lilac:"280 15% 13%",charcoal:"210 5% 13%",gold:"45 15% 13%",
+                    black:"0 0% 8%"
                   };
                   var LIGHT_BASE_BG = {
                     neutral:"0 0% 100%",stone:"30 10% 98%",zinc:"240 6% 98%",
@@ -122,7 +115,8 @@ export default function RootLayout({
                     coral:"10 15% 95%",mint:"165 15% 95%",indigo:"235 15% 95%",
                     peach:"20 15% 95%",teal:"175 15% 95%",magenta:"310 15% 95%",
                     olive:"80 10% 95%",sky:"195 20% 95%",copper:"18 12% 95%",
-                    lilac:"280 15% 95%",charcoal:"210 5% 94%",gold:"45 15% 95%"
+                    lilac:"280 15% 95%",charcoal:"210 5% 94%",gold:"45 15% 95%",
+                    black:"0 0% 94%"
                   };
                   var bg;
                   if (dark) {
@@ -139,9 +133,7 @@ export default function RootLayout({
           }}
         />
       </head>
-        <body className="h-full min-h-screen bg-background font-sans selection:bg-primary/20 overflow-auto" suppressHydrationWarning>
-        <MouseGlowEffect />
-        <GridOverlay />
+        <body className="min-h-screen bg-background font-sans selection:bg-primary/20 overflow-auto" suppressHydrationWarning>
         <AuthProvider>
           <ThemeProvider>
             <ThemeScope />
@@ -153,9 +145,8 @@ export default function RootLayout({
               >
                 Skip to main content
               </a>
-              <ImpersonationBanner />
               <AppShell>
-                <main id="main-content" className="h-full">{children}</main>
+                {children}
               </AppShell>
             </SidebarProvider>
             <Toaster position="top-right" richColors />

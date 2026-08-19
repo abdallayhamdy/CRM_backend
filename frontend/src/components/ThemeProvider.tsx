@@ -48,6 +48,7 @@ export const THEMES = [
   { id: 'rose', name: 'Rose', color: '340 45% 40%', icon: '🌸' },
   { id: 'burgundy', name: 'Burgundy', color: '345 45% 40%', icon: '🍷' },
   { id: 'blush', name: 'Blush', color: '350 50% 40%', icon: '💗' },
+  { id: 'black', name: 'Black', color: '0 0% 10%', icon: '⬛' },
 ] as const
 
 export type ThemeId = (typeof THEMES)[number]['id']
