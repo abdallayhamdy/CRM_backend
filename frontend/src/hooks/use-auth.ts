@@ -97,7 +97,7 @@ function mockUserToAuthUser(mu: MockUser) {
     email: mu.email,
     firstName: mu.firstName || '',
     lastName: mu.lastName || '',
-    avatarUrl: mu.avatarUrl || undefined,
+    avatarUrl: mu.avatarUrl || null,
     profileId: mu.profile_id,
   }
 }
