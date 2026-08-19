@@ -1,13 +1,37 @@
 // Mock API Client - Replaces real API calls
 import { mockDb, MockEntity } from './database'
+import { mockAuth } from './auth'
+import { mockContacts, mockCompanies, mockDeals, mockActivities, mockQuotations, mockInvoices, mockTickets, mockProducts, mockDocuments } from './data'
 
 export interface ApiResponse<T = unknown> {
   data: T | null
   error: string | null
 }
 
-// Simulate network delay
 const delay = (ms: number = 100) => new Promise(resolve => setTimeout(resolve, ms))
+
+const ENTITIES_WITH_OWNER = new Set([
+  'contacts', 'deals', 'activities', 'tickets',
+  'quotations', 'invoices', 'documents',
+])
+
+function shouldFilterByOwner(entity: string): boolean {
+  return ENTITIES_WITH_OWNER.has(entity)
+}
+
+function filterByOwner<T extends MockEntity>(items: T[]): T[] {
+  const currentUser = mockAuth.getUser()
+  if (!currentUser) return items
+
+  const role = currentUser.role
+  if (role === 'owner' || role === 'admin') return items
+
+  const userId = currentUser.id
+  return items.filter((item) => {
+    const ownerId = (item as Record<string, unknown>).owner_id
+    return ownerId === userId
+  })
+}
 
 class MockApiClient {
   async get<T extends MockEntity>(entity: string, params?: Record<string, string | number | boolean | null | undefined>): Promise<ApiResponse<{ data: T[]; meta: { total: number; page: number; limit: number } }>> {
@@ -23,6 +47,33 @@ class MockApiClient {
           value && String(value).toLowerCase().includes(query)
         )
       )
+    }
+    
+    // Apply explicit filter params (e.g. filter[assigned_to] from contacts service)
+    if (params) {
+      for (const [key, val] of Object.entries(params)) {
+        const filterMatch = key.match(/^filter\[(.+)\]$/)
+        if (!filterMatch) continue
+        const filterField = filterMatch[1]
+        const filterValue = String(val)
+
+        if (filterValue === 'null') {
+          items = items.filter(item => {
+            const rv = (item as Record<string, unknown>)[filterField]
+            return rv === null || rv === undefined || rv === ''
+          })
+        } else {
+          items = items.filter(item => {
+            const rv = (item as Record<string, unknown>)[filterField]
+            return rv === filterValue
+          })
+        }
+      }
+    }
+    
+    // Apply owner-based filtering for member/viewer roles
+    if (shouldFilterByOwner(entity)) {
+      items = filterByOwner(items)
     }
     
     // Apply sorting
@@ -73,68 +124,65 @@ class MockApiClient {
 
   async search<T extends MockEntity>(entity: string, query: string, fields: (keyof T)[]): Promise<ApiResponse<T[]>> {
     await delay()
-    const items = mockDb.search<T>(entity, query, fields)
+    let items = mockDb.search<T>(entity, query, fields)
+    if (shouldFilterByOwner(entity)) {
+      items = filterByOwner(items)
+    }
     return { data: items, error: null }
   }
 }
 
 export const mockApi = new MockApiClient()
 
-// Initialize mock data on first load
-export function initializeMockData() {
-  if (typeof window === 'undefined') return
+let initPromise: Promise<void> | null = null
+
+export function initializeMockData(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
   
-  // Check if data already exists
-  if (localStorage.getItem('crm_mock_initialized')) return
+  if (localStorage.getItem('crm_mock_initialized')) return Promise.resolve()
   
-  // Import and seed data
-  import('./data').then(data => {
-    // Seed contacts
-    data.mockContacts.forEach(contact => {
+  if (initPromise) return initPromise
+  
+  initPromise = Promise.resolve().then(() => {
+    mockContacts.forEach(contact => {
       mockDb.create('contacts', contact)
     })
     
-    // Seed companies
-    data.mockCompanies.forEach(company => {
+    mockCompanies.forEach(company => {
       mockDb.create('companies', company)
     })
     
-    // Seed deals
-    data.mockDeals.forEach(deal => {
+    mockDeals.forEach(deal => {
       mockDb.create('deals', deal)
     })
     
-    // Seed activities
-    data.mockActivities.forEach(activity => {
+    mockActivities.forEach(activity => {
       mockDb.create('activities', activity)
     })
     
-    // Seed quotations
-    data.mockQuotations.forEach(quotation => {
+    mockQuotations.forEach(quotation => {
       mockDb.create('quotations', quotation)
     })
     
-    // Seed invoices
-    data.mockInvoices.forEach(invoice => {
+    mockInvoices.forEach(invoice => {
       mockDb.create('invoices', invoice)
     })
     
-    // Seed tickets
-    data.mockTickets.forEach(ticket => {
+    mockTickets.forEach(ticket => {
       mockDb.create('tickets', ticket)
     })
     
-    // Seed products
-    data.mockProducts.forEach(product => {
+    mockProducts.forEach(product => {
       mockDb.create('products', product)
     })
     
-    // Seed documents
-    data.mockDocuments.forEach(document => {
+    mockDocuments.forEach(document => {
       mockDb.create('documents', document)
     })
     
     localStorage.setItem('crm_mock_initialized', 'true')
     console.log('[Mock DB] Data initialized successfully')
   })
+  
+  return initPromise
 }

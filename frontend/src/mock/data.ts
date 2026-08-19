@@ -30,6 +30,36 @@ export const mockUsers = [
     role: 'admin' as const,
     workspace_id: 'ws_1',
     profile_id: 'profile_2'
+  },
+  {
+    id: 'user_3',
+    email: 'omar@example.com',
+    firstName: 'عمر',
+    lastName: 'خالد',
+    avatarUrl: null as string | null,
+    role: 'member' as const,
+    workspace_id: 'ws_1',
+    profile_id: 'profile_3'
+  },
+  {
+    id: 'user_4',
+    email: 'fatima@example.com',
+    firstName: 'فاطمة',
+    lastName: 'حسين',
+    avatarUrl: null as string | null,
+    role: 'member' as const,
+    workspace_id: 'ws_1',
+    profile_id: 'profile_4'
+  },
+  {
+    id: 'user_5',
+    email: 'youssef@example.com',
+    firstName: 'يوسف',
+    lastName: 'أحمد',
+    avatarUrl: null as string | null,
+    role: 'viewer' as const,
+    workspace_id: 'ws_1',
+    profile_id: 'profile_5'
   }
 ]
 
@@ -45,6 +75,7 @@ export const mockContacts = [
     position: 'مدير تقني',
     status: 'active',
     lead_source: 'website',
+    owner_id: 'user_1',
     notes: 'مهتم بالمنتج',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
@@ -60,6 +91,7 @@ export const mockContacts = [
     position: 'مديرة مبيعات',
     status: 'lead',
     lead_source: 'referral',
+    owner_id: 'user_2',
     notes: 'تفضل التواصل عبر البريد',
     created_at: '2024-01-20T14:30:00Z',
     updated_at: '2024-01-20T14:30:00Z'
@@ -75,6 +107,7 @@ export const mockContacts = [
     position: 'مدير مشتريات',
     status: 'customer',
     lead_source: 'linkedin',
+    owner_id: 'user_3',
     notes: 'عميل مميز',
     created_at: '2024-02-01T09:15:00Z',
     updated_at: '2024-02-01T09:15:00Z'
@@ -90,6 +123,7 @@ export const mockContacts = [
     position: 'مديرة تسويق',
     status: 'active',
     lead_source: 'campaign',
+    owner_id: 'user_4',
     notes: 'تتابع حملات التسويق',
     created_at: '2024-02-10T11:45:00Z',
     updated_at: '2024-02-10T11:45:00Z'
@@ -105,6 +139,7 @@ export const mockContacts = [
     position: 'مدير تقني',
     status: 'lead',
     lead_source: 'event',
+    owner_id: 'user_1',
     notes: 'قابلته في مؤتمر tech summit',
     created_at: '2024-02-15T16:20:00Z',
     updated_at: '2024-02-15T16:20:00Z'
@@ -168,6 +203,7 @@ export const mockDeals = [
     stage: 'qualified',
     status: 'open',
     priority: 'high',
+    owner_id: 'user_1',
     expected_close_date: '2024-03-30',
     probability: 75,
     notes: 'العميل مهتم جداً بالمشروع',
@@ -185,6 +221,7 @@ export const mockDeals = [
     stage: 'proposal',
     status: 'open',
     priority: 'high',
+    owner_id: 'user_2',
     expected_close_date: '2024-04-15',
     probability: 60,
     notes: 'تم تقديم العرض السعري',
@@ -202,6 +239,7 @@ export const mockDeals = [
     stage: 'negotiation',
     status: 'open',
     priority: 'medium',
+    owner_id: 'user_3',
     expected_close_date: '2024-03-20',
     probability: 80,
     notes: 'في مرحلة التفاوض النهائي',
@@ -219,6 +257,7 @@ export const mockDeals = [
     stage: 'closed_won',
     status: 'won',
     priority: 'low',
+    owner_id: 'user_4',
     expected_close_date: '2024-02-28',
     probability: 100,
     notes: 'تم إغلاق الصفقة بنجاح',
@@ -236,6 +275,7 @@ export const mockDeals = [
     stage: 'discovery',
     status: 'open',
     priority: 'medium',
+    owner_id: 'user_1',
     expected_close_date: '2024-05-01',
     probability: 30,
     notes: 'في مرحلة اكتشاف الاحتياجات',
@@ -250,6 +290,7 @@ export const mockActivities = [
     workspace_id: 'ws_1',
     contact_id: 'contact_1',
     deal_id: 'deal_1',
+    owner_id: 'user_1',
     type: 'call',
     title: 'مكالمة هاتفية',
     description: 'تم التواصل مع العميل لمناقشة المتطلبات',
@@ -265,6 +306,7 @@ export const mockActivities = [
     workspace_id: 'ws_1',
     contact_id: 'contact_2',
     deal_id: 'deal_3',
+    owner_id: 'user_3',
     type: 'meeting',
     title: 'اجتماع تقديم العرض',
     description: 'تقديم العرض السعري للعميل',
@@ -280,6 +322,7 @@ export const mockActivities = [
     workspace_id: 'ws_1',
     contact_id: 'contact_3',
     deal_id: 'deal_2',
+    owner_id: 'user_2',
     type: 'email',
     title: 'إرسال العرض الفني',
     description: 'إرسال التفاصيل الفنية للتطبيق',
@@ -299,6 +342,7 @@ export const mockQuotations = [
     deal_id: 'deal_1',
     contact_id: 'contact_1',
     company_id: 'company_1',
+    owner_id: 'user_1',
     number: 'Q-2024-001',
     status: 'sent',
     total: 150000,
@@ -341,6 +385,7 @@ export const mockInvoices = [
     deal_id: 'deal_4',
     contact_id: 'contact_4',
     company_id: 'company_1',
+    owner_id: 'user_4',
     number: 'INV-2024-001',
     status: 'paid',
     total: 50000,
@@ -373,6 +418,7 @@ export const mockTickets = [
     status: 'open',
     priority: 'high',
     category: 'technical',
+    owner_id: 'user_3',
     assigned_to: 'user_1',
     created_at: '2024-02-25T09:00:00Z',
     updated_at: '2024-02-25T09:00:00Z'
@@ -386,6 +432,7 @@ export const mockTickets = [
     status: 'in_progress',
     priority: 'medium',
     category: 'feature_request',
+    owner_id: 'user_1',
     assigned_to: 'user_2',
     created_at: '2024-02-20T14:00:00Z',
     updated_at: '2024-02-21T10:00:00Z'

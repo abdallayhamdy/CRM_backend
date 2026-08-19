@@ -19,9 +19,23 @@ export interface MockWorkspace {
   clerk_org_id?: string
 }
 
+const STORAGE_KEY = 'crm_mock_current_user'
+const WORKSPACE_KEY = 'crm_mock_current_workspace'
+
 class MockAuthService {
   private currentUser: MockUser | null = null
   private currentWorkspace: MockWorkspace | null = null
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = localStorage.getItem(STORAGE_KEY)
+        const storedWorkspace = localStorage.getItem(WORKSPACE_KEY)
+        if (storedUser) this.currentUser = JSON.parse(storedUser)
+        if (storedWorkspace) this.currentWorkspace = JSON.parse(storedWorkspace)
+      } catch { /* ignore */ }
+    }
+  }
 
   getUser(): MockUser | null {
     return this.currentUser
@@ -51,6 +65,13 @@ class MockAuthService {
     
     this.currentUser = user
     this.currentWorkspace = mockWorkspaces.find(w => w.id === user.workspace_id) || null
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+      if (this.currentWorkspace) {
+        localStorage.setItem(WORKSPACE_KEY, JSON.stringify(this.currentWorkspace))
+      }
+    }
     
     return { success: true }
   }
@@ -58,6 +79,10 @@ class MockAuthService {
   async signOut(): Promise<void> {
     this.currentUser = null
     this.currentWorkspace = null
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(WORKSPACE_KEY)
+    }
   }
 
   isAuthenticated(): boolean {

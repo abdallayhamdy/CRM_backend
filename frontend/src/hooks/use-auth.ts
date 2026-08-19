@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { laravelApi, storeToken, removeToken, getStoredToken } from '@/lib/laravel-api'
+import { mockAuth, MockUser } from '@/mock/auth'
+import { initializeMockData } from '@/mock/api'
 import { authService } from '@/services/auth'
 
 export type Role = 'owner' | 'admin' | 'member' | 'viewer'
@@ -89,6 +91,26 @@ function parseName(fullName: string): { firstName: string; lastName: string } {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') }
 }
 
+function mockUserToAuthUser(mu: MockUser) {
+  return {
+    id: mu.id,
+    email: mu.email,
+    firstName: mu.firstName || '',
+    lastName: mu.lastName || '',
+    avatarUrl: mu.avatarUrl || undefined,
+    profileId: mu.profile_id,
+  }
+}
+
+async function isLaravelAvailable(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/laravel/auth/me', { method: 'GET', headers: { Accept: 'application/json' } })
+    return res.status !== 404
+  } catch {
+    return false
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [activeWorkspace, setActiveWorkspaceState] = useState<{ id: string; name: string } | null>(null)
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
@@ -99,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileId, setProfileId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } | null>(null)
+  const [useMock, setUseMock] = useState<boolean | null>(null)
   const initializingRef = useRef(false)
   const initializedRef = useRef(false)
 
@@ -121,6 +144,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       try {
+        const laravelUp = await isLaravelAvailable()
+        setUseMock(!laravelUp)
+
+        if (!laravelUp) {
+          // Mock mode: seed mock data and check for stored session
+          await initializeMockData()
+          const mockUser = mockAuth.getUser()
+          if (mockUser) {
+            setUser(mockUserToAuthUser(mockUser))
+            const role = safeRole(mockUser.role)
+            setUserRole(role)
+            setWorkspaceId(mockUser.workspace_id)
+            setProfileId(mockUser.profile_id)
+            setActiveWorkspaceState({ id: mockUser.workspace_id, name: mockAuth.getWorkspace()?.name || '' })
+            if (mockUser.workspace_id) {
+              localStorage.setItem('active_workspace_id', mockUser.workspace_id)
+            }
+          }
+          setLoading(false)
+          return
+        }
+
+        // Laravel mode: existing logic
         const token = getStoredToken()
         if (!token) {
           setLoading(false)
@@ -199,8 +245,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await laravelApi.post('/logout')
-    removeToken()
+    if (useMock) {
+      await mockAuth.signOut()
+    } else {
+      await laravelApi.post('/logout')
+      removeToken()
+    }
     authService.clearCache()
     localStorage.removeItem('active_workspace_id')
     setUser(null)
@@ -212,63 +262,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPermissions([])
     setProfileId(null)
     window.location.href = '/login'
-  }, [])
+  }, [useMock])
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data, error } = await laravelApi.post<LoginResponse>('/login', { email, password })
+    // Try Laravel first if available, otherwise use mock
+    if (useMock === false) {
+      const { data, error } = await laravelApi.post<LoginResponse>('/login', { email, password })
 
-    if (error || !data) {
-      return { success: false, error: error || 'Login failed', isSuperAdmin: false }
-    }
+      if (error || !data) {
+        return { success: false, error: error || 'Login failed', isSuperAdmin: false }
+      }
 
-    storeToken(data.data.token)
+      storeToken(data.data.token)
 
-    const me = data.data.user
-    const { firstName, lastName } = parseName(me.name)
+      const me = data.data.user
+      const { firstName, lastName } = parseName(me.name)
 
-    setUser({
-      id: me.id,
-      email: me.email,
-      firstName,
-      lastName,
-      avatarUrl: null,
-    })
+      setUser({
+        id: me.id,
+        email: me.email,
+        firstName,
+        lastName,
+        avatarUrl: null,
+      })
 
-    setProfileId(me.id)
+      setProfileId(me.id)
 
-    let resultIsSuperAdmin = false
+      let resultIsSuperAdmin = false
 
-    try {
-      const { data: meData } = await laravelApi.get<MeResponse>('/auth/me')
-      if (meData?.data) {
-        const fullMe = meData.data
-        const role = fullMe.roles.length > 0 ? safeRole(fullMe.roles[0]) : 'member'
-        setUserRole(role)
-        setIsSuperAdmin(fullMe.is_super_admin)
-        setRoles(fullMe.roles)
-        setPermissions(fullMe.permissions)
-        resultIsSuperAdmin = fullMe.is_super_admin
+      try {
+        const { data: meData } = await laravelApi.get<MeResponse>('/auth/me')
+        if (meData?.data) {
+          const fullMe = meData.data
+          const role = fullMe.roles.length > 0 ? safeRole(fullMe.roles[0]) : 'member'
+          setUserRole(role)
+          setIsSuperAdmin(fullMe.is_super_admin)
+          setRoles(fullMe.roles)
+          setPermissions(fullMe.permissions)
+          resultIsSuperAdmin = fullMe.is_super_admin
 
-        if (fullMe.is_super_admin) {
-          return { success: true, isSuperAdmin: true }
+          if (fullMe.is_super_admin) {
+            return { success: true, isSuperAdmin: true }
+          }
+
+          const workspaceIdVal = fullMe.workspace_id
+          setWorkspaceId(workspaceIdVal)
+          setActiveWorkspaceState({ id: workspaceIdVal, name: '' })
+
+          if (workspaceIdVal) {
+            localStorage.setItem('active_workspace_id', workspaceIdVal)
+          }
+        } else {
+          setUserRole('member')
         }
-
-        const workspaceIdVal = fullMe.workspace_id
-        setWorkspaceId(workspaceIdVal)
-        setActiveWorkspaceState({ id: workspaceIdVal, name: '' })
-
-        if (workspaceIdVal) {
-          localStorage.setItem('active_workspace_id', workspaceIdVal)
-        }
-      } else {
+      } catch {
         setUserRole('member')
       }
-    } catch {
-      setUserRole('member')
+
+      return { success: true, isSuperAdmin: resultIsSuperAdmin }
     }
 
-    return { success: true, isSuperAdmin: resultIsSuperAdmin }
-  }, [])
+    // Mock auth
+    await initializeMockData()
+    const result = await mockAuth.signIn(email, password)
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    const mockUser = mockAuth.getUser()!
+    setUser(mockUserToAuthUser(mockUser))
+    const role = safeRole(mockUser.role)
+    setUserRole(role)
+    setWorkspaceId(mockUser.workspace_id)
+    setProfileId(mockUser.profile_id)
+    setActiveWorkspaceState({ id: mockUser.workspace_id, name: mockAuth.getWorkspace()?.name || '' })
+    if (mockUser.workspace_id) {
+      localStorage.setItem('active_workspace_id', mockUser.workspace_id)
+    }
+
+    return { success: true, isSuperAdmin: false }
+  }, [useMock])
 
   const userObj = useMemo(() => user ? {
     id: user.id,
