@@ -1,29 +1,53 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { CheckSquare } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { DataTable } from "@/components/shared/DataTable"
 import { TaskEditorSheet } from "@/components/activities/TaskEditorSheet"
 import { useAuth } from "@/hooks/use-auth"
 import { tasksService } from "@/services/tasks"
 import { getBadgeClasses } from "@/lib/badge-colors"
+import { toast } from "sonner"
 import type { Task } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 
 type TaskRow = Pick<Task, "id" | "title" | "type" | "due_date" | "task_priority" | "status">
 
-export function IntegrationCards() {
+export function TasksCardSkeleton() {
+  return (
+    <Card className="border border-border shadow-sm flex flex-col h-full">
+      <CardHeader>
+        <CardTitle>
+          <Skeleton className="h-4 w-24" />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-64 rounded-md" />
+          <Skeleton className="h-64 w-full rounded-lg border border-border" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export function TasksCard() {
   const { workspaceId } = useAuth()
   const [taskOpen, setTaskOpen] = React.useState(false)
   const [tasks, setTasks] = React.useState<TaskRow[]>([])
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    if (!workspaceId) return
+    if (!workspaceId) {
+      setLoading(false)
+      return
+    }
     const controller = new AbortController()
     tasksService.getAll({ workspace_id: workspaceId, limit: 20 }).then(({ data }) => {
       if (!controller.signal.aborted && data) {
@@ -36,7 +60,11 @@ export function IntegrationCards() {
           status: t.status as "pending" | "completed" | "in_progress",
         })))
       }
-    }).catch(() => {})
+    }).catch(() => {
+      if (!controller.signal.aborted) toast.error("Failed to load tasks")
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoading(false)
+    })
     return () => controller.abort()
   }, [workspaceId])
 
@@ -89,6 +117,10 @@ export function IntegrationCards() {
     },
   ], [])
 
+  if (loading) {
+    return <TasksCardSkeleton />
+  }
+
   const openTasks = tasks.filter(t => t.status !== "completed")
   const completedTasks = tasks.filter(t => t.status === "completed")
 
@@ -98,8 +130,6 @@ export function IntegrationCards() {
         open={taskOpen}
         onClose={() => setTaskOpen(false)}
         onSaved={() => setTaskOpen(false)}
-        entityType="company"
-        entityId=""
         workspaceId={workspaceId}
       />
 

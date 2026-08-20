@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/use-auth"
 import { activitiesService } from "@/services/activities"
+import { toast } from "sonner"
 import type { Activity } from "@/lib/types/crm"
 
 const ANSWERS_COLOR = "var(--color-chart-1)"
@@ -43,7 +44,7 @@ export function PhoneCallCard() {
 
   useEffect(() => {
     if (!workspaceId || !user?.profileId) {
-      if (!workspaceId || !user?.profileId) setLoading(false)
+      setLoading(false)
       return
     }
 
@@ -60,7 +61,7 @@ export function PhoneCallCard() {
         })
         if (!controller.signal.aborted && data) setCalls(data)
       } catch {
-        // Expected in standalone mode
+        if (!controller.signal.aborted) toast.error("Failed to load call data")
       } finally {
         if (!controller.signal.aborted) setLoading(false)
       }

@@ -12,11 +12,10 @@ import { activitiesService } from "@/services/activities"
 import { contactsService } from "@/services/contacts"
 import { activityCommentsService } from "@/services/activity-comments"
 import { DataTable } from "@/components/shared/DataTable"
+import { toast } from "sonner"
 import type { Activity, Contact } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 import DOMPurify from "dompurify"
-
-/* ظ¤ظ¤ Helpers ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
 
 function stripHtml(html: string): string {
   const tmp = document.createElement("div")
@@ -45,15 +44,11 @@ function subtypeLabel(raw?: string | null): string {
   return SUBTYPE_LABELS[key] || raw
 }
 
-/* ظ¤ظ¤ Types ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
-
 interface OverdueRow {
   task: Activity
   contact: Contact | null
   lastComment: string
 }
-
-/* ظ¤ظ¤ Skeleton ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
 
 export function OverdueCardSkeleton() {
   return (
@@ -73,8 +68,6 @@ export function OverdueCardSkeleton() {
   )
 }
 
-/* ظ¤ظ¤ Component ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
-
 export function OverdueCard() {
   const { workspaceId, user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -92,7 +85,6 @@ export function OverdueCard() {
       if (!workspaceId || !user?.profileId) return
 
       try {
-        // Fetch all tasks for current user (unfiltered, we filter client-side to match tasks/page.tsx)
         const { data: tasks } = await activitiesService.getAll({
           workspace_id: workspaceId!,
           type: "task",
@@ -102,7 +94,6 @@ export function OverdueCard() {
 
         if (controller.signal.aborted || !tasks) return
 
-        // Overdue filter: same logic as src/app/tasks/page.tsx line 222
         const now = new Date()
         const overdue = tasks.filter(
           (t) => !t.completed && t.due_date && new Date(t.due_date) < now && t.contact_id
@@ -113,15 +104,6 @@ export function OverdueCard() {
           return
         }
 
-        // Batch-fetch contacts
-        const contactIds = [...new Set(overdue.map((t) => t.contact_id!))]
-        const contactResults = await Promise.all(
-          contactIds.map((id) =>
-            contactsService.getAll({ workspace_id: workspaceId!, limit: 1, search: id })
-          )
-        )
-
-        // Build contact lookup from all contacts (since search may not match by ID directly)
         const allContactsRes = await contactsService.getAll({ workspace_id: workspaceId!, limit: 1000 })
         const contactMap = new Map<string, Contact>()
         for (const c of allContactsRes.data ?? []) {
@@ -130,7 +112,6 @@ export function OverdueCard() {
 
         if (controller.signal.aborted) return
 
-        // Fetch last comment for each task
         const commentResults = await Promise.all(
           overdue.map((t) =>
             activityCommentsService.getByTarget(t.id, "activity", workspaceId!)
@@ -142,18 +123,17 @@ export function OverdueCard() {
         const rows: OverdueRow[] = overdue.map((task, i) => {
           const contact = contactMap.get(task.contact_id!) ?? null
           const comments = commentResults[i].data
-          let lastComment = "ظ¤"
+          let lastComment = "--"
           if (comments && comments.length > 0) {
-            // First item is most recent (sorted created_at DESC by mock API)
             const text = stripHtml(comments[0].content)
-            lastComment = text.length > 80 ? text.slice(0, 80) + "ظخ" : text
+            lastComment = text.length > 80 ? text.slice(0, 80) + "..." : text
           }
           return { task, contact, lastComment }
         })
 
         setOverdueTasks(rows)
       } catch {
-        // Expected in standalone mode
+        toast.error("Failed to load overdue tasks")
       } finally {
         if (!controller.signal.aborted) setLoading(false)
       }
@@ -162,8 +142,6 @@ export function OverdueCard() {
     loadData()
     return () => controller.abort()
   }, [workspaceId, user?.profileId])
-
-  /* ظ¤ظ¤ Group by task_subtype ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
 
   const groups = useMemo(() => {
     const map = new Map<string, OverdueRow[]>()
@@ -175,8 +153,6 @@ export function OverdueCard() {
     return map
   }, [overdueTasks])
 
-  /* ظ¤ظ¤ Tab config ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
-
   const tabs = useMemo(() => {
     return TASK_TYPE_KEYS.map((key) => ({
       key,
@@ -185,15 +161,13 @@ export function OverdueCard() {
     }))
   }, [groups])
 
-  /* ظ¤ظ¤ Table columns ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
-
   const columns = useMemo<ColumnDef<OverdueRow, any>[]>(() => [
     {
       accessorKey: "contact",
       header: "Lead Name",
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const c = row.original.contact
-        if (!c) return <span className="text-muted-foreground">ظ¤</span>
+        if (!c) return <span className="text-muted-foreground">--</span>
         return (
           <Link
             href={`/contacts/${c.id}`}
@@ -211,7 +185,7 @@ export function OverdueCard() {
         const c = row.original.contact
         return (
           <span className="text-muted-foreground">
-            {c?.mobile_phone || c?.phone || "ظ¤"}
+            {c?.mobile_phone || c?.phone || "--"}
           </span>
         )
       },
@@ -221,7 +195,7 @@ export function OverdueCard() {
       header: "Stage Date",
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const d = row.original.task.due_date
-        if (!d) return "ظ¤"
+        if (!d) return "--"
         return (
           <span className="text-destructive font-medium">
             {new Date(d).toLocaleDateString("en-GB", {
@@ -265,8 +239,6 @@ export function OverdueCard() {
     },
   ], [])
 
-  /* ظ¤ظ¤ Render ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
-
   if (loading) {
     return <OverdueCardSkeleton />
   }
@@ -288,7 +260,6 @@ export function OverdueCard() {
       <CardContent className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <Tabs defaultValue={tabs[0]?.key} className="flex flex-col min-h-0">
           <TabsList className="mb-3 h-auto min-h-8 bg-transparent p-0 flex-wrap gap-1">
-            {/* Total tab */}
             <TabsTrigger
               value="__total__"
               className="group text-[12px] font-bold rounded-full px-3 h-7 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:shadow-sm transition-colors"
@@ -312,7 +283,6 @@ export function OverdueCard() {
             ))}
           </TabsList>
 
-          {/* Total tab content */}
           <TabsContent value="__total__" className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
             <DataTable
               columns={columns}
@@ -323,7 +293,6 @@ export function OverdueCard() {
             />
           </TabsContent>
 
-          {/* Per-type tab content */}
           {tabs.map((tab) => (
             <TabsContent key={tab.key} value={tab.key} className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
               <DataTable

@@ -5,22 +5,46 @@ import Link from "next/link"
 import { Clock, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/use-auth"
 import { activitiesService } from "@/services/activities"
 import { formatDistanceToNow } from "date-fns"
 import { DataTable } from "@/components/shared/DataTable"
 import { getBadgeClasses } from "@/lib/badge-colors"
+import { toast } from "sonner"
 import type { Activity } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
 type ActivityRow = Pick<Activity, "id" | "type" | "title" | "description" | "created_at" | "entity_name">
 
+export function RecentActivityCardSkeleton() {
+  return (
+    <Card className="border border-border shadow-sm flex flex-col h-full">
+      <CardHeader>
+        <CardTitle>
+          <Skeleton className="h-4 w-32" />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-64 rounded-md" />
+          <Skeleton className="h-64 w-full rounded-lg border border-border" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function RecentActivityCard() {
   const { workspaceId } = useAuth()
   const [activities, setActivities] = React.useState<ActivityRow[]>([])
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    if (!workspaceId) return
+    if (!workspaceId) {
+      setLoading(false)
+      return
+    }
     const controller = new AbortController()
     activitiesService.getAll({ workspace_id: workspaceId, limit: 10 }).then(({ data }) => {
       if (!controller.signal.aborted && data) {
@@ -33,7 +57,11 @@ export function RecentActivityCard() {
           entity_name: a.entity_name,
         })))
       }
-    }).catch(() => {})
+    }).catch(() => {
+      if (!controller.signal.aborted) toast.error("Failed to load recent activity")
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoading(false)
+    })
     return () => controller.abort()
   }, [workspaceId])
 
@@ -71,6 +99,10 @@ export function RecentActivityCard() {
       ),
     },
   ], [])
+
+  if (loading) {
+    return <RecentActivityCardSkeleton />
+  }
 
   return (
     <Card className="border border-border shadow-sm flex flex-col h-full">

@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import * as React from "react"
-import { Users, Handshake, CheckSquare, Headset, Phone, Maximize2, Minimize2 } from "lucide-react"
+import { Users, Handshake, CheckSquare, Headset, Maximize2, Minimize2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { contactsService } from "@/services/contacts"
 import { companiesService } from "@/services/companies"
@@ -11,6 +11,7 @@ import { ticketsService } from "@/services/tickets"
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton"
 import { DEAL_STAGE_OPTIONS, LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
 import { TICKET_STATUSES } from "@/lib/types/crm"
+import { toast } from "sonner"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -18,9 +19,9 @@ import { cn } from "@/lib/utils"
 export function CrmOverviewCardsSkeleton() {
   return (
     <LoadingSkeleton
-      count={5}
+      count={4}
       height="10rem"
-      containerClassName="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8"
+      containerClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       className="rounded-xl bg-background border border-border"
     />
   )
@@ -56,7 +57,7 @@ export function CrmOverviewCards() {
           await Promise.all([
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             companiesService.getAll({ workspace_id: workspaceId!, limit: 1 }),
-            dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1 }),
+            dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1000 }),
             activitiesService.getAll({ workspace_id: workspaceId!, type: "task", completed: false, limit: 1 }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1000, sortBy: "created_at", sortDir: "desc" }),
@@ -125,7 +126,7 @@ export function CrmOverviewCards() {
         setTicketStages(tStages)
         setTicketPriorities(tPriorities)
       } catch {
-        // Expected in standalone mode
+        toast.error("Failed to load overview data")
       } finally {
         if (!signal.aborted) setLoading(false)
       }
@@ -148,7 +149,7 @@ export function CrmOverviewCards() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/contacts">
           <Card className="border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-card cursor-pointer h-full">
             <CardContent className="p-4">
@@ -264,37 +265,7 @@ export function CrmOverviewCards() {
           </Card>
         </Link>
 
-        <Link href="/calls">
-          <Card className="border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-card cursor-pointer h-full">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-status-warning" />
-                  <span className="text-[13px] font-bold text-muted-foreground uppercase tracking-wider">Call Outcomes</span>
-                </div>
-              </div>
-              <div className={contentClass}>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Incoming</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Outgoing</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="border-t border-border/50 my-1" />
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">Answer</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[12px] text-muted-foreground font-medium">No Answer</span>
-                  <span className="text-[13px] font-bold text-foreground">0</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        {/* Call Outcomes card hidden — no API endpoint available yet */}
       </div>
 
       <div className="flex justify-center">
