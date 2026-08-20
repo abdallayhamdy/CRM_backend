@@ -40,6 +40,7 @@ export function TaskEditorSheet({ open, onClose, onSaved, entityType, entityId, 
         description: notes || undefined,
         due_date: dueDate && dueTime ? `${dueDate} ${dueTime}` : dueDate || undefined,
         status: "pending",
+        task_subtype: type || undefined,
       }
       if (entityType && entityId && ["contact", "company", "deal"].includes(entityType)) {
         payload.taskable_type = entityType
@@ -85,6 +86,7 @@ export function TaskEditorSheet({ open, onClose, onSaved, entityType, entityId, 
                   <SelectItem value="call">Call</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="follow_up">Follow up</SelectItem>
+                  <SelectItem value="follow_up_after_meeting">Follow up after meeting</SelectItem>
                 </SelectContent>
               </Select>
             </div>

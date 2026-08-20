@@ -584,6 +584,7 @@ export interface DashboardOverview {
   tasks: {
     total: number
     statuses: Record<string, number>
+    subtypes: Record<string, number>
   }
   tickets: {
     total: number

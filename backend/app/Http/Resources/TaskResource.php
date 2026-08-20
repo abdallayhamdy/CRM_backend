@@ -14,6 +14,7 @@ class TaskResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status ?? 'pending',
+            'task_subtype' => $this->task_subtype,
             'due_date' => $this->due_date,
             'type' => class_basename($this->taskable_type),
             'taskable_id' => $this->taskable_id,

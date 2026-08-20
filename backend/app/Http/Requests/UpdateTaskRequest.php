@@ -28,6 +28,7 @@ class UpdateTaskRequest extends FormRequest
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'status' => 'nullable|in:pending,in_progress,completed',
+            'task_subtype' => 'nullable|string|max:50',
         ];
     }
 

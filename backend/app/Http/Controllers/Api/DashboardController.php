@@ -67,6 +67,12 @@ class DashboardController extends Controller
                     ->map(fn ($count) => (int) $count)
                     ->toArray();
 
+                $taskSubtypes = Task::selectRaw("COALESCE(task_subtype, 'unspecified') as subtype, count(*) as cnt")
+                    ->groupBy('subtype')
+                    ->pluck('cnt', 'subtype')
+                    ->map(fn ($count) => (int) $count)
+                    ->toArray();
+
                 $ticketsCount = Ticket::count();
 
                 $ticketRows = Ticket::selectRaw('status, priority, count(*) as cnt')
@@ -97,6 +103,7 @@ class DashboardController extends Controller
                     'tasks' => [
                         'total' => $tasksCount,
                         'statuses' => $taskStatuses,
+                        'subtypes' => $taskSubtypes,
                     ],
                     'tickets' => [
                         'total' => $ticketsCount,
