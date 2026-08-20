@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { contactsService } from "@/services/contacts"
 import { companiesService } from "@/services/companies"
 import { dealsService } from "@/services/deals"
-import { activitiesService } from "@/services/activities"
+import { tasksService } from "@/services/tasks"
 import { ticketsService } from "@/services/tickets"
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton"
 import { DEAL_STAGE_OPTIONS, LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
@@ -58,11 +58,11 @@ export function CrmOverviewCards() {
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             companiesService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1000 }),
-            activitiesService.getAll({ workspace_id: workspaceId!, type: "task", completed: false, limit: 1 }),
+            tasksService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
             contactsService.getAll({ workspace_id: workspaceId!, limit: 1000, sortBy: "created_at", sortDir: "desc" }),
             ticketsService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
-            activitiesService.getAll({ workspace_id: workspaceId!, type: "task", completed: false, limit: 1000 }),
+            tasksService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
           ])
 
         if (signal.aborted) return
@@ -109,8 +109,8 @@ export function CrmOverviewCards() {
         const allTasks = allTasksRes.data ?? []
         const tTypes: Record<string, number> = {}
         for (const t of allTasks) {
-          const subtype = t.task_subtype || "to_do"
-          tTypes[subtype] = (tTypes[subtype] || 0) + 1
+          const status = t.status || "pending"
+          tTypes[status] = (tTypes[status] || 0) + 1
         }
         setTaskTypes(tTypes)
 
@@ -219,12 +219,8 @@ export function CrmOverviewCards() {
               </div>
               <div className={contentClass}>
                 {[
-                  { value: "to_do", label: "To-do" },
-                  { value: "call", label: "Call" },
-                  { value: "follow_up", label: "Follow up" },
-                  { value: "follow_up_after_meeting", label: "Follow up after meeting" },
-                  { value: "email", label: "Email" },
-                  { value: "message", label: "Message" },
+                  { value: "pending", label: "Pending" },
+                  { value: "completed", label: "Completed" },
                 ].map((t) => (
                   <div key={t.value} className="flex justify-between items-center">
                     <span className="text-[12px] text-muted-foreground font-medium">{t.label}</span>

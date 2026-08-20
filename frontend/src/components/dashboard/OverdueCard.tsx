@@ -8,46 +8,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
-import { activitiesService } from "@/services/activities"
+import { tasksService } from "@/services/tasks"
 import { contactsService } from "@/services/contacts"
-import { activityCommentsService } from "@/services/activity-comments"
 import { DataTable } from "@/components/shared/DataTable"
 import { toast } from "sonner"
-import type { Activity, Contact } from "@/lib/types/crm"
+import type { Task, Contact } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
-import DOMPurify from "dompurify"
-
-function stripHtml(html: string): string {
-  const tmp = document.createElement("div")
-  tmp.innerHTML = DOMPurify.sanitize(html)
-  return tmp.textContent || tmp.innerText || ""
-}
-
-const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call"] as const
-
-const SUBTYPE_LABELS: Record<string, string> = {
-  to_do: "To Do",
-  follow_up: "Follow Up",
-  follow_up_after_meeting: "Follow Up After Meeting",
-  call: "Call",
-}
-
-function subtypeKey(raw?: string | null): string {
-  if (!raw) return "other"
-  const lower = raw.toLowerCase().replace(/\s+/g, "_")
-  return lower
-}
-
-function subtypeLabel(raw?: string | null): string {
-  if (!raw) return "Other"
-  const key = subtypeKey(raw)
-  return SUBTYPE_LABELS[key] || raw
-}
 
 interface OverdueRow {
-  task: Activity
-  contact: Contact | null
-  lastComment: string
+  task: Task
+  contact: { id: string; first_name: string; last_name: string | null; mobile_phone?: string | null; phone?: string | null } | null
 }
 
 export function OverdueCardSkeleton() {
@@ -85,10 +55,9 @@ export function OverdueCard() {
       if (!workspaceId || !user?.profileId) return
 
       try {
-        const { data: tasks } = await activitiesService.getAll({
+        const { data: tasks } = await tasksService.getAll({
           workspace_id: workspaceId!,
-          type: "task",
-          owner_id: user!.profileId!,
+          assigned_to: user!.profileId!,
           limit: 1000,
         })
 
@@ -96,7 +65,7 @@ export function OverdueCard() {
 
         const now = new Date()
         const overdue = tasks.filter(
-          (t) => !t.completed && t.due_date && new Date(t.due_date) < now && t.contact_id
+          (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now && t.contact?.id
         )
 
         if (overdue.length === 0) {
@@ -112,23 +81,12 @@ export function OverdueCard() {
 
         if (controller.signal.aborted) return
 
-        const commentResults = await Promise.all(
-          overdue.map((t) =>
-            activityCommentsService.getByTarget(t.id, "activity", workspaceId!)
-          )
-        )
-
-        if (controller.signal.aborted) return
-
-        const rows: OverdueRow[] = overdue.map((task, i) => {
-          const contact = contactMap.get(task.contact_id!) ?? null
-          const comments = commentResults[i].data
-          let lastComment = "--"
-          if (comments && comments.length > 0) {
-            const text = stripHtml(comments[0].content)
-            lastComment = text.length > 80 ? text.slice(0, 80) + "..." : text
-          }
-          return { task, contact, lastComment }
+        const rows: OverdueRow[] = overdue.map((task) => {
+          const fullContact = contactMap.get(task.contact!.id)
+          const contact = fullContact
+            ? { id: fullContact.id, first_name: fullContact.first_name, last_name: fullContact.last_name, mobile_phone: fullContact.mobile_phone, phone: fullContact.phone }
+            : { id: task.contact!.id, first_name: task.contact!.first_name, last_name: task.contact!.last_name ?? null }
+          return { task, contact }
         })
 
         setOverdueTasks(rows)
@@ -146,7 +104,7 @@ export function OverdueCard() {
   const groups = useMemo(() => {
     const map = new Map<string, OverdueRow[]>()
     for (const row of overdueTasks) {
-      const key = subtypeKey(row.task.task_subtype)
+      const key = row.task.type?.toLowerCase() ?? "other"
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(row)
     }
@@ -154,9 +112,9 @@ export function OverdueCard() {
   }, [overdueTasks])
 
   const tabs = useMemo(() => {
-    return TASK_TYPE_KEYS.map((key) => ({
+    return Array.from(groups.keys()).map((key) => ({
       key,
-      label: SUBTYPE_LABELS[key],
+      label: key.charAt(0).toUpperCase() + key.slice(1),
       count: groups.get(key)?.length ?? 0,
     }))
   }, [groups])
@@ -212,16 +170,7 @@ export function OverdueCard() {
       header: "Task Type",
       cell: ({ row }: CellContext<OverdueRow, any>) => (
         <span className="text-muted-foreground text-[13px]">
-          {subtypeLabel(row.original.task.task_subtype)}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "lastComment",
-      header: "Last Comment",
-      cell: ({ row }: CellContext<OverdueRow, any>) => (
-        <span className="text-muted-foreground text-[13px] max-w-[200px] truncate block">
-          {row.original.lastComment}
+          {row.original.task.type ?? "Task"}
         </span>
       ),
     },
@@ -232,7 +181,7 @@ export function OverdueCard() {
         const t = row.original.task
         return (
           <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-[12px]">
-            <Link href={t.contact_id ? `/contacts/${t.contact_id}` : `/tasks`}>View</Link>
+            <Link href={t.contact?.id ? `/contacts/${t.contact.id}` : `/tasks/${t.id}`}>View</Link>
           </Button>
         )
       },
