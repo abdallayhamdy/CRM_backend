@@ -19,6 +19,15 @@ interface OverdueRow {
   contact: { id: string; first_name: string; last_name: string | null; phone?: string | null } | null
 }
 
+const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call"] as const
+
+const SUBTYPE_LABELS: Record<string, string> = {
+  to_do: "To Do",
+  follow_up: "Follow Up",
+  follow_up_after_meeting: "Follow Up After Meeting",
+  call: "Call",
+}
+
 export function OverdueCardSkeleton() {
   return (
     <Card className="border border-border shadow-sm flex flex-col h-full">
@@ -87,28 +96,21 @@ export function OverdueCard() {
     return () => controller.abort()
   }, [workspaceId, user?.profileId, userRole])
 
-  const groups = useMemo(() => {
-    const map = new Map<string, OverdueRow[]>()
-    for (const row of overdueTasks) {
-      const key = row.task.type?.toLowerCase() ?? "other"
-      if (!map.has(key)) map.set(key, [])
-      map.get(key)!.push(row)
-    }
-    return map
-  }, [overdueTasks])
-
   const tabs = useMemo(() => {
-    return Array.from(groups.keys()).map((key) => ({
+    return TASK_TYPE_KEYS.map((key) => ({
       key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
-      count: groups.get(key)?.length ?? 0,
+      label: SUBTYPE_LABELS[key],
+      count: overdueTasks.filter((row) => {
+        const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") ?? "other"
+        return subtype === key
+      }).length,
     }))
-  }, [groups])
+  }, [overdueTasks])
 
   const columns = useMemo<ColumnDef<OverdueRow, any>[]>(() => [
     {
       accessorKey: "contact",
-      header: "Lead Name",
+      header: "LEAD NAME",
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const c = row.original.contact
         if (!c) return <span className="text-muted-foreground">--</span>
@@ -125,7 +127,7 @@ export function OverdueCard() {
     },
     {
       accessorKey: "phone",
-      header: "Mobile",
+      header: "MOBILE",
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const c = row.original.contact
         return (
@@ -137,12 +139,12 @@ export function OverdueCard() {
     },
     {
       accessorKey: "due_date",
-      header: "Stage Date",
+      header: "STAGE DATE",
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const d = row.original.task.due_date
         if (!d) return "--"
         return (
-          <span className="text-destructive font-medium">
+          <span className="text-red-500 font-medium">
             {new Date(d).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
@@ -154,10 +156,19 @@ export function OverdueCard() {
     },
     {
       accessorKey: "taskType",
-      header: "Task Type",
+      header: "TASK TYPE",
       cell: ({ row }: CellContext<OverdueRow, any>) => (
         <span className="text-muted-foreground text-[13px]">
           {row.original.task.type ?? "Task"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "lastComment",
+      header: "LAST COMMENT",
+      cell: () => (
+        <span className="text-muted-foreground text-[13px]">
+          --
         </span>
       ),
     },
@@ -233,7 +244,10 @@ export function OverdueCard() {
             <TabsContent key={tab.key} value={tab.key} className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
               <DataTable
                 columns={columns}
-                data={groups.get(tab.key) || []}
+                data={overdueTasks.filter((row) => {
+                  const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") ?? "other"
+                  return subtype === tab.key
+                })}
                 pagination={false}
                 emptyTitle="No overdue tasks"
                 emptyDescription={`No overdue ${tab.label.toLowerCase()} tasks.`}
