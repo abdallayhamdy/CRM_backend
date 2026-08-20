@@ -9,33 +9,36 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { DataTable } from "@/components/shared/DataTable"
 import { TaskEditorSheet } from "@/components/activities/TaskEditorSheet"
 import { useAuth } from "@/hooks/use-auth"
+import { tasksService } from "@/services/tasks"
 import { getBadgeClasses } from "@/lib/badge-colors"
+import type { Task } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
-import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 
-type TaskRow = {
-  id: string
-  title: string
-  type: string
-  dueDate: string
-  priority: string
-  status: "open" | "completed"
-  contact?: string
-}
-
-const MOCK_TASKS: TaskRow[] = [
-  { id: "1", title: "Follow up with Bayan Al-Otaibi", type: "Follow Up", dueDate: "2024-07-25", priority: "high", status: "open", contact: "Bayan Al-Otaibi" },
-  { id: "2", title: "Send proposal to Marwa Al-Othmani", type: "To Do", dueDate: "2024-07-22", priority: "medium", status: "open", contact: "Marwa Al-Othmani" },
-  { id: "3", title: "Schedule demo with Khalid Hassan", type: "Follow Up After Meeting", dueDate: "2024-07-28", priority: "low", status: "open", contact: "Khalid Hassan" },
-  { id: "4", title: "Review pricing for Tech Solutions", type: "To Do", dueDate: "2024-07-20", priority: "medium", status: "open", contact: "Tech Solutions" },
-  { id: "5", title: "Call with Tech Solutions team", type: "Call", dueDate: "2024-07-19", priority: "high", status: "completed", contact: "Tech Solutions" },
-  { id: "6", title: "Review contract for Sarah Ahmed", type: "To Do", dueDate: "2024-07-18", priority: "medium", status: "completed", contact: "Sarah Ahmed" },
-]
+type TaskRow = Pick<Task, "id" | "title" | "type" | "due_date" | "task_priority" | "status">
 
 export function IntegrationCards() {
   const { workspaceId } = useAuth()
   const [taskOpen, setTaskOpen] = React.useState(false)
+  const [tasks, setTasks] = React.useState<TaskRow[]>([])
+
+  React.useEffect(() => {
+    if (!workspaceId) return
+    const controller = new AbortController()
+    tasksService.getAll({ workspace_id: workspaceId, limit: 20 }).then(({ data }) => {
+      if (!controller.signal.aborted && data) {
+        setTasks(data.map(t => ({
+          id: t.id,
+          title: t.title,
+          type: t.type,
+          due_date: t.due_date,
+          task_priority: t.task_priority,
+          status: t.status as "pending" | "completed" | "in_progress",
+        })))
+      }
+    }).catch(() => {})
+    return () => controller.abort()
+  }, [workspaceId])
 
   const columns: ColumnDef<TaskRow, any>[] = React.useMemo(() => [
     {
@@ -46,37 +49,32 @@ export function IntegrationCards() {
       ),
     },
     {
-      accessorKey: "contact",
-      header: "Contact",
-      cell: ({ row }: CellContext<TaskRow, any>) => (
-        <span className="text-muted-foreground text-[13px]">{row.original.contact || "ظ¤"}</span>
-      ),
-    },
-    {
       accessorKey: "type",
       header: "Type",
       cell: ({ row }: CellContext<TaskRow, any>) => (
-        <Badge variant="outline" className="text-[11px] px-1.5 py-0">{row.original.type}</Badge>
+        <Badge variant="outline" className="text-[11px] px-1.5 py-0">{row.original.type || "--"}</Badge>
       ),
     },
     {
-      accessorKey: "dueDate",
+      accessorKey: "due_date",
       header: "Due Date",
       cell: ({ row }: CellContext<TaskRow, any>) => {
-        const isOverdue = new Date(row.original.dueDate) < new Date() && row.original.status === "open"
+        const due = row.original.due_date
+        if (!due) return <span className="text-muted-foreground text-[13px]">--</span>
+        const isOverdue = new Date(due) < new Date() && row.original.status === "pending"
         return (
           <span className={`text-[13px] ${isOverdue ? "text-status-danger" : "text-muted-foreground"}`}>
-            {new Date(row.original.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            {new Date(due).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         )
       },
     },
     {
-      accessorKey: "priority",
+      accessorKey: "task_priority",
       header: "Priority",
       cell: ({ row }: CellContext<TaskRow, any>) => (
-        <Badge variant="outline" className={`text-[11px] px-1.5 py-0 capitalize ${getBadgeClasses('task_priority', row.original.priority, 'bordered')}`}>
-          {row.original.priority}
+        <Badge variant="outline" className={`text-[11px] px-1.5 py-0 capitalize ${getBadgeClasses('task_priority', row.original.task_priority || 'medium', 'bordered')}`}>
+          {row.original.task_priority || "medium"}
         </Badge>
       ),
     },
@@ -85,14 +83,14 @@ export function IntegrationCards() {
       header: "",
       cell: ({ row }: CellContext<TaskRow, any>) => (
         <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-[12px]">
-          <Link href="/tasks">View</Link>
+          <Link href={`/tasks/${row.original.id}`}>View</Link>
         </Button>
       ),
     },
   ], [])
 
-  const openTasks = MOCK_TASKS.filter(t => t.status === "open")
-  const completedTasks = MOCK_TASKS.filter(t => t.status === "completed")
+  const openTasks = tasks.filter(t => t.status !== "completed")
+  const completedTasks = tasks.filter(t => t.status === "completed")
 
   return (
     <>
@@ -111,7 +109,7 @@ export function IntegrationCards() {
             <CheckSquare className="h-[16px] w-[16px] text-muted-foreground" />
             Tasks
             <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-muted-foreground border-border">
-              {MOCK_TASKS.length}
+              {tasks.length}
             </Badge>
           </CardTitle>
         </CardHeader>

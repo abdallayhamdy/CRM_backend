@@ -101,11 +101,11 @@ export default function DealDetailPage() {
 
       const dealWorkspaceId = (dealRes.data as unknown as Deal)?.workspace_id
       const [userRes, profilesRes] = await Promise.all([
-        authService.getUser(),
+        authService.getCurrentUser(),
         dealWorkspaceId ? authService.listProfiles(dealWorkspaceId) : Promise.resolve({ data: [] as Profile[] | null, error: null })
       ])
 
-      setCurrentUser(userRes)
+      setCurrentUser(userRes.data)
       setProfiles(profilesRes.data || [])
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to load deal data")

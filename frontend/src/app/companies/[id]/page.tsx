@@ -243,11 +243,11 @@ export default function CompanyDetailPage() {
 
       const companyWorkspaceId = (companyRes.data as Company)?.workspace_id
       const [userRes, profilesRes] = await Promise.all([
-        authService.getUser(),
+        authService.getCurrentUser(),
         companyWorkspaceId ? authService.listProfiles(companyWorkspaceId) : Promise.resolve({ data: [] as Profile[] | null, error: null })
       ])
 
-      setCurrentUser(userRes)
+      setCurrentUser(userRes.data)
       setProfiles(profilesRes.data || [])
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to load company data")

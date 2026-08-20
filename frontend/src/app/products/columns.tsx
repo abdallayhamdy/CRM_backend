@@ -3,15 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-
-export type Product = {
-  id: string
-  name: string
-  status: string
-  sku: string
-  unit_price: number
-  created_at: string
-}
+import type { Product } from "@/lib/types/crm"
 
 export const columns: ColumnDef<Product>[] = [
   {

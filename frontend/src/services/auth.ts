@@ -8,10 +8,6 @@ const cachedProfiles: Record<string, Profile[]> = {}
 const pendingProfilesPromises: Record<string, Promise<ServiceResponse<Profile[]>> | null> = {}
 
 export const authService = {
-  async getUser(): Promise<null> {
-    return null
-  },
-
   async getCurrentUser() {
     if (cachedUser) {
       return { data: cachedUser, error: null } as ServiceResponse<Profile>

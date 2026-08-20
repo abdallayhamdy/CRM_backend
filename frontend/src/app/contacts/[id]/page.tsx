@@ -246,7 +246,7 @@ export default function ContactDetailPage() {
     try {
       const [contactRes, userRes, profilesRes, activitiesRes, notesRes, ticketsRes, tasksRes] = await Promise.all([
         contactsService.getById(id, workspaceId),
-        authService.getUser(),
+        authService.getCurrentUser(),
         authService.listProfiles(workspaceId),
         activitiesService.getAll({ workspace_id: workspaceId, contact_id: id }),
         notesService.getAll({ workspace_id: workspaceId, contact_id: id }),
@@ -256,7 +256,7 @@ export default function ContactDetailPage() {
 
       if (contactRes.error) throw contactRes.error
       setContact((contactRes.data || null) as any as Contact)
-      setCurrentUser(userRes)
+      setCurrentUser(userRes.data)
       setProfiles(profilesRes.data || [])
       setActivities(activitiesRes.data || [])
       setNotes(notesRes.data || [])

@@ -81,7 +81,7 @@ function UtilityIcons() {
 }
 
 export function TopNav({ onMobileMenuOpen }: { onMobileMenuOpen?: () => void }) {
-  const { signOut, activeWorkspace, user } = useAuth();
+  const { activeWorkspace, user } = useAuth();
   const [profileOpen, setProfileOpen] = React.useState(false);
 
   const userInitials = user?.firstName

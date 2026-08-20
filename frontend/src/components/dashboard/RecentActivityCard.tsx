@@ -6,30 +6,36 @@ import { Clock, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/use-auth"
+import { activitiesService } from "@/services/activities"
 import { formatDistanceToNow } from "date-fns"
 import { DataTable } from "@/components/shared/DataTable"
 import { getBadgeClasses } from "@/lib/badge-colors"
+import type { Activity } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
-type ActivityRow = {
-  type: string
-  title: string
-  description: string
-  created_at: string
-  lead?: string
-}
-
-const MOCK_ACTIVITIES: ActivityRow[] = [
-  { type: "task", title: "Follow up with Bayan Al-Otaibi", description: "Follow up with Bayan Al-Otaibi", created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), lead: "Bayan Al-Otaibi" },
-  { type: "call", title: "Call completed with Marwa Al-Othmani", description: "Call completed with Marwa Al-Othmani", created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), lead: "Marwa Al-Othmani" },
-  { type: "note", title: "Meeting notes added for Khalid Hassan", description: "Meeting notes added for Khalid Hassan", created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), lead: "Khalid Hassan" },
-  { type: "deal", title: "Deal stage updated for Tech Solutions", description: "Deal stage updated for Tech Solutions", created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), lead: "Tech Solutions" },
-  { type: "contact", title: "New contact added: Sarah Ahmed", description: "New contact added: Sarah Ahmed", created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), lead: "Sarah Ahmed" },
-  { type: "task", title: "Send proposal to Marwa Al-Othmani", description: "Send proposal to Marwa Al-Othmani", created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(), lead: "Marwa Al-Othmani" },
-]
+type ActivityRow = Pick<Activity, "id" | "type" | "title" | "description" | "created_at" | "entity_name">
 
 export function RecentActivityCard() {
   const { workspaceId } = useAuth()
+  const [activities, setActivities] = React.useState<ActivityRow[]>([])
+
+  React.useEffect(() => {
+    if (!workspaceId) return
+    const controller = new AbortController()
+    activitiesService.getAll({ workspace_id: workspaceId, limit: 10 }).then(({ data }) => {
+      if (!controller.signal.aborted && data) {
+        setActivities(data.map(a => ({
+          id: a.id,
+          type: a.type,
+          title: a.title,
+          description: a.description,
+          created_at: a.created_at,
+          entity_name: a.entity_name,
+        })))
+      }
+    }).catch(() => {})
+    return () => controller.abort()
+  }, [workspaceId])
 
   const columns: ColumnDef<ActivityRow, any>[] = React.useMemo(() => [
     {
@@ -49,10 +55,10 @@ export function RecentActivityCard() {
       ),
     },
     {
-      accessorKey: "lead",
+      accessorKey: "entity_name",
       header: "Lead",
       cell: ({ row }: CellContext<ActivityRow, any>) => (
-        <span className="text-muted-foreground text-[13px]">{row.original.lead || "ظ¤"}</span>
+        <span className="text-muted-foreground text-[13px]">{row.original.entity_name || "--"}</span>
       ),
     },
     {
@@ -73,7 +79,7 @@ export function RecentActivityCard() {
           <Clock className="h-[16px] w-[16px] text-muted-foreground" />
           Recent activity
           <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-muted-foreground border-border">
-            {MOCK_ACTIVITIES.length}
+            {activities.length}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -81,7 +87,7 @@ export function RecentActivityCard() {
         <div className="flex-1 min-h-0 overflow-y-auto max-h-[350px]">
           <DataTable
             columns={columns}
-            data={MOCK_ACTIVITIES}
+            data={activities}
             pagination={false}
             emptyTitle="No recent activity"
             emptyDescription="There is no recent activity to show right now."

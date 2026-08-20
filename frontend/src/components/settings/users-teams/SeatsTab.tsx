@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Info, X, ChevronsUpDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -10,6 +10,8 @@ import {
   DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { authService } from "@/services/auth"
+import { useAuth } from "@/hooks/use-auth"
 
 const SEAT_TYPES = [
   { id: "view_only", label: "VIEW-ONLY", count: 0, total: "Unlimited seats", hasInfo: true, badge: null },
@@ -19,23 +21,6 @@ const SEAT_TYPES = [
   { id: "service_professional", label: "SERVICE PROFESSIONAL SEATS", count: 1, total: "Unlimited seats", hasInfo: true, badge: "Trial" },
 ]
 
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Vs Realestate",
-    email: "vsrealstateagency@gmail.com",
-    initials: "V",
-    seats: [
-      { label: "Core Seat", badge: "Trial" },
-      { label: "Sales Professional Seat", badge: "Trial" },
-      { label: "Service Professional Seat", badge: "Trial" },
-    ],
-    permissionSet: "--",
-    inviteStatus: "Invite accepted",
-    lastActive: "5 hours ago",
-  },
-]
-
 type FilterState = {
   seat: string | null
   permissionSet: string | null
@@ -43,7 +28,9 @@ type FilterState = {
 }
 
 export function SeatsTab() {
+  const { workspaceId } = useAuth()
   const [search, setSearch] = useState("")
+  const [users, setUsers] = useState<{ id: string; name: string; email: string; initials: string; seat: string; permissionSet: string; inviteStatus: string }[]>([])
   const [filters, setFilters] = useState<FilterState>({
     seat: null,
     permissionSet: null,
@@ -51,10 +38,27 @@ export function SeatsTab() {
   })
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
+  useEffect(() => {
+    if (!workspaceId) return
+    authService.listProfiles(workspaceId).then(({ data }) => {
+      if (data) {
+        setUsers(data.map(p => ({
+          id: p.id,
+          name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email || "Unknown",
+          email: p.email || "",
+          initials: `${(p.first_name || "")[0] || ""}${(p.last_name || "")[0] || ""}`.toUpperCase() || "?",
+          seat: "Core",
+          permissionSet: p.role === "owner" || p.role === "admin" ? "Super Admin" : "Standard user",
+          inviteStatus: "Accepted",
+        })))
+      }
+    }).catch(() => {})
+  }, [workspaceId])
+
   const clearInviteFilter = () =>
     setFilters(prev => ({ ...prev, inviteStatus: null }))
 
-  const filtered = MOCK_USERS.filter(u =>
+  const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
@@ -221,18 +225,7 @@ export function SeatsTab() {
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex flex-col gap-1">
-                    {user.seats.map((seat, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
-                        <span className="text-sm">{seat.label}</span>
-                        {seat.badge && (
-                          <span className="text-xs bg-status-success text-white px-1.5 py-0.5 rounded-full font-medium">
-                            {seat.badge}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <span className="text-sm">{user.seat}</span>
                 </td>
                 <td className="px-4 py-4 text-sm text-muted-foreground">
                   {user.permissionSet}
@@ -244,7 +237,7 @@ export function SeatsTab() {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-sm text-muted-foreground">
-                  {user.lastActive}
+                  --
                 </td>
               </tr>
             ))}

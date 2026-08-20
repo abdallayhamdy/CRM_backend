@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { 
+import { useState, useEffect } from "react"
+import {
   Search, X, ChevronsUpDown
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -12,36 +12,10 @@ import {
   DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { authService } from "@/services/auth"
+import { useAuth } from "@/hooks/use-auth"
 
 type TabType = "active" | "deactivated"
-
-const TABS: { id: TabType; label: string; count: number }[] = [
-  { id: "active", label: "Active Users", count: 2 },
-  { id: "deactivated", label: "Deactivated Users", count: 0 },
-]
-
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Ahmed Mohamed",
-    email: "admin@leadswift.com",
-    initials: "AM",
-    seat: "Core",
-    access: "Super Admin",
-    defaultTeam: "--",
-    inviteStatus: "Accepted",
-  },
-  {
-    id: "2",
-    name: "Sara Ali",
-    email: "sara@leadswift.com",
-    initials: "SA",
-    seat: "Core",
-    access: "Member",
-    defaultTeam: "--",
-    inviteStatus: "Accepted",
-  },
-]
 
 type FilterState = {
   status: string | null
@@ -49,17 +23,42 @@ type FilterState = {
 }
 
 export function ActiveUsersTab() {
+  const { workspaceId } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>("active")
   const [search, setSearch] = useState("")
+  const [users, setUsers] = useState<{ id: string; name: string; email: string; initials: string; seat: string; access: string; defaultTeam: string; inviteStatus: string }[]>([])
   const [filters, setFilters] = useState<FilterState>({
     status: null,
     lastActive: null,
   })
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
+  const tabs = [
+    { id: "active" as TabType, label: "Active Users", count: users.length },
+    { id: "deactivated" as TabType, label: "Deactivated Users", count: 0 },
+  ]
+
+  useEffect(() => {
+    if (!workspaceId) return
+    authService.listProfiles(workspaceId).then(({ data }) => {
+      if (data) {
+        setUsers(data.map(p => ({
+          id: p.id,
+          name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email || "Unknown",
+          email: p.email || "",
+          initials: `${(p.first_name || "")[0] || ""}${(p.last_name || "")[0] || ""}`.toUpperCase() || "?",
+          seat: "Core",
+          access: p.role === "owner" || p.role === "admin" ? "Super Admin" : p.role === "viewer" ? "Viewer" : "Member",
+          defaultTeam: "--",
+          inviteStatus: "Accepted",
+        })))
+      }
+    }).catch(() => {})
+  }, [workspaceId])
+
   const clearFilters = () => setFilters({ status: null, lastActive: null })
 
-  const filtered = MOCK_USERS.filter(u =>
+  const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
@@ -80,7 +79,7 @@ export function ActiveUsersTab() {
     <div className="space-y-0">
       {/* Tabs */}
       <div className="flex items-center border-b">
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -115,7 +114,7 @@ export function ActiveUsersTab() {
               </button>
             </div>
           )}
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1">

@@ -9,7 +9,7 @@ export type ObjectType =
   | "deal" | "invoice" | "line_item" | "marketing_email"
   | "marketing_event" | "meeting" | "order" | "payment"
   | "product" | "quote" | "segment" | "subscription"
-  | "ticket" | "workflow"
+  | "task" | "ticket" | "workflow"
 
 export interface PropertyFromDB {
   id: string

@@ -79,6 +79,7 @@ export interface Profile {
   user_id?: string
   clerk_user_id?: string | null
   name?: string
+  email?: string
   first_name: string
   last_name: string
   role: UserRole

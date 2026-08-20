@@ -253,7 +253,7 @@ export default function TaskDetailPage() {
       <EditRecordSheet
         open={aboutEditOpen}
         onOpenChange={setAboutEditOpen}
-        objectType="deal"
+        objectType="task"
         title="Task"
         fields={taskAboutFields}
         initialValues={task || {}}

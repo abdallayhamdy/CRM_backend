@@ -96,73 +96,6 @@ interface LaravelApiResponse<T> {
   validationErrors?: LaravelApiValidationErrors
 }
 
-let laravelAvailable: boolean | null = null
-
-async function checkLaravelAvailable(): Promise<boolean> {
-  if (laravelAvailable !== null) return laravelAvailable
-  try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    })
-    laravelAvailable = res.status !== 404
-  } catch {
-    laravelAvailable = false
-  }
-  return laravelAvailable
-}
-
-// --- Mock Fallback ---
-async function mockFallbackRequest<T>(
-  method: string,
-  path: string,
-  body?: unknown,
-  urlParams?: Record<string, string | number | boolean | null | undefined>
-): Promise<LaravelApiResponse<T>> {
-  const { mockApi } = await import('@/mock/api')
-  const { initializeMockData } = await import('@/mock/api')
-  await initializeMockData()
-
-  const cleanPath = path.split('?')[0]
-  const pathParts = cleanPath.split('/').filter(Boolean)
-  const entity = pathParts[0] || 'unknown'
-  const id = pathParts.length > 1 ? pathParts[1] : null
-  const action = pathParts.length > 2 ? pathParts[2] : null
-
-  try {
-    if (method === 'GET' && !id) {
-      // List
-      const result = await mockApi.get(entity, urlParams)
-      return { data: result.data as unknown as T, error: result.error }
-    }
-    if (method === 'GET' && id && !action) {
-      // Get by id
-      const result = await mockApi.getById(entity, id)
-      return { data: result.data as unknown as T, error: result.error }
-    }
-    if (method === 'POST' && !action) {
-      const result = await mockApi.create(entity, body as any)
-      return { data: { data: result.data } as unknown as T, error: result.error }
-    }
-    if (method === 'POST' && action) {
-      // Action endpoints (move-stage, associate-contact, import, etc.)
-      const result = await mockApi.create(entity, body as any)
-      return { data: { data: result.data } as unknown as T, error: result.error }
-    }
-    if ((method === 'PATCH' || method === 'PUT') && id) {
-      const result = await mockApi.update(entity, id, body as any)
-      return { data: { data: result.data } as unknown as T, error: result.error }
-    }
-    if (method === 'DELETE' && id) {
-      const result = await mockApi.delete(entity, id)
-      return { data: null, error: result.error }
-    }
-    return { data: null, error: 'Unknown operation' }
-  } catch (err) {
-    return { data: null, error: (err as Error).message || 'Mock API error' }
-  }
-}
-
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -188,17 +121,6 @@ async function request<T>(
   }
 
   try {
-    const isUp = await checkLaravelAvailable()
-
-    if (!isUp) {
-      const method = (options.method || 'GET').toUpperCase()
-      const body = options.body ? JSON.parse(options.body as string) : undefined
-      const url = new URL(`${API_BASE}${path}`, window.location.origin)
-      const params: Record<string, string | number | boolean | null | undefined> = {}
-      url.searchParams.forEach((v, k) => { params[k] = v })
-      return mockFallbackRequest<T>(method, path, body, Object.keys(params).length ? params : undefined)
-    }
-
     const response = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers: {
@@ -229,30 +151,8 @@ async function request<T>(
     }
 
     if (response.status === 403) {
-      if (typeof window !== 'undefined') {
-        const hasWorkspace = localStorage.getItem('active_workspace_id')
-        if (hasWorkspace) {
-          localStorage.removeItem('active_workspace_id')
-          const retryHeaders = { ...headers }
-          delete retryHeaders['X-Workspace-Id']
-          try {
-            const retryResponse = await fetch(`${API_BASE}${path}`, {
-              ...options,
-              headers: {
-                ...retryHeaders,
-                ...(options.headers as Record<string, string>),
-              },
-            })
-            if (retryResponse.ok) {
-              const retryContentType = retryResponse.headers.get('content-type') || ''
-              const retryJson = retryContentType.includes('application/json') ? await retryResponse.json() : null
-              return { data: retryJson as T, error: null }
-            }
-          } catch {
-            // Fall through to default error response
-          }
-        }
-      }
+      const message = getApiErrorMessage(json) || 'You do not have permission to access this resource'
+      return { data: null, error: message }
     }
 
     if (!response.ok) {
@@ -265,10 +165,7 @@ async function request<T>(
 
     return { data: json as T, error: null }
   } catch (err) {
-    // Network error — Laravel is not available, fall back to mock
-    const method = (options.method || 'GET').toUpperCase()
-    const body = options.body ? (() => { try { return JSON.parse(options.body as string) } catch { return undefined } })() : undefined
-    return mockFallbackRequest<T>(method, path, body)
+    return { data: null, error: (err as Error).message || 'Network error: could not reach the server' }
   }
 }
 
