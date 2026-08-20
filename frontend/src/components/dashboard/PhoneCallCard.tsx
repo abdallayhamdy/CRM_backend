@@ -39,7 +39,7 @@ export function PhoneCallCardSkeleton() {
 }
 
 export function PhoneCallCard() {
-  const { workspaceId, user } = useAuth()
+  const { workspaceId, user, userRole } = useAuth()
   const [calls, setCalls] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -65,8 +65,8 @@ export function PhoneCallCard() {
         const { data } = await activitiesService.getAll({
           workspace_id: workspaceId!,
           type: "call",
-          owner_id: user!.profileId!,
           limit: 1000,
+          ...(userRole === "member" || userRole === "viewer" ? { owner_id: user!.profileId! } : {}),
         })
         if (!controller.signal.aborted && data) setCalls(data)
       } catch {
@@ -77,7 +77,7 @@ export function PhoneCallCard() {
     }
     loadCalls()
     return () => controller.abort()
-  }, [workspaceId, user?.profileId, pathname, refreshKey])
+  }, [workspaceId, user?.profileId, userRole, pathname, refreshKey])
 
   const { total, answered, noAnswer, donutData } = useMemo(() => {
     const a = calls.filter(
