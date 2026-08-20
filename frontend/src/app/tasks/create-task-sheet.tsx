@@ -13,6 +13,7 @@ import { companiesService } from "@/services/companies"
 import { dealsService } from "@/services/deals"
 import { toast } from "sonner"
 import { CheckSquare, X, User, Building2, DollarSign, ExternalLink } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/use-auth"
 
 interface CreateTaskSheetProps {
@@ -30,6 +31,7 @@ export function CreateTaskSheet({
 }: CreateTaskSheetProps) {
   const [title, setTitle] = React.useState("")
   const [description, setDescription] = React.useState("")
+  const [taskSubtype, setTaskSubtype] = React.useState("to_do")
   const [dueDate, setDueDate] = React.useState("")
   const [assignedTo, setAssignedTo] = React.useState("")
   const [isSaving, setIsSaving] = React.useState(false)
@@ -70,6 +72,7 @@ export function CreateTaskSheet({
       const payload: any = {
         title: title.trim(),
         description: description.trim() || undefined,
+        task_subtype: taskSubtype || undefined,
         due_date: dueDate || undefined,
         assigned_to: assignedTo || undefined,
         status: "pending",
@@ -86,6 +89,7 @@ export function CreateTaskSheet({
       toast.success("Task created")
       setTitle("")
       setDescription("")
+      setTaskSubtype("to_do")
       setDueDate("")
       setAssignedTo("")
       setAssociationType(null)
@@ -145,7 +149,22 @@ export function CreateTaskSheet({
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Task Type</Label>
+                    <Select value={taskSubtype} onValueChange={setTaskSubtype}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="to_do">To Do</SelectItem>
+                        <SelectItem value="call">Call</SelectItem>
+                        <SelectItem value="follow_up">Follow Up</SelectItem>
+                        <SelectItem value="follow_up_after_meeting">Follow Up After Meeting</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="dueDate">Due date</Label>
                     <Input
