@@ -18,7 +18,15 @@ import type { Task } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 
-type TaskRow = Pick<Task, "id" | "title" | "type" | "due_date" | "task_priority" | "status">
+type TaskRow = Pick<Task, "id" | "title" | "task_subtype" | "due_date" | "task_priority" | "status">
+
+const SUBTYPE_LABELS: Record<string, string> = {
+  to_do: "To Do",
+  call: "Call",
+  email: "Email",
+  follow_up: "Follow Up",
+  follow_up_after_meeting: "Follow Up After Meeting",
+}
 
 export function TasksCardSkeleton() {
   return (
@@ -66,7 +74,7 @@ export function TasksCard() {
         setTasks(data.map(t => ({
           id: t.id,
           title: t.title,
-          type: t.type,
+          task_subtype: t.task_subtype,
           due_date: t.due_date,
           task_priority: t.task_priority,
           status: t.status as "pending" | "completed" | "in_progress",
@@ -98,10 +106,10 @@ export function TasksCard() {
       ),
     },
     {
-      accessorKey: "type",
+      accessorKey: "task_subtype",
       header: "Type",
       cell: ({ row }: CellContext<TaskRow, any>) => (
-        <Badge variant="outline" className="text-[11px] px-1.5 py-0">{row.original.type || "--"}</Badge>
+        <Badge variant="outline" className="text-[11px] px-1.5 py-0">{SUBTYPE_LABELS[row.original.task_subtype || ""] || "To Do"}</Badge>
       ),
     },
     {

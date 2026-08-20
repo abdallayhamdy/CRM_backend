@@ -4,8 +4,16 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Task } from "@/lib/types/crm"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Phone, Mail, CheckCircle2 } from "lucide-react"
+import { Phone, Mail, CheckCircle2, CalendarClock, MessageSquare } from "lucide-react"
 import { format } from "date-fns"
+
+const SUBTYPE_LABELS: Record<string, string> = {
+  to_do: "To Do",
+  call: "Call",
+  email: "Email",
+  follow_up: "Follow Up",
+  follow_up_after_meeting: "Follow Up After Meeting",
+}
 
 export const columns = (onComplete: (id: string) => void): ColumnDef<Task>[] => [
   {
@@ -47,25 +55,30 @@ export const columns = (onComplete: (id: string) => void): ColumnDef<Task>[] => 
     meta: { editable: true },
   },
   {
-    accessorKey: "type",
+    accessorKey: "task_subtype",
     header: "Task type",
     cell: ({ row }) => {
-      const type = row.getValue("type") as string
+      const subtype = row.original.task_subtype as string
+      const label = SUBTYPE_LABELS[subtype] || "To Do"
       return (
         <div className="flex items-center gap-2">
-          {type === "Call" && <Phone className="h-3.5 w-3.5 text-muted-foreground" />}
-          {type === "Email" && <Mail className="h-3.5 w-3.5 text-muted-foreground" />}
-          {type === "To-do" && <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />}
-          <span className="text-[13px] text-muted-foreground">{type || "To-do"}</span>
+          {subtype === "call" && <Phone className="h-3.5 w-3.5 text-muted-foreground" />}
+          {subtype === "email" && <Mail className="h-3.5 w-3.5 text-muted-foreground" />}
+          {subtype === "follow_up" && <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />}
+          {subtype === "follow_up_after_meeting" && <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />}
+          {(!subtype || subtype === "to_do") && <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />}
+          <span className="text-[13px] text-muted-foreground">{label}</span>
         </div>
       )
     },
     meta: {
       editable: true,
       options: [
-        { value: "Call", label: "Call" },
-        { value: "Email", label: "Email" },
-        { value: "To-do", label: "To-do" },
+        { value: "to_do", label: "To Do" },
+        { value: "call", label: "Call" },
+        { value: "email", label: "Email" },
+        { value: "follow_up", label: "Follow Up" },
+        { value: "follow_up_after_meeting", label: "Follow Up After Meeting" },
       ]
     },
   },

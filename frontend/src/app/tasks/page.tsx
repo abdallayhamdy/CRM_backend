@@ -43,7 +43,14 @@ import { TaskPreviewSheet } from "./preview-sheet"
 import { TaskEditSidebar } from "@/components/tasks/TaskEditSidebar"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
 
-const TASK_TYPES = ["Call", "Email", "To-do"]
+const TASK_TYPES = ["to_do", "call", "email", "follow_up", "follow_up_after_meeting"]
+const TASK_TYPE_LABELS: Record<string, string> = {
+  to_do: "To Do",
+  call: "Call",
+  email: "Email",
+  follow_up: "Follow Up",
+  follow_up_after_meeting: "Follow Up After Meeting",
+}
 const TASK_QUEUES = ["General", "Support", "Sales"]
 
 export default function TasksPage() {
@@ -264,7 +271,7 @@ export default function TasksPage() {
       }
 
       const selectedTypes = filters.properties["type"] || []
-      if (selectedTypes.length > 0 && (!task.type || !selectedTypes.includes(task.type))) return false
+      if (selectedTypes.length > 0 && (!task.task_subtype || !selectedTypes.includes(task.task_subtype))) return false
 
       const selectedQueues = filters.properties["queue"] || []
       if (selectedQueues.length > 0 && !selectedQueues.includes("General")) return false
@@ -319,7 +326,7 @@ export default function TasksPage() {
     const labelOf = (id: string) => exportColumns.find(c => c.id === id)?.label || id
     const fieldMap: Record<string, (t: Task) => unknown> = {
       title: (t) => t.title,
-      type: (t) => t.type || "To-do",
+      type: (t) => TASK_TYPE_LABELS[t.task_subtype || ""] || "To Do",
       status: (t) => t.status,
       priority: (t) => "Medium",
       assigned_to: (t) => t.assigned_to ? t.assigned_to.name : "",

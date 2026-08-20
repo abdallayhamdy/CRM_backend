@@ -216,7 +216,7 @@ export function TaskPreviewSheet({
                   <Type className="h-3 w-3" /> Task Type
                 </Label>
                 <div className="text-sm font-medium text-foreground">
-                  {task.type}
+                  {task.task_subtype?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "To Do"}
                 </div>
               </div>
 

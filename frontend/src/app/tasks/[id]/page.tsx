@@ -174,10 +174,10 @@ export default function TaskDetailPage() {
                 <label className="text-[13px] text-muted-foreground block mb-1">Status</label>
                 <div className="text-[14px] text-foreground capitalize">{statusLabel}</div>
               </div>
-              {task.type && (
+              {task.task_subtype && (
                 <div className="group relative">
                   <label className="text-[13px] text-muted-foreground block mb-1">Type</label>
-                  <div className="text-[14px] text-foreground">{task.type}</div>
+                  <div className="text-[14px] text-foreground">{task.task_subtype.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</div>
                 </div>
               )}
               {task.task_priority && (

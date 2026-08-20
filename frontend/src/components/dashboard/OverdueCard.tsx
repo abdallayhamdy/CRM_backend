@@ -20,13 +20,14 @@ interface OverdueRow {
   contact: { id: string; first_name: string; last_name: string | null; phone?: string | null } | null
 }
 
-const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call"] as const
+const TASK_TYPE_KEYS = ["to_do", "follow_up", "follow_up_after_meeting", "call", "email"] as const
 
 const SUBTYPE_LABELS: Record<string, string> = {
   to_do: "To Do",
   follow_up: "Follow Up",
   follow_up_after_meeting: "Follow Up After Meeting",
   call: "Call",
+  email: "Email",
 }
 
 export function OverdueCardSkeleton() {
@@ -90,7 +91,7 @@ export function OverdueCard() {
         const now = new Date()
         const rows: OverdueRow[] = tasks
           .filter(
-            (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now && t.contact?.id
+            (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now
           )
           .map((task) => ({
             task,
@@ -174,7 +175,7 @@ export function OverdueCard() {
       header: "TASK TYPE",
       cell: ({ row }: CellContext<OverdueRow, any>) => (
         <span className="text-muted-foreground text-[13px]">
-          {row.original.task.type ?? "Task"}
+          {SUBTYPE_LABELS[row.original.task.task_subtype || ""] || "To Do"}
         </span>
       ),
     },
