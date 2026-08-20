@@ -117,7 +117,7 @@ export function OverdueCard() {
       key,
       label: SUBTYPE_LABELS[key],
       count: overdueTasks.filter((row) => {
-        const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") ?? "other"
+        const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") || "to_do"
         return subtype === key
       }).length,
     }))
@@ -261,7 +261,7 @@ export function OverdueCard() {
               <DataTable
                 columns={columns}
                 data={overdueTasks.filter((row) => {
-                  const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") ?? "other"
+                  const subtype = row.task.task_subtype?.toLowerCase().replace(/\s+/g, "_") || "to_do"
                   return subtype === tab.key
                 })}
                 pagination={false}

@@ -70,6 +70,7 @@ export const tasksService = {
     assigned_to?: string | null
     due_date?: string | null
     status?: string
+    task_subtype?: string
     taskable_type?: string
     taskable_id?: string
   }) {
@@ -84,6 +85,7 @@ export const tasksService = {
     assigned_to: string
     due_date: string
     status: string
+    task_subtype: string
     taskable_type: string
     taskable_id: string
   }>) {
