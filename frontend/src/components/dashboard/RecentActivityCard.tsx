@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Clock, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,6 +40,14 @@ export function RecentActivityCard() {
   const { workspaceId } = useAuth()
   const [activities, setActivities] = React.useState<ActivityRow[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [refreshKey, setRefreshKey] = React.useState(0)
+  const pathname = usePathname()
+
+  React.useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    document.addEventListener("visibilitychange", handler)
+    return () => document.removeEventListener("visibilitychange", handler)
+  }, [])
 
   React.useEffect(() => {
     if (!workspaceId) {
@@ -63,7 +72,7 @@ export function RecentActivityCard() {
       if (!controller.signal.aborted) setLoading(false)
     })
     return () => controller.abort()
-  }, [workspaceId])
+  }, [workspaceId, pathname, refreshKey])
 
   const columns: ColumnDef<ActivityRow, any>[] = React.useMemo(() => [
     {

@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { Users, Handshake, CheckSquare, Headset, Maximize2, Minimize2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { dashboardService } from "@/services/dashboard"
@@ -40,6 +41,14 @@ export function CrmOverviewCards() {
   const [ticketPriorities, setTicketPriorities] = React.useState<Record<string, number>>({})
   const [loading, setLoading] = React.useState(true)
   const [allExpanded, setAllExpanded] = React.useState(false)
+  const [refreshKey, setRefreshKey] = React.useState(0)
+  const pathname = usePathname()
+
+  React.useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    document.addEventListener("visibilitychange", handler)
+    return () => document.removeEventListener("visibilitychange", handler)
+  }, [])
 
   React.useEffect(() => {
     if (!workspaceId) return
@@ -80,7 +89,7 @@ export function CrmOverviewCards() {
 
     loadCounts()
     return () => controller.abort()
-  }, [workspaceId])
+  }, [workspaceId, pathname, refreshKey])
 
   if (loading) {
     return <CrmOverviewCardsSkeleton />

@@ -1,7 +1,8 @@
 ﻿"use client"
 
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -48,8 +49,22 @@ export function OverdueCardSkeleton() {
 
 export function OverdueCard() {
   const { workspaceId, user, userRole } = useAuth()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [overdueTasks, setOverdueTasks] = useState<OverdueRow[]>([])
+  const refreshKeyRef = useRef(0)
+  const [, setRefreshTick] = useState(0)
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshKeyRef.current += 1
+        setRefreshTick((k) => k + 1)
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    return () => document.removeEventListener("visibilitychange", handleVisibility)
+  }, [])
 
   useEffect(() => {
     if (!workspaceId || !user?.profileId) {
@@ -94,7 +109,7 @@ export function OverdueCard() {
 
     loadData()
     return () => controller.abort()
-  }, [workspaceId, user?.profileId, userRole])
+  }, [workspaceId, user?.profileId, userRole, pathname, refreshKeyRef.current])
 
   const tabs = useMemo(() => {
     return TASK_TYPE_KEYS.map((key) => ({

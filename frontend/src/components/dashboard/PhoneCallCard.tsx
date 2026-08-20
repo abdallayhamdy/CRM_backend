@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import React, { useState, useEffect, useMemo } from "react"
+import { usePathname } from "next/navigation"
 import { PieChart, Pie, Cell } from "recharts"
 import {
   ChartContainer,
@@ -41,6 +42,14 @@ export function PhoneCallCard() {
   const { workspaceId, user } = useAuth()
   const [calls, setCalls] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    document.addEventListener("visibilitychange", handler)
+    return () => document.removeEventListener("visibilitychange", handler)
+  }, [])
 
   useEffect(() => {
     if (!workspaceId || !user?.profileId) {
@@ -68,7 +77,7 @@ export function PhoneCallCard() {
     }
     loadCalls()
     return () => controller.abort()
-  }, [workspaceId, user?.profileId])
+  }, [workspaceId, user?.profileId, pathname, refreshKey])
 
   const { total, answered, noAnswer, donutData } = useMemo(() => {
     const a = calls.filter(

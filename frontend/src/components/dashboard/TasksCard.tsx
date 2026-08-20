@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { CheckSquare } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,15 +40,26 @@ export function TasksCardSkeleton() {
 
 export function TasksCard() {
   const { workspaceId } = useAuth()
+  const pathname = usePathname()
   const [taskOpen, setTaskOpen] = React.useState(false)
   const [tasks, setTasks] = React.useState<TaskRow[]>([])
   const [loading, setLoading] = React.useState(true)
+  const refreshKeyRef = React.useRef(0)
+  const [, setRefreshTick] = React.useState(0)
 
   React.useEffect(() => {
-    if (!workspaceId) {
-      setLoading(false)
-      return
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshKeyRef.current += 1
+        setRefreshTick((k) => k + 1)
+      }
     }
+    document.addEventListener("visibilitychange", handleVisibility)
+    return () => document.removeEventListener("visibilitychange", handleVisibility)
+  }, [])
+
+  const fetchTasks = React.useCallback(() => {
+    if (!workspaceId) return
     const controller = new AbortController()
     tasksService.getAll({ workspace_id: workspaceId, limit: 20 }).then(({ data }) => {
       if (!controller.signal.aborted && data) {
@@ -67,6 +79,15 @@ export function TasksCard() {
     })
     return () => controller.abort()
   }, [workspaceId])
+
+  React.useEffect(() => {
+    if (!workspaceId) {
+      setLoading(false)
+      return
+    }
+    const cleanup = fetchTasks()
+    return () => { cleanup?.() }
+  }, [workspaceId, pathname, refreshKeyRef.current, fetchTasks])
 
   const columns: ColumnDef<TaskRow, any>[] = React.useMemo(() => [
     {
@@ -129,7 +150,11 @@ export function TasksCard() {
       <TaskEditorSheet
         open={taskOpen}
         onClose={() => setTaskOpen(false)}
-        onSaved={() => setTaskOpen(false)}
+        onSaved={() => {
+          setTaskOpen(false)
+          refreshKeyRef.current += 1
+          setRefreshTick((k) => k + 1)
+        }}
         workspaceId={workspaceId}
       />
 
