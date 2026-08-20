@@ -24,6 +24,7 @@ class UpdateActivityRequest extends FormRequest
             'completed' => 'sometimes|nullable|boolean',
 
             'activity_date' => 'sometimes|nullable|date',
+            'call_outcome' => 'sometimes|nullable|string|max:50',
 
             'owner_id' => [
                 'nullable',

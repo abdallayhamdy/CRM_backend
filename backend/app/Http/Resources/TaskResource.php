@@ -28,6 +28,7 @@ class TaskResource extends JsonResource
                     'id' => $this->taskable->id,
                     'first_name' => $this->taskable->first_name,
                     'last_name' => $this->taskable->last_name,
+                    'phone' => $this->taskable->phone,
                 ] : null;
             }),
             'company' => $this->when($this->taskable_type === \App\Models\Company::class, function () {

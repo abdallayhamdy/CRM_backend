@@ -23,6 +23,7 @@ class StoreActivityRequest extends FormRequest
             'completed' => 'nullable|boolean',
 
             'activity_date' => 'nullable|date',
+            'call_outcome' => 'nullable|string|max:50',
 
             'owner_id' => [
                 'nullable',

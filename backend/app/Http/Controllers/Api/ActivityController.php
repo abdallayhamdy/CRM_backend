@@ -133,6 +133,7 @@ class ActivityController extends Controller
             'subject' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'activity_date' => $validated['activity_date'] ?? now(),
+            'call_outcome' => $validated['call_outcome'] ?? null,
             'activitable_type' => $activitableType,
             'activitable_id' => $activitableId,
         ]);
@@ -173,6 +174,7 @@ class ActivityController extends Controller
         if (array_key_exists('description', $validated)) $data['description'] = $validated['description'];
         if (isset($validated['owner_id'])) $data['user_id'] = $validated['owner_id'];
         if (array_key_exists('activity_date', $validated)) $data['activity_date'] = $validated['activity_date'];
+        if (array_key_exists('call_outcome', $validated)) $data['call_outcome'] = $validated['call_outcome'];
 
         if (isset($validated['contact_id'])) {
             $data['activitable_type'] = 'App\Models\Contact';

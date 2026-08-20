@@ -51,13 +51,12 @@ class DashboardController extends Controller
 
                 $dealsCount = Deal::count();
 
-                $dealStages = Deal::with('pipelineStage')
-                    ->get()
-                    ->groupBy(fn ($deal) => $deal->pipelineStage
-                        ? strtolower(str_replace(' ', '_', $deal->pipelineStage->name))
-                        : 'unknown'
-                    )
-                    ->mapWithKeys(fn ($deals, $stage) => [$stage => $deals->count()])
+                $dealStages = Deal::query()
+                    ->leftJoin('pipeline_stages', 'deals.pipeline_stage_id', '=', 'pipeline_stages.id')
+                    ->selectRaw("LOWER(REPLACE(COALESCE(pipeline_stages.name, 'unknown'), ' ', '_')) as stage, COUNT(*) as cnt")
+                    ->groupBy('stage')
+                    ->pluck('cnt', 'stage')
+                    ->map(fn ($count) => (int) $count)
                     ->toArray();
 
                 $tasksCount = Task::count();

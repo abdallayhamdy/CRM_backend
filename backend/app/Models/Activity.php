@@ -21,6 +21,7 @@ class Activity extends Model
         'subject',
         'description',
         'activity_date',
+        'call_outcome',
     ];
 
     protected function casts(): array

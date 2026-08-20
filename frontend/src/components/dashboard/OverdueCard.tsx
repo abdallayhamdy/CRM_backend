@@ -9,15 +9,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
 import { tasksService } from "@/services/tasks"
-import { contactsService } from "@/services/contacts"
 import { DataTable } from "@/components/shared/DataTable"
 import { toast } from "sonner"
-import type { Task, Contact } from "@/lib/types/crm"
+import type { Task } from "@/lib/types/crm"
 import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
 interface OverdueRow {
   task: Task
-  contact: { id: string; first_name: string; last_name: string | null; mobile_phone?: string | null; phone?: string | null } | null
+  contact: { id: string; first_name: string; last_name: string | null; phone?: string | null } | null
 }
 
 export function OverdueCardSkeleton() {
@@ -39,7 +38,7 @@ export function OverdueCardSkeleton() {
 }
 
 export function OverdueCard() {
-  const { workspaceId, user } = useAuth()
+  const { workspaceId, user, userRole } = useAuth()
   const [loading, setLoading] = useState(true)
   const [overdueTasks, setOverdueTasks] = useState<OverdueRow[]>([])
 
@@ -55,39 +54,26 @@ export function OverdueCard() {
       if (!workspaceId || !user?.profileId) return
 
       try {
+        const isAdminOrOwner = userRole === "admin" || userRole === "owner"
         const { data: tasks } = await tasksService.getAll({
           workspace_id: workspaceId!,
-          assigned_to: user!.profileId!,
+          ...(isAdminOrOwner ? {} : { assigned_to: user!.profileId! }),
           limit: 1000,
         })
 
         if (controller.signal.aborted || !tasks) return
 
         const now = new Date()
-        const overdue = tasks.filter(
-          (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now && t.contact?.id
-        )
-
-        if (overdue.length === 0) {
-          setOverdueTasks([])
-          return
-        }
-
-        const allContactsRes = await contactsService.getAll({ workspace_id: workspaceId!, limit: 1000 })
-        const contactMap = new Map<string, Contact>()
-        for (const c of allContactsRes.data ?? []) {
-          contactMap.set(c.id, c)
-        }
-
-        if (controller.signal.aborted) return
-
-        const rows: OverdueRow[] = overdue.map((task) => {
-          const fullContact = contactMap.get(task.contact!.id)
-          const contact = fullContact
-            ? { id: fullContact.id, first_name: fullContact.first_name, last_name: fullContact.last_name, mobile_phone: fullContact.mobile_phone, phone: fullContact.phone }
-            : { id: task.contact!.id, first_name: task.contact!.first_name, last_name: task.contact!.last_name ?? null }
-          return { task, contact }
-        })
+        const rows: OverdueRow[] = tasks
+          .filter(
+            (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < now && t.contact?.id
+          )
+          .map((task) => ({
+            task,
+            contact: task.contact
+              ? { id: task.contact.id, first_name: task.contact.first_name, last_name: task.contact.last_name ?? null, phone: task.contact.phone }
+              : null,
+          }))
 
         setOverdueTasks(rows)
       } catch {
@@ -99,7 +85,7 @@ export function OverdueCard() {
 
     loadData()
     return () => controller.abort()
-  }, [workspaceId, user?.profileId])
+  }, [workspaceId, user?.profileId, userRole])
 
   const groups = useMemo(() => {
     const map = new Map<string, OverdueRow[]>()
@@ -126,12 +112,13 @@ export function OverdueCard() {
       cell: ({ row }: CellContext<OverdueRow, any>) => {
         const c = row.original.contact
         if (!c) return <span className="text-muted-foreground">--</span>
+        const name = [c.first_name, c.last_name].filter(Boolean).join(" ")
         return (
           <Link
             href={`/contacts/${c.id}`}
             className="font-medium text-foreground hover:text-primary transition-colors"
           >
-            {c.first_name} {c.last_name}
+            {name}
           </Link>
         )
       },
@@ -143,7 +130,7 @@ export function OverdueCard() {
         const c = row.original.contact
         return (
           <span className="text-muted-foreground">
-            {c?.mobile_phone || c?.phone || "--"}
+            {c?.phone || "--"}
           </span>
         )
       },
@@ -207,7 +194,7 @@ export function OverdueCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        <Tabs defaultValue={tabs[0]?.key} className="flex flex-col min-h-0">
+        <Tabs defaultValue="__total__" className="flex flex-col min-h-0">
           <TabsList className="mb-3 h-auto min-h-8 bg-transparent p-0 flex-wrap gap-1">
             <TabsTrigger
               value="__total__"

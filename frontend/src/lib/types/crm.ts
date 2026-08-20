@@ -337,7 +337,7 @@ export interface Task {
   taskable_id?: string | null
   taskable_type?: string
   assigned_to?: { id: string; name: string } | null
-  contact?: { id: string; first_name: string; last_name?: string | null } | null
+  contact?: { id: string; first_name: string; last_name?: string | null; phone?: string | null } | null
   company?: { id: string; name: string } | null
   deal?: { id: string; name: string } | null
   created_at?: string
@@ -568,4 +568,26 @@ export interface ServiceListResponse<T> {
   data: T[]
   error: { message: string } | null
   meta: PaginationMeta
+}
+
+export interface DashboardOverview {
+  contacts: {
+    total: number
+    companies: number
+    duplicatedPhones: number
+    leadStatuses: Record<string, number>
+  }
+  deals: {
+    total: number
+    stages: Record<string, number>
+  }
+  tasks: {
+    total: number
+    statuses: Record<string, number>
+  }
+  tickets: {
+    total: number
+    statuses: Record<string, number>
+    priorities: Record<string, number>
+  }
 }

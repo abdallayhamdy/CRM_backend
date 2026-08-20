@@ -3,11 +3,7 @@
 import * as React from "react"
 import { Users, Handshake, CheckSquare, Headset, Maximize2, Minimize2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
-import { contactsService } from "@/services/contacts"
-import { companiesService } from "@/services/companies"
-import { dealsService } from "@/services/deals"
-import { tasksService } from "@/services/tasks"
-import { ticketsService } from "@/services/tickets"
+import { dashboardService } from "@/services/dashboard"
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton"
 import { DEAL_STAGE_OPTIONS, LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
 import { TICKET_STATUSES } from "@/lib/types/crm"
@@ -53,80 +49,30 @@ export function CrmOverviewCards() {
 
     async function loadCounts() {
       try {
-        const [contactsRes, companiesRes, dealsRes, tasksRes, ticketsRes, allContactsRes, allTicketsRes, allTasksRes] =
-          await Promise.all([
-            contactsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
-            companiesService.getAll({ workspace_id: workspaceId!, limit: 1 }),
-            dealsService.getAll({}, { workspace_id: workspaceId!, limit: 1000 }),
-            tasksService.getAll({ workspace_id: workspaceId!, limit: 1 }),
-            ticketsService.getAll({ workspace_id: workspaceId!, limit: 1 }),
-            contactsService.getAll({ workspace_id: workspaceId!, limit: 1000, sortBy: "created_at", sortDir: "desc" }),
-            ticketsService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
-            tasksService.getAll({ workspace_id: workspaceId!, limit: 1000 }),
-          ])
+        const { data, error } = await dashboardService.getOverview(workspaceId!)
 
         if (signal.aborted) return
-
-        let duplicatedNumbers = 0
-        const allContacts = allContactsRes.data ?? []
-        if (allContacts.length > 0) {
-          const phoneMap = new Map<string, number>()
-          for (const c of allContacts) {
-            const phone = c.phone?.trim()
-            if (phone) {
-              phoneMap.set(phone, (phoneMap.get(phone) ?? 0) + 1)
-            }
-          }
-          for (const count of phoneMap.values()) {
-            if (count > 1) duplicatedNumbers += count
-          }
+        if (error || !data) {
+          toast.error("Failed to load overview data")
+          return
         }
 
         setCounts({
-          contacts: contactsRes.meta?.total ?? 0,
-          companies: companiesRes.meta?.total ?? 0,
-          deals: dealsRes.meta?.total ?? 0,
-          tasks: tasksRes.meta?.total ?? 0,
-          tickets: ticketsRes.count ?? 0,
-          duplicatedNumbers,
+          contacts: data.contacts?.total ?? 0,
+          companies: data.contacts?.companies ?? 0,
+          deals: data.deals?.total ?? 0,
+          tasks: data.tasks?.total ?? 0,
+          tickets: data.tickets?.total ?? 0,
+          duplicatedNumbers: data.contacts?.duplicatedPhones ?? 0,
         })
 
-        const allDeals = dealsRes.data ?? []
-        const stages: Record<string, number> = {}
-        for (const deal of allDeals) {
-          const stage = deal.stage || "new"
-          stages[stage] = (stages[stage] || 0) + 1
-        }
-        setDealStages(stages)
-
-        const statuses: Record<string, number> = {}
-        for (const c of allContacts) {
-          const status = c.lead_status || "New"
-          statuses[status] = (statuses[status] || 0) + 1
-        }
-        setLeadStatuses(statuses)
-
-        const allTasks = allTasksRes.data ?? []
-        const tTypes: Record<string, number> = {}
-        for (const t of allTasks) {
-          const status = t.status || "pending"
-          tTypes[status] = (tTypes[status] || 0) + 1
-        }
-        setTaskTypes(tTypes)
-
-        const allTickets = allTicketsRes.data ?? []
-        const tStages: Record<string, number> = {}
-        const tPriorities: Record<string, number> = {}
-        for (const t of allTickets) {
-          const status = t.status || "open"
-          tStages[status] = (tStages[status] || 0) + 1
-          const priority = t.priority || "medium"
-          tPriorities[priority] = (tPriorities[priority] || 0) + 1
-        }
-        setTicketStages(tStages)
-        setTicketPriorities(tPriorities)
+        setDealStages(data.deals?.stages ?? {})
+        setLeadStatuses(data.contacts?.leadStatuses ?? {})
+        setTaskTypes(data.tasks?.statuses ?? {})
+        setTicketStages(data.tickets?.statuses ?? {})
+        setTicketPriorities(data.tickets?.priorities ?? {})
       } catch {
-        toast.error("Failed to load overview data")
+        if (!signal.aborted) toast.error("Failed to load overview data")
       } finally {
         if (!signal.aborted) setLoading(false)
       }
