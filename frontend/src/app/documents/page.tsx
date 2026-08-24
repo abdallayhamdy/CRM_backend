@@ -541,6 +541,7 @@ export default function DocumentsPage() {
                   data={tabFilteredData}
                   emptyState={emptyState}
                   tableSettings={tableSettings}
+                  hidePreviewActions
                 />
               </>
             )}

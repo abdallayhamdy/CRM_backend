@@ -51,6 +51,7 @@ interface CrmDataTableProps<TData, TValue> {
   isLoading?: boolean
   emptyState?: React.ReactNode
   entityName?: string
+  hidePreviewActions?: boolean
   selectedIds?: Set<string>
   onToggleOne?: (id: string) => void
   tableSettings?: TableSettings
@@ -66,6 +67,7 @@ function CrmDataTableInner<TData, TValue>({
   isLoading,
   emptyState,
   entityName = "record",
+  hidePreviewActions = false,
   selectedIds,
   onToggleOne,
   tableSettings,
@@ -190,13 +192,15 @@ function CrmDataTableInner<TData, TValue>({
                 </svg>
               </button>
             )}
-            <SidebarPreviewButton
-              onPreview={(e: React.MouseEvent) => {
-                e.stopPropagation()
-                ctx.table.options.meta?.onRowClick?.(ctx.row.original)
-              }}
-              href={`${routeBase}/${(ctx.row.original as any).id}`}
-            />
+            {!hidePreviewActions && (
+              <SidebarPreviewButton
+                onPreview={(e: React.MouseEvent) => {
+                  e.stopPropagation()
+                  ctx.table.options.meta?.onRowClick?.(ctx.row.original)
+                }}
+                href={`${routeBase}/${(ctx.row.original as any).id}`}
+              />
+            )}
             {onHistoryClickRef.current && (
               <button
                 type="button"
@@ -227,7 +231,7 @@ function CrmDataTableInner<TData, TValue>({
         ),
       }
     })
-  }, [columns, entityName])
+  }, [columns, entityName, hidePreviewActions])
 
   // Memoize table options to prevent re-renders during column resizing
   const tableOptions = React.useMemo(() => ({
