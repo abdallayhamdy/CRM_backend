@@ -52,6 +52,7 @@ interface CrmDataTableProps<TData, TValue> {
   emptyState?: React.ReactNode
   entityName?: string
   hidePreviewActions?: boolean
+  hideFullPageAction?: boolean
   selectedIds?: Set<string>
   onToggleOne?: (id: string) => void
   tableSettings?: TableSettings
@@ -68,6 +69,7 @@ function CrmDataTableInner<TData, TValue>({
   emptyState,
   entityName = "record",
   hidePreviewActions = false,
+  hideFullPageAction = false,
   selectedIds,
   onToggleOne,
   tableSettings,
@@ -199,6 +201,7 @@ function CrmDataTableInner<TData, TValue>({
                   ctx.table.options.meta?.onRowClick?.(ctx.row.original)
                 }}
                 href={`${routeBase}/${(ctx.row.original as any).id}`}
+                hideExpand={hideFullPageAction}
               />
             )}
             {onHistoryClickRef.current && (
@@ -231,7 +234,7 @@ function CrmDataTableInner<TData, TValue>({
         ),
       }
     })
-  }, [columns, entityName, hidePreviewActions])
+  }, [columns, entityName, hidePreviewActions, hideFullPageAction])
 
   // Memoize table options to prevent re-renders during column resizing
   const tableOptions = React.useMemo(() => ({

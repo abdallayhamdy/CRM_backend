@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { columns } from "./columns"
@@ -549,6 +549,7 @@ export default function ProductsPage() {
                  selectedIds={selectedIds}
                  onToggleOne={toggleOne}
                  entityName="product"
+  hideFullPageAction
                  onRowClick={handleRowClick}
                  onHistoryClick={(item) => {
                    setHistoryProduct(item)

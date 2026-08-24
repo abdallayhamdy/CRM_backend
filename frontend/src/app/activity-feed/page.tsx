@@ -5,39 +5,14 @@ import * as React from "react"
 import { activitiesService } from "@/services/activities"
 import { authService } from "@/services/auth"
 import { useAuth } from "@/hooks/use-auth"
-import { usePermissions } from "@/hooks/use-permissions"
 import { Activity, ActivityType } from "@/lib/types/crm"
-import {
-  isChangeDescription,
-  parseChanges,
-  getActionVerb,
-  formatRelativeTime,
-  groupActivitiesByDate,
-  ChangeDetail,
-} from "@/lib/activity-formatters"
-import {
-  Search,
-  ChevronDown,
-  Mail,
-  User,
-  Phone,
-  FileText,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Zap,
-  Bell,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Plus,
-  RefreshCw,
-  Loader2,
-  Trash2,
-} from "lucide-react"
+import { isChangeDescription, parseChanges, formatRelativeTime } from "@/lib/activity-formatters"
+import { Search, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, RefreshCw } from "lucide-react"
 import { useRealtime } from "@/hooks/use-realtime"
 import { cn } from "@/lib/utils"
+import { getBadgeClasses } from "@/lib/badge-colors"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { CrmDataTable } from "@/components/crm/CrmDataTable"
+import type { ColumnDef, CellContext } from "@tanstack/react-table"
 
 const ACTIVITY_TYPES = [
   { value: "all", label: "All activity types" },
@@ -68,7 +46,6 @@ export default function ActivityFeedPage() {
   const [totalCount, setTotalCount] = React.useState(0)
   const [perPage] = React.useState(25)
   const { workspaceId } = useAuth()
-  const { canDeleteActivity } = usePermissions()
   const [nameMap, setNameMap] = React.useState<Record<string, string>>({})
 
   const totalPages = Math.ceil(totalCount / perPage)
@@ -137,25 +114,110 @@ export default function ActivityFeedPage() {
     }
   }, ["activity_comments"], workspaceId, { intervalMs: 5000 })
 
-  const groupedActivities = React.useMemo(() => {
-    return groupActivitiesByDate(activities)
-  }, [activities])
-
-  const handleDelete = React.useCallback(async (id: string) => {
-    if (!confirm("Are you sure you want to delete this activity?")) return
-    try {
-      const { error } = await activitiesService.delete(id, workspaceId!)
-      if (error) throw error
-      toast.success("Activity deleted")
-      fetchActivities()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete activity")
-    }
-  }, [workspaceId, fetchActivities])
+  const columns: ColumnDef<Activity, any>[] = React.useMemo(() => [
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }: CellContext<Activity, any>) => {
+        const type = row.original.type
+        return (
+          <Badge variant="outline" className={cn("text-[11px] px-1.5 py-0 capitalize", getBadgeClasses("activity_type", type as string, "bordered"))}>
+            {type}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: "owner",
+      header: "Owner",
+      cell: ({ row }: CellContext<Activity, any>) => {
+        const ownerId = row.original.owner_id
+        const name = (ownerId && nameMap[ownerId]) || "System"
+        return <span className="text-foreground text-[13px] font-medium">{name}</span>
+      },
+    },
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: ({ row }: CellContext<Activity, any>) => (
+        <span className="text-foreground text-[13px] font-bold">
+          {row.original.title || row.original.entity_name || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "description",
+      header: "Description",
+      cell: ({ row }: CellContext<Activity, any>) => {
+        const a = row.original
+        const raw = a.formatted_description || a.description || ""
+        if (!raw) {
+          return <span className="text-muted-foreground text-[13px]">—</span>
+        }
+        if (isChangeDescription(raw)) {
+          const changes = parseChanges(raw, nameMap)
+          if (changes.length > 0) {
+            const summary = changes
+              .slice(0, 2)
+              .map((c) => `${c.fieldLabel}: ${c.oldValue} → ${c.newValue}`)
+              .join(" · ")
+            const extra = changes.length > 2 ? ` (+${changes.length - 2} more)` : ""
+            return (
+              <span
+                title={`${summary}${extra}`}
+                className="text-muted-foreground text-[13px] max-w-[300px] truncate block"
+              >
+                {summary}{extra}
+              </span>
+            )
+          }
+          return (
+            <span className="text-muted-foreground text-[13px] max-w-[300px] truncate block">
+              Record updated
+            </span>
+          )
+        }
+        return (
+          <span
+            title={raw}
+            className="text-muted-foreground text-[13px] max-w-[300px] truncate block"
+          >
+            {raw}
+          </span>
+        )
+      },
+    },
+    {
+      id: "related",
+      header: "Related To",
+      cell: ({ row }: CellContext<Activity, any>) => {
+        const a = row.original
+        if (a.entity_name && a.entity_route) {
+          return (
+            <Link href={a.entity_route} className="text-primary text-[13px] font-bold hover:underline inline-flex items-center gap-1">
+              {a.entity_name}
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          )
+        }
+        return <span className="text-muted-foreground text-[13px]">—</span>
+      },
+    },
+    {
+      id: "time",
+      header: "Time",
+      cell: ({ row }: CellContext<Activity, any>) => (
+        <span className="text-muted-foreground text-[13px]">
+          {formatRelativeTime(row.original.activity_date ?? row.original.created_at)}
+        </span>
+      ),
+    },
+  ], [nameMap])
 
   return (
     <div className="h-full bg-muted/50 flex flex-col overflow-y-auto">
-      <div className="bg-background border-b border-border px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-2 shrink-0 z-20 shadow-sm">
+      {/* Top Header - Fixed */}
+      <div className="bg-background border-b border-border px-8 py-4 flex items-center justify-between shrink-0 z-20 shadow-sm">
         <h1 className="text-[20px] font-bold text-foreground">Activity Feed</h1>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-9 border-border text-muted-foreground font-bold" onClick={fetchActivities}>
@@ -165,322 +227,104 @@ export default function ActivityFeedPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth">
-        <div className="max-w-[1000px] mx-auto pt-8 px-4 sm:px-6 pb-20">
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="relative max-w-[600px] mx-auto w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-              <input
-                type="text"
-                placeholder="Search by title, description or owner..."
-                aria-label="Search activity feed"
-                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-full text-[14px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-center justify-center gap-4 text-[13px] font-medium text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span>Activity type:</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1.5 font-bold text-foreground hover:text-primary transition-colors">
-                      {ACTIVITY_TYPES.find((t) => t.value === typeFilter)?.label}{" "}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    {ACTIVITY_TYPES.map((type) => (
-                      <DropdownMenuItem
-                        key={type.value}
-                        onClick={() => setTypeFilter(type.value)}
-                        className={cn(typeFilter === type.value && "bg-muted/50 font-bold")}
-                      >
-                        {type.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Search and Filters */}
+        <div className="flex items-center gap-4 px-6 py-4 border-b border-border bg-background shrink-0">
+          <div className="relative flex-1 max-w-[500px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <input
+              type="text"
+              placeholder="Search by title, description or owner..."
+              aria-label="Search activity feed"
+              className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-[14px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          <div className="space-y-10">
-            {isLoading ? (
+          <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
+            <span>Activity type:</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 font-bold text-foreground hover:text-primary transition-colors border border-border px-3 py-2 rounded-lg bg-background">
+                  {ACTIVITY_TYPES.find(t => t.value === typeFilter)?.label} <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {ACTIVITY_TYPES.map((type) => (
+                  <DropdownMenuItem
+                    key={type.value}
+                    onClick={() => setTypeFilter(type.value)}
+                    className={cn(typeFilter === type.value && "bg-muted/50 font-bold")}
+                  >
+                    {type.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Activity Table */}
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          {isLoading ? (
+            <div className="p-6">
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 w-full bg-background border border-border rounded-xl animate-pulse" />
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                    <Skeleton className="h-4 w-24 ml-auto" />
+                  </div>
                 ))}
               </div>
-            ) : activities.length === 0 ? (
-              <div className="text-center py-24 bg-background border border-border rounded-xl shadow-sm">
-                <div className="bg-muted/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-border">
-                  <Zap className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1">No activities found</h3>
-                <p className="text-muted-foreground text-sm max-w-[300px] mx-auto">
-                  Try adjusting your search or filters to see more results.
-                </p>
-              </div>
-            ) : (
-              groupedActivities.map(({ label, items }) => (
-                <section key={label} className="space-y-3">
-                  <h2 className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-3">
-                    <div className="h-px flex-1 bg-border/50" />
-                    <span className="whitespace-nowrap">{label}</span>
-                    <div className="h-px flex-1 bg-border/50" />
-                  </h2>
-                  <div className="space-y-3">
-                    {items.map((activity) => (
-                      <ActivityCard
-                        key={activity.id}
-                        activity={activity}
-                        onDelete={handleDelete}
-                        canDelete={canDeleteActivity}
-                        nameMap={nameMap}
-                      />
-                    ))}
+            </div>
+          ) : (
+            <>
+              <CrmDataTable
+                columns={columns}
+                data={activities}
+                entityName="activity"
+                hidePreviewActions
+              />
+
+              {!isLoading && totalCount > perPage && (
+                <div className="flex items-center justify-between gap-4 py-4 px-6 border-t border-border bg-background">
+                  <span className="text-[13px] text-muted-foreground">
+                    {totalCount === 0 ? 0 : from + 1}–{Math.min(to + 1, totalCount)} of {totalCount} activities
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage <= 1 || isLoading}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Prev
+                    </Button>
+                    <span className="text-[13px] text-muted-foreground">
+                      Page {currentPage} of {totalPages || 1}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage >= totalPages || isLoading}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
                   </div>
-                </section>
-              ))
-            )}
-          </div>
-
-          {!isLoading && totalCount > perPage && (
-            <div className="flex items-center justify-between gap-4 py-6 mt-8 border-t border-border">
-              <span className="text-[13px] text-muted-foreground">
-                {totalCount === 0 ? 0 : from + 1}–{Math.min(to + 1, totalCount)} of {totalCount} activities
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1 || isLoading}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Prev
-                </Button>
-                <span className="text-[13px] text-muted-foreground">
-                  Page {currentPage} of {totalPages || 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages || isLoading}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function ActivityCard({
-  activity,
-  onDelete,
-  canDelete,
-  nameMap,
-}: {
-  activity: Activity
-  onDelete: (id: string) => void
-  canDelete: boolean
-  nameMap?: Record<string, string>
-}) {
-  const ownerName = activity.owner
-    ? `${activity.owner.first_name} ${activity.owner.last_name || ""}`
-    : "System"
-
-  const isUpdate = (activity.type as string) === "updated" && (isChangeDescription(activity.description) || (activity.resolved_changes?.length ?? 0) > 0)
-  const isCreate = (activity.type as string) === "created"
-  const isDelete = (activity.type as string) === "deleted"
-  const changes = isUpdate
-    ? (activity.resolved_changes?.length ?? 0) > 0
-      ? activity.resolved_changes!.map((rc) => ({
-          field: rc.key,
-          fieldLabel: rc.key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-          oldValue: rc.old_label ?? String(rc.old ?? "—"),
-          newValue: rc.new_label ?? String(rc.new ?? "—"),
-        }))
-      : parseChanges(activity.description || "", nameMap)
-    : []
-
-  const getIcon = () => {
-    switch (activity.type as string) {
-      case "email":
-        return <Mail className="w-4 h-4" />
-      case "note":
-        return <FileText className="w-4 h-4" />
-      case "task":
-        return <CheckCircle2 className="w-4 h-4" />
-      case "call":
-        return <Phone className="w-4 h-4" />
-      case "meeting":
-        return <Calendar className="w-4 h-4" />
-      case "system":
-        return <Bell className="w-4 h-4" />
-      case "created":
-        return <Plus className="w-4 h-4" />
-      case "updated":
-        return <RefreshCw className="w-4 h-4" />
-      case "deleted":
-        return <Trash2 className="w-4 h-4" />
-      default:
-        return <Zap className="w-4 h-4" />
-    }
-  }
-
-  const getColors = () => {
-    switch (activity.type as string) {
-      case "email":
-        return "text-primary bg-primary/10 border-primary/20"
-      case "note":
-        return "text-status-warning bg-status-warning/10 border-status-warning/20"
-      case "task":
-        return "text-status-purple bg-status-purple/10 border-status-purple/20"
-      case "call":
-        return "text-status-success bg-status-success/10 border-status-success/20"
-      case "meeting":
-        return "text-status-purple bg-status-purple/10 border-status-purple/20"
-      case "system":
-        return "text-muted-foreground bg-muted border-border"
-      case "created":
-        return "text-status-success bg-status-success/10 border-status-success/20"
-      case "updated":
-        return "text-primary bg-primary/10 border-primary/20"
-      case "deleted":
-        return "text-status-danger bg-status-danger/10 border-status-danger/20"
-      default:
-        return "text-muted-foreground bg-muted border-border"
-    }
-  }
-
-  const getBorderColor = () => {
-    switch (activity.type as string) {
-      case "email":
-        return "border-l-primary"
-      case "note":
-        return "border-l-status-warning"
-      case "task":
-        return "border-l-status-purple"
-      case "call":
-        return "border-l-status-success"
-      case "meeting":
-        return "border-l-status-purple"
-      case "system":
-        return "border-l-muted-foreground"
-      case "created":
-        return "border-l-status-success"
-      case "updated":
-        return "border-l-primary"
-      case "deleted":
-        return "border-l-status-danger"
-      default:
-        return "border-l-border"
-    }
-  }
-
-  return (
-    <div
-      className={cn(
-        "bg-background border border-border rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden border-l-[3px]",
-        getBorderColor()
-      )}
-    >
-      <div className="p-4 flex items-start gap-3">
-        <div className="shrink-0 mt-0.5">
-          <div
-            className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center border",
-              getColors()
-            )}
-          >
-            {getIcon()}
-          </div>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3 mb-1">
-            <div className="text-[14px] leading-relaxed">
-              <span className="font-bold text-foreground">{ownerName}</span>
-              <span className="text-muted-foreground"> </span>
-              <span className="text-muted-foreground">
-                {getActionVerb(activity.type, activity.entity_name)}
-              </span>
-              {activity.entity_name && activity.entity_route && (
-                <Link
-                  href={activity.entity_route}
-                  className="ml-1.5 inline-flex items-center gap-1 text-primary font-bold hover:underline"
-                >
-                  &quot;{activity.entity_name}&quot;
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-              )}
-            </div>
-
-            {canDelete && (
-              <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => onDelete(activity.id)}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {isUpdate && changes.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {changes.map((change) => (
-                <ChangeRow key={change.field} change={change} />
-              ))}
-            </div>
-          )}
-
-          {!isUpdate && (activity.formatted_description || (activity.description && !isChangeDescription(activity.description))) && (
-            <div className="text-[13px] text-muted-foreground mt-1.5 line-clamp-2">
-              {activity.formatted_description || activity.description}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/50">
-            <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground/60 font-medium">
-              <Clock className="w-3 h-3" />
-              {formatRelativeTime(activity.activity_date ?? activity.created_at)}
-            </div>
-
-            <span
-              className={cn(
-                "px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-tight",
-                getColors()
-              )}
-            >
-              {activity.type}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ChangeRow({ change }: { change: ChangeDetail }) {
-  return (
-    <div className="flex items-center gap-2 text-[13px] py-1 px-2.5 rounded-md bg-muted/50">
-      <span className="font-bold text-foreground whitespace-nowrap">{change.fieldLabel}:</span>
-      <span className="text-muted-foreground line-through decoration-status-danger/50">{change.oldValue}</span>
-      <span className="text-muted-foreground">→</span>
-      <span className="font-medium text-foreground">{change.newValue}</span>
     </div>
   )
 }

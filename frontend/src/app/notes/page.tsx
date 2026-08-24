@@ -348,6 +348,7 @@ export default function NotesPage() {
                       router.push(`/notes/${note.id}`)
                     }}
                     entityName="note"
+                    hidePreviewActions
                     tableSettings={tableSettings}
                   />
                 </div>

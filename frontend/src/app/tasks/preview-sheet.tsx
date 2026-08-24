@@ -129,19 +129,27 @@ export function TaskPreviewSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[500px] p-0 border-l border-border">
+      <SheetContent
+        style={{ top: '56px', height: 'calc(100vh - 56px)' }}
+        className="w-[500px] sm:w-[540px] p-0 flex flex-col hide-scrollbar border-t border-border shadow-2xl"
+        side="right"
+      >
         {!isContentReady ? (
           <PreviewSheetSkeleton />
         ) : (
           <>
-            <SheetHeader className="p-6 border-b border-border bg-muted/50">
+            <SheetHeader>
               <VisuallyHidden>
                 <SheetTitle>Task Preview</SheetTitle>
                 <SheetDescription>
                   Task details and management.
                 </SheetDescription>
               </VisuallyHidden>
-              <div className="flex items-center justify-between mb-2">
+            </SheetHeader>
+
+            {/* Header Section */}
+            <div className="bg-muted/30 border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
             <div className={cn(task.status === "completed" ? "bg-status-success text-[var(--color-hs-card-bg)]" : "bg-muted text-foreground", "inline-flex items-center justify-center text-[11px] font-bold rounded-full py-0.5 px-2.5")}>
               <CheckCircle2 className="h-3 w-3 mr-1" />
               {task.status === "completed" ? "Completed" : "In Progress"}
@@ -180,9 +188,9 @@ export function TaskPreviewSheet({
               task.title
             )}
           </div>
-        </SheetHeader>
+            </div>
 
-        <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto w-full">
           {/* Main Info */}
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-2 gap-6">

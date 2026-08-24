@@ -17,6 +17,7 @@ interface SidebarPreviewButtonProps {
   href: string
   tooltipPreview?: string
   tooltipExpand?: string
+  hideExpand?: boolean
 }
 
 export function SidebarPreviewButton({
@@ -24,6 +25,7 @@ export function SidebarPreviewButton({
   href,
   tooltipPreview = "Sidebar Preview",
   tooltipExpand = "Open full page",
+  hideExpand = false,
 }: SidebarPreviewButtonProps) {
   return (
     <div className="flex items-center gap-1.5 shrink-0">
@@ -42,21 +44,23 @@ export function SidebarPreviewButton({
           <TooltipContent>{tooltipPreview}</TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={href}
-              onClick={(e) => e.stopPropagation()}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "icon" }),
-                "h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10"
-              )}
-            >
-              <Maximize2 className="h-4.5 w-4.5" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>{tooltipExpand}</TooltipContent>
-        </Tooltip>
+        {!hideExpand && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={href}
+                onClick={(e) => e.stopPropagation()}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10"
+                )}
+              >
+                <Maximize2 className="h-4.5 w-4.5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>{tooltipExpand}</TooltipContent>
+          </Tooltip>
+        )}
       </TooltipProvider>
     </div>
   )

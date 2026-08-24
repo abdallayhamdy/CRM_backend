@@ -63,17 +63,25 @@ export function CallPreviewSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[500px] p-0 border-l border-border">
+      <SheetContent
+        style={{ top: '56px', height: 'calc(100vh - 56px)' }}
+        className="w-[500px] sm:w-[540px] p-0 flex flex-col hide-scrollbar border-t border-border shadow-2xl"
+        side="right"
+      >
         {!isContentReady ? (
           <PreviewSheetSkeleton />
         ) : (
           <>
-            <SheetHeader className="p-6 border-b border-border bg-muted/50">
+            <SheetHeader>
               <VisuallyHidden>
                 <SheetTitle>Call Details</SheetTitle>
                 <SheetDescription>Previewing call records and associations.</SheetDescription>
               </VisuallyHidden>
-              <div className="flex items-center justify-between mb-2">
+            </SheetHeader>
+
+            {/* Header Section */}
+            <div className="bg-muted/30 border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
             <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-status-success-light text-status-success border-status-success/20">
               {call.call_direction || "Call"}
             </Badge>
@@ -92,9 +100,10 @@ export function CallPreviewSheet({
           <div className="text-xl font-bold text-foreground">
             {call.title || "Call with Contact"}
           </div>
-        </SheetHeader>
+            </div>
 
-        <div className="flex flex-col flex-1 overflow-y-auto p-6 gap-6">
+        <div className="flex-1 overflow-y-auto w-full">
+          <div className="px-6 py-5 flex flex-col gap-6">
           {/* Main Info */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1.5">
@@ -173,6 +182,7 @@ export function CallPreviewSheet({
                 />
               )}
             </div>
+          </div>
           </div>
         </div>
           </>

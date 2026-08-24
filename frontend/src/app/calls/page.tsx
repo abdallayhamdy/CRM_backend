@@ -367,6 +367,7 @@ export default function CallsPage() {
                       data={summaryFilteredData}
                       onRowClick={handleRowClick}
                       entityName="call"
+                      hideFullPageAction
                       tableSettings={tableSettings}
                     />
                   </div>
