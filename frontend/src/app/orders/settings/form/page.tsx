@@ -175,7 +175,7 @@ function FieldItem({
 export default function EditOrderFormPage() {
   const router = useRouter()
   const defaultSelected = React.useMemo(() => INITIAL_GROUPS.flatMap(g => g.properties.filter(p => p.selected)), [])
-  const { formFields, setFormFields, loading, saving, hasChanges, save, reset: resetLayout, updateFormField } = useFormLayout('order', defaultSelected)
+  const { formFields, loading, saving, hasChanges, save, reset: resetLayout, updateFormField } = useFormLayout('order', defaultSelected)
   const [groups, setGroups] = React.useState<PropertyGroup[]>(INITIAL_GROUPS)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [expandedGroups, setExpandedGroups] = React.useState<string[]>(["order-info", "order-associations"])
@@ -228,7 +228,7 @@ export default function EditOrderFormPage() {
   }
 
   const toggleProperty = (propertyId: string) => {
-    setFormFields(prev => {
+    updateFormField(prev => {
       const exists = prev.some(f => f.id === propertyId)
       if (exists) {
         return prev.filter(f => f.id !== propertyId)
@@ -243,14 +243,14 @@ export default function EditOrderFormPage() {
   }
 
   const toggleRequired = (propertyId: string) => {
-    setFormFields(prev => prev.map(f => {
+    updateFormField(prev => prev.map(f => {
       if (f.id !== propertyId) return f
       return { ...f, required: !f.required }
     }))
   }
 
   const handleReorder = (newFields: typeof formFields) => {
-    setFormFields(newFields)
+    updateFormField(() => newFields)
   }
 
   const filteredGroups = groups.map(group => ({
