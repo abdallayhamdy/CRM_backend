@@ -350,15 +350,28 @@ function CrmDataTableInner<TData, TValue>({
             table.getState().columnSizingInfo.isResizingColumn && "crm-table-resizing",
             tableSettings?.zebraStriping && "crm-table-striped"
           )}
-          style={{ width: '100%', tableLayout: 'fixed' }}
+          style={{
+            width: '100%',
+            tableLayout: table.getState().columnSizingInfo.isResizingColumn ? 'fixed' : 'auto',
+          }}
         >
           <colgroup>
-            {table.getVisibleLeafColumns().map((col) => (
-              <col
-                key={col.id}
-                style={col.id === "select" ? { width: "40px" } : undefined}
-              />
-            ))}
+            {table.getVisibleLeafColumns().map((col) => {
+              const userSize = table.getState().columnSizing?.[col.id]
+              const width = col.id === "select"
+                ? "40px"
+                : userSize != null
+                  ? `${userSize}px`
+                  : table.getState().columnSizingInfo.isResizingColumn
+                    ? `${col.getSize()}px`
+                    : undefined
+              return (
+                <col
+                  key={col.id}
+                  style={width ? { width } : undefined}
+                />
+              )
+            })}
           </colgroup>
           <TableHeader className="sticky top-0 z-20 border-b border-border">
             {table.getHeaderGroups().map((headerGroup) => (
