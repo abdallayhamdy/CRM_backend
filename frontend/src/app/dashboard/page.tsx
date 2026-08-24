@@ -6,7 +6,6 @@ import { RecentActivityCard, RecentActivityCardSkeleton } from "@/components/das
 import { PhoneCallCard, PhoneCallCardSkeleton } from "@/components/dashboard/PhoneCallCard";
 import { OverdueCard, OverdueCardSkeleton } from "@/components/dashboard/OverdueCard";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
-import { SalesStatsCards, SalesStatsCardsSkeleton } from "@/components/dashboard/SalesStatsCards";
 import { CallOutcomeCards, CallOutcomeCardsSkeleton } from "@/components/dashboard/CallOutcomeCards";
 import { IntegrationCards } from "@/components/dashboard/IntegrationCards";
 
@@ -20,10 +19,6 @@ export default function DashboardPage() {
 
         <Suspense fallback={<CrmOverviewCardsSkeleton />}>
           <CrmOverviewCards />
-        </Suspense>
-
-        <Suspense fallback={<SalesStatsCardsSkeleton />}>
-          <SalesStatsCards />
         </Suspense>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
