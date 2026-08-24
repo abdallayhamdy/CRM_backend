@@ -50,6 +50,40 @@ const priorityColors: Record<string, string> = {
   None: "bg-gray-100 text-gray-700 border-gray-200",
 }
 
+export const TASK_TYPE_OPTIONS = [
+  { value: "to_do", label: "To-do" },
+  { value: "call", label: "Call" },
+  { value: "email", label: "Email" },
+  { value: "follow_up", label: "Follow Up" },
+  { value: "follow_up_after_meeting", label: "Follow Up After Meeting" },
+] as const
+
+function normalizeTaskSubtype(raw?: string | null): string {
+  if (!raw) return "to_do"
+  const v = raw.trim().toLowerCase().replace(/\s+/g, " ")
+  const mapped: Record<string, string> = {
+    "to-do": "to_do",
+    todo: "to_do",
+    "to do": "to_do",
+    call: "call",
+    email: "email",
+    meeting: "follow_up_after_meeting",
+    "follow up": "follow_up",
+    followup: "follow_up",
+    "follow up after meeting": "follow_up_after_meeting",
+    "followup after meeting": "follow_up_after_meeting",
+    followupaftermeeting: "follow_up_after_meeting",
+  }
+  if (mapped[v]) return mapped[v]
+  if (TASK_TYPE_OPTIONS.some((o) => o.value === v)) return v
+  return "to_do"
+}
+
+function taskSubtypeLabel(value?: string | null): string {
+  const v = normalizeTaskSubtype(value)
+  return TASK_TYPE_OPTIONS.find((o) => o.value === v)?.label ?? "To-do"
+}
+
 interface ActivityTaskCardProps {
   id?: string
   title: string
@@ -94,7 +128,7 @@ export function ActivityTaskCard({
   const [editedDueDate, setEditedDueDate] = React.useState(dueDate)
 
   // Local state for dropdowns — initialized from persisted props
-  const [taskType, setTaskType] = React.useState(initialTaskSubtype)
+  const [taskType, setTaskType] = React.useState(() => normalizeTaskSubtype(initialTaskSubtype))
   const [priority, setPriority] = React.useState(initialPriority)
   const [queue, setQueue] = React.useState(initialQueue)
   const [reminder, setReminder] = React.useState(initialReminder)
@@ -224,7 +258,7 @@ export function ActivityTaskCard({
     setEditedNotes(description || "")
     setEditedDueDate(dueDate)
     setEditedDueTime(dueTime)
-    setTaskType(initialTaskSubtype)
+    setTaskType(normalizeTaskSubtype(initialTaskSubtype))
     setPriority(initialPriority)
     setQueue(initialQueue)
     setReminder(initialReminder)
@@ -238,7 +272,7 @@ export function ActivityTaskCard({
     editedNotes !== (description || "") ||
     editedDueDate !== dueDate ||
     editedDueTime !== dueTime ||
-    taskType !== initialTaskSubtype ||
+    taskType !== normalizeTaskSubtype(initialTaskSubtype) ||
     priority !== initialPriority ||
     queue !== initialQueue ||
     reminder !== initialReminder ||
@@ -272,6 +306,7 @@ export function ActivityTaskCard({
         title: (editedTitle || "").trim(),
         description: (editedNotes || "").trim() || undefined,
         status: isCompleted ? "completed" : "pending",
+        task_subtype: taskType,
         ...(dueDateISO ? { due_date: dueDateISO } : {})
       })
       if (error) throw error
@@ -403,7 +438,7 @@ export function ActivityTaskCard({
       {!isEditing && isExpanded && (
         <div className="px-4 md:px-12 pb-3 pt-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[12px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{taskType}</span>
+            <span className="text-[12px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{taskSubtypeLabel(taskType)}</span>
             <span className={cn("text-[12px] px-2 py-0.5 rounded-full font-medium border", priorityColors[priority] || "bg-muted text-muted-foreground border-border")}>{priority}</span>
             <span className="text-[12px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{queue}</span>
             <span className="text-[12px] text-muted-foreground">•</span>
@@ -514,21 +549,21 @@ export function ActivityTaskCard({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" className="w-full flex items-center justify-between py-2 px-3 bg-muted/50 hover:bg-border rounded-md border border-border transition-colors outline-none group">
-                    <span className="text-[14px] font-bold text-foreground">{taskType}</span>
+                     <span className="text-[14px] font-bold text-foreground">{taskSubtypeLabel(taskType)}</span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[180px] p-1 shadow-2xl border-border bg-background rounded-lg">
-                  {["To-do", "Call", "Email", "Meeting"].map((opt) => (
-                    <DropdownMenuItem 
-                      key={opt} 
-                      onClick={() => setTaskType(opt)}
+                  {TASK_TYPE_OPTIONS.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => setTaskType(opt.value)}
                       className={cn(
                         "px-3 py-2 text-[14px] cursor-pointer rounded-md transition-colors",
-                        taskType === opt ? "bg-muted/50 font-bold text-primary" : "text-foreground hover:bg-accent"
+                        taskType === opt.value ? "bg-muted/50 font-bold text-primary" : "text-foreground hover:bg-accent"
                       )}
                     >
-                      {opt}
+                      {opt.label}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

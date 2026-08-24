@@ -82,7 +82,7 @@ export function TaskEditorSheet({ open, onClose, onSaved, entityType, entityId, 
   const [dueDateTime, setDueDateTime] = React.useState(resolveSmartDate("in_3_days") + " 08:00 AM")
   const [smartDate, setSmartDate] = React.useState("in_3_days")
   const [priority, setPriority] = React.useState("")
-  const [type, setType] = React.useState("")
+  const [type, setType] = React.useState("to_do")
   const [queue, setQueue] = React.useState("general")
   const [assignedTo, setAssignedTo] = React.useState("")
   const [sendReminder, setSendReminder] = React.useState("")
