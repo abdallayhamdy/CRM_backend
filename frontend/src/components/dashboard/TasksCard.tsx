@@ -69,7 +69,7 @@ export function TasksCard() {
   const fetchTasks = React.useCallback(() => {
     if (!workspaceId) return
     const controller = new AbortController()
-    tasksService.getAll({ workspace_id: workspaceId, limit: 20 }).then(({ data }) => {
+    tasksService.getAll({ workspace_id: workspaceId, limit: 1000 }).then(({ data }) => {
       if (!controller.signal.aborted && data) {
         setTasks(data.map(t => ({
           id: t.id,
