@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { PageNumbers } from "@/components/shared/Pagination"
 import { cn } from "@/lib/utils"
 
 interface PaginationBarProps {
@@ -21,6 +22,7 @@ interface PaginationBarProps {
   onPreviousPage: () => void
   onNextPage: () => void
   onSetPageSize: (size: number) => void
+  onGoToPage?: (pageIndex: number) => void
 }
 
 function PaginationBarInner({
@@ -33,7 +35,9 @@ function PaginationBarInner({
   onPreviousPage,
   onNextPage,
   onSetPageSize,
+  onGoToPage,
 }: PaginationBarProps) {
+  const pageCount = Math.max(1, Math.ceil(totalFilteredRows / pageSize))
   return (
     <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 border-t border-border z-20 shrink-0 flex-wrap">
       <div className="text-xs text-muted-foreground font-medium">
@@ -94,9 +98,17 @@ function PaginationBarInner({
             <ChevronLeft className="h-4 w-4" />
             Prev
           </Button>
-          <div className="flex items-center px-3 h-8 text-[13px] font-bold text-primary bg-primary/5 border border-primary/20 rounded-sm">
-            {pageIndex + 1}
-          </div>
+          {onGoToPage ? (
+            <PageNumbers
+              pageIndex={pageIndex}
+              pageCount={pageCount}
+              onGoToPage={onGoToPage}
+            />
+          ) : (
+            <div className="flex items-center px-3 h-8 text-[13px] font-bold text-primary bg-primary/5 border border-primary/20 rounded-sm">
+              {pageIndex + 1}
+            </div>
+          )}
           <Button
             variant="outline"
             size="sm"

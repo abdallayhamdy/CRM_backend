@@ -448,6 +448,7 @@ function CrmDataTableInner<TData, TValue>({
           onPreviousPage={() => table.previousPage()}
           onNextPage={() => table.nextPage()}
           onSetPageSize={(size) => table.setPageSize(size)}
+          onGoToPage={(page) => table.setPageIndex(page)}
         />
       )}
       {isInfinite && (
