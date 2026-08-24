@@ -448,6 +448,7 @@ export default function TasksPage() {
       if (columnId === 'title') updates.title = value
       if (columnId === 'due_date') updates.due_date = value
       if (columnId === 'completed') updates.status = value ? 'completed' : 'pending'
+      if (columnId === 'task_subtype') updates.task_subtype = value as string | null
 
       const { error } = await tasksService.update(task.id, updates)
       if (error) throw error
