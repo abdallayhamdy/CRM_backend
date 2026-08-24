@@ -21,6 +21,8 @@ import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar
 
 
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog"
+import type { CardAction } from "@/components/crm/CrmBoardView"
 import { DealsPageHeader } from "./DealsPageHeader"
 import { DealsTableView } from "./DealsTableView"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
@@ -84,6 +86,7 @@ const DEFAULT_BOARD_COLUMNS = [
 
 export default function DealsPage() {
   const [selectedDeal, setSelectedDeal] = React.useState<Deal | null>(null)
+  const [boardDeleteDeal, setBoardDeleteDeal] = React.useState<Deal | null>(null)
   const [dealData, setDealData] = React.useState<Deal[]>([])
   const [refreshKey, setRefreshKey] = React.useState(0)
   const [owners, setOwners] = React.useState<Profile[]>([])
@@ -566,6 +569,36 @@ export default function DealsPage() {
     }
   }
 
+  const handleBoardCardAction = (deal: Deal, action: CardAction) => {
+    if (action === 'full-preview') {
+      setSelectedDeal(deal)
+      return
+    }
+    if (action === 'delete') {
+      if (!canDeleteDeal) {
+        toast.error("You don't have permission to delete deals")
+        return
+      }
+      setBoardDeleteDeal(deal)
+    }
+  }
+
+  const confirmBoardDelete = async () => {
+    if (!boardDeleteDeal || !workspaceId) return
+    try {
+      const { error } = await dealsService.delete(boardDeleteDeal.id, workspaceId)
+      if (error) throw error
+      toast.success("Deal deleted")
+      if (selectedDeal?.id === boardDeleteDeal.id) setSelectedDeal(null)
+      setRefreshKey(k => k + 1)
+    } catch (err) {
+      console.error("[deals] Board delete failed:", err)
+      toast.error("Failed to delete deal")
+    } finally {
+      setBoardDeleteDeal(null)
+    }
+  }
+
   const handleBulkExport = () => {
     const exportData = selectedItems.map(d => ({
       "Deal Name": d.title,
@@ -834,6 +867,7 @@ export default function DealsPage() {
                     filteredData={filteredData}
                     boardColumns={currentBoardColumns}
                     setSelectedDeal={setSelectedDeal}
+                    onCardAction={handleBoardCardAction}
                     onDragEnd={handleDealDragEnd}
                   />
                 )}
@@ -871,6 +905,16 @@ export default function DealsPage() {
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen} 
         onDealCreated={loadDeals}
+      />
+
+      <ConfirmDialog
+        open={!!boardDeleteDeal}
+        onOpenChange={(open) => !open && setBoardDeleteDeal(null)}
+        title="Delete deal?"
+        description={`"${boardDeleteDeal?.title ?? ""}" will be permanently deleted. This action cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={confirmBoardDelete}
       />
 
       {count > 0 && canDeleteDeal && (

@@ -40,7 +40,7 @@ export const columns: ColumnDef<Ticket>[] = [
     accessorKey: "subject",
     header: "Ticket Name",
     cell: ({ row }) => (
-      <span                 className="text-[var(--color-hs-blue)] font-semibold text-[13.5px] hover:underline cursor-pointer tracking-tight">
+      <span className="text-[var(--color-hs-blue)] font-semibold text-[13.5px] hover:underline cursor-pointer tracking-tight flex-1 min-w-0">
         {row.getValue("subject")}
       </span>
     ),

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { PropertyFormState } from "./CreatePropertyFormState";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RollupEditorProps {
   form: PropertyFormState;
@@ -43,19 +44,20 @@ export function RollupEditor({ form, setForm }: RollupEditorProps) {
         <p className="text-xs text-muted-foreground">
           {ROLLUP_DESCRIPTIONS[form.rollup_type] || ''}
         </p>
-        <select
-          value={form.rollup_type}
-          onChange={e => setForm(p => ({ ...p, rollup_type: e.target.value as any }))}
-          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="min">Min</option>
-          <option value="max">Max</option>
-          <option value="count">Count</option>
-          <option value="sum">Sum</option>
-          <option value="average">Average</option>
-          <option value="earliest_date">Earliest date</option>
-          <option value="latest_date">Latest date</option>
-        </select>
+        <Select value={form.rollup_type} onValueChange={(v) => setForm(p => ({ ...p, rollup_type: v as any }))}>
+          <SelectTrigger className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="min">Min</SelectItem>
+            <SelectItem value="max">Max</SelectItem>
+            <SelectItem value="count">Count</SelectItem>
+            <SelectItem value="sum">Sum</SelectItem>
+            <SelectItem value="average">Average</SelectItem>
+            <SelectItem value="earliest_date">Earliest date</SelectItem>
+            <SelectItem value="latest_date">Latest date</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Number format — only for numeric rollup types */}

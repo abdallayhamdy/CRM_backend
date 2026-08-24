@@ -65,11 +65,11 @@ export function getCoreColumns(lifecycleStages: StageConfig[], properties?: Prop
       return (
         <div className="flex items-center gap-3 py-1 text-foreground">
           <Avatar firstName={contact.first_name} lastName={contact.last_name || undefined} size="md" />
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0 flex-1">
             <Link
               href={`/contacts/${contact.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="font-semibold text-primary hover:underline cursor-pointer"
+              className="font-semibold text-primary hover:underline cursor-pointer truncate"
             >
               {fullName || '--'}
             </Link>

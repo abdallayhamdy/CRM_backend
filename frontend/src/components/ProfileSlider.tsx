@@ -51,6 +51,7 @@ export function ProfileSlider({ open, onOpenChange }: ProfileSliderProps) {
       <SheetContent
         side="right"
         showCloseButton={false}
+        overlayClassName="bg-transparent"
         className="p-0 gap-0 bg-card overflow-y-auto"
         style={{ width: "340px", maxWidth: "85vw" }}
       >
@@ -137,47 +138,24 @@ export function ProfileSlider({ open, onOpenChange }: ProfileSliderProps) {
           {/* Color Theme */}
           <div className="rounded-xl border border-border bg-background p-4 space-y-3">
             <span className="text-xs text-primary font-medium">Color</span>
-            <div className="overflow-x-auto pb-1">
-              <div className="flex flex-col gap-2" style={{ width: "max-content" }}>
-                <div className="flex gap-2">
-                  {THEMES.slice(0, Math.ceil(THEMES.length / 2)).map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setColorTheme(t.id)
-                        applyColorTheme(t.id as ThemeId)
-                      }}
-                      className={cn(
-                        "h-8 w-8 rounded-full border-2 transition-all shrink-0",
-                        colorTheme === t.id
-                          ? "border-foreground scale-110"
-                          : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: `hsl(${t.color})` }}
-                      title={t.name}
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  {THEMES.slice(Math.ceil(THEMES.length / 2)).map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setColorTheme(t.id)
-                        applyColorTheme(t.id as ThemeId)
-                      }}
-                      className={cn(
-                        "h-8 w-8 rounded-full border-2 transition-all shrink-0",
-                        colorTheme === t.id
-                          ? "border-foreground scale-110"
-                          : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: `hsl(${t.color})` }}
-                      title={t.name}
-                    />
-                  ))}
-                </div>
-              </div>
+            <div className="grid grid-cols-11 gap-2 justify-items-center">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setColorTheme(t.id)
+                    applyColorTheme(t.id as ThemeId)
+                  }}
+                  className={cn(
+                    "h-7 w-7 rounded-full border-2 transition-all shrink-0",
+                    colorTheme === t.id
+                      ? "border-foreground scale-110"
+                      : "border-transparent hover:scale-105"
+                  )}
+                  style={{ backgroundColor: `hsl(${t.color})` }}
+                  title={t.name}
+                />
+              ))}
             </div>
           </div>
         </div>

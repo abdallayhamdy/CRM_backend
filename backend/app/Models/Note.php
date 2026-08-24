@@ -71,8 +71,8 @@ class Note extends Model
         $subject = "Note was {$action}";
         if ($this->content) {
             $plainText = strip_tags($this->content);
-            $subject = substr($plainText, 0, 50);
-            if (strlen($plainText) > 50) $subject .= "...";
+            $subject = mb_substr($plainText, 0, 50, 'UTF-8');
+            if (mb_strlen($plainText, 'UTF-8') > 50) $subject .= "...";
         }
 
         if (app()->runningUnitTests()) {

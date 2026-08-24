@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   AlertTriangle, ArrowLeft, Save, BarChart2, Database, CheckCircle2,
   Info, Lock, Users, Loader2, ChevronRight, FileText, Settings2, Shield,
-  Eye, ShieldCheck
+  Eye, ShieldCheck, Plus, X, Type
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,10 @@ const RulesTab = dynamic(
 );
 const ManageAccessTab = dynamic(
   () => import('@/components/properties/ManageAccessTab'),
+  { ssr: false }
+);
+const FieldTypeSelector = dynamic(
+  () => import('@/components/properties/FieldTypeSelector'),
   { ssr: false }
 );
 
@@ -56,10 +60,11 @@ const FIELD_LABELS: Record<string, string> = {
   owner:'Owner', color_picker:'Color picker',
 };
 
-type TabId = 'details' | 'rules' | 'manage_access' | 'preview';
+type TabId = 'details' | 'field_type' | 'rules' | 'manage_access' | 'preview';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'details',       label: 'Details',       icon: FileText    },
+  { id: 'field_type',    label: 'Field Type',    icon: Type        },
   { id: 'rules',         label: 'Rules',         icon: Settings2   },
   { id: 'manage_access', label: 'Manage Access', icon: ShieldCheck },
   { id: 'preview',       label: 'Preview',       icon: Eye         },
@@ -93,6 +98,18 @@ export default function PropertyEditPage() {
   const [isRequired, setIsRequired] = useState(false);
   const [showInForms, setShowInForms] = useState(true);
 
+  // Field type specific state
+  const [fieldType, setFieldType] = useState('');
+  const [options, setOptions] = useState<Array<{ label: string; value: string; color?: string }>>([]);
+  const [defaultValue, setDefaultValue] = useState('');
+  const [numberFormat, setNumberFormat] = useState('formatted');
+  const [dateDisplayFormat, setDateDisplayFormat] = useState('date_only');
+  const [datetimeDisplayFormat, setDatetimeDisplayFormat] = useState('date_time_only');
+  const [optionStyle, setOptionStyle] = useState('default');
+
+  const isChoiceField = ['dropdown_select', 'radio_select', 'multiple_checkboxes'].includes(fieldType);
+  const isNumberField = ['number', 'currency', 'percent'].includes(fieldType);
+
   const isSystem = property?.created_by === 'System';
 
   const fetchProperty = useCallback(async () => {
@@ -104,6 +121,13 @@ export default function PropertyEditPage() {
       setProperty(p); setLabel(p.label); setDescription(p.description || '');
       setGroupName(p.group_name || ''); setIsRequired(p.is_required);
       setShowInForms(p.show_in_forms ?? true);
+      setFieldType(p.field_type);
+      setOptions(p.options?.length > 0 ? p.options.map((o: any) => ({ label: o.label, value: o.value, color: o.color || '' })) : []);
+      setDefaultValue((p as any).default_value || '');
+      setNumberFormat((p as any).number_format || 'formatted');
+      setDateDisplayFormat((p as any).date_display_format || 'date_only');
+      setDatetimeDisplayFormat((p as any).datetime_display_format || 'date_time_only');
+      setOptionStyle((p as any).option_style || 'default');
     } catch { setError('Failed to load property.'); }
     finally { setLoading(false); }
   }, [propertyId]);
@@ -128,7 +152,21 @@ export default function PropertyEditPage() {
     try {
       const body: Record<string, any> = {
         description: description || null, is_required: isRequired, show_in_forms: showInForms,
+        field_type: fieldType, default_value: defaultValue || null,
       };
+      if (isChoiceField) {
+        body.options = options.filter(opt => opt.label.trim() !== '');
+        body.option_style = optionStyle;
+      }
+      if (isNumberField) {
+        body.number_format = numberFormat;
+      }
+      if (fieldType === 'date_picker') {
+        body.date_display_format = dateDisplayFormat;
+      }
+      if (fieldType === 'date_time_picker') {
+        body.datetime_display_format = datetimeDisplayFormat;
+      }
       if (!isSystem) { body.label = label.trim(); body.group_name = groupName || null; }
       const { data, error } = await laravelApi.patch<{ data: Property }>(`/properties/${propertyId}`, body);
       if (error) { setError(error); return; }
@@ -317,6 +355,298 @@ export default function PropertyEditPage() {
                       <Switch checked={showInForms} onCheckedChange={setShowInForms} />
                     </div>
                   </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-border bg-[var(--color-hs-light-bg)] flex items-center justify-between">
+                  <Button variant="outline" className="text-[13px] border-border" onClick={() => router.back()}>
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />Back
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    {saved && (
+                      <div className="flex items-center gap-1.5 text-[13px] text-status-success">
+                        <CheckCircle2 className="w-4 h-4" />Saved
+                      </div>
+                    )}
+                    <Button className="bg-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue-hover)] text-white text-[13px] font-semibold gap-1.5"
+                      onClick={handleSave} disabled={saving}>
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {saving ? 'Saving…' : 'Save changes'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── FIELD TYPE TAB ──────────────────────────────────────────────── */}
+          {activeTab === 'field_type' && (
+            <div className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 rounded-[6px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />{error}
+                </div>
+              )}
+              <div className="rounded-[8px] border border-border bg-[var(--color-hs-card-bg)] shadow-sm overflow-hidden">
+                <div className="px-6 py-5 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-[18px] font-bold text-foreground">Field Type</h2>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">
+                        Configure the field type and options for this property.
+                      </p>
+                    </div>
+                    {isSystem && (
+                      <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground bg-[var(--color-hs-light-bg)] px-3 py-1.5 rounded-full border border-border">
+                        <Lock className="w-3 h-3" /> System property
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-6 py-6 space-y-5">
+                  {/* Field type */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-semibold text-foreground">Field type</Label>
+                    <FieldTypeSelector
+                      value={fieldType}
+                      onChange={setFieldType}
+                      placeholder="Select field type"
+                    />
+                  </div>
+
+                  {/* Default Value - for most field types */}
+                  {fieldType && !isChoiceField && !['calculation', 'rollup'].includes(fieldType) && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-foreground">Default value</Label>
+                      {(fieldType === 'single_line_text' || fieldType === 'phone_number' || fieldType === 'email' || fieldType === 'url') && (
+                        <Input
+                          value={defaultValue}
+                          onChange={(e) => setDefaultValue(e.target.value)}
+                          placeholder={`Enter default ${fieldType === 'email' ? 'email' : fieldType === 'url' ? 'URL' : 'value'}`}
+                          type={fieldType === 'email' ? 'email' : fieldType === 'url' ? 'url' : 'text'}
+                          className="border-border text-[14px]"
+                        />
+                      )}
+                      {fieldType === 'multi_line_text' && (
+                        <Textarea
+                          value={defaultValue}
+                          onChange={(e) => setDefaultValue(e.target.value)}
+                          placeholder="Enter default text value"
+                          className="border-border text-[14px] resize-none min-h-[80px]"
+                        />
+                      )}
+                      {isNumberField && (
+                        <div className="relative">
+                          {fieldType === 'currency' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>}
+                          <Input
+                            type="number"
+                            value={defaultValue}
+                            onChange={(e) => setDefaultValue(e.target.value)}
+                            placeholder={fieldType === 'currency' ? '0.00' : fieldType === 'percent' ? '0' : '0'}
+                            step="any"
+                            className={`border-border text-[14px] ${fieldType === 'currency' ? 'pl-7' : fieldType === 'percent' ? 'pr-7' : ''}`}
+                          />
+                          {fieldType === 'percent' && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>}
+                        </div>
+                      )}
+                      {fieldType === 'number' && (
+                        <Select value={numberFormat} onValueChange={setNumberFormat}>
+                          <SelectTrigger className="border-border text-[14px]">
+                            <SelectValue placeholder="Number format" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="formatted">Formatted number</SelectItem>
+                            <SelectItem value="unformatted">Unformatted number</SelectItem>
+                            <SelectItem value="currency">Currency format</SelectItem>
+                            <SelectItem value="percentage">Percentage format</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {(fieldType === 'date_picker') && (
+                        <Input
+                          type="date"
+                          value={defaultValue}
+                          onChange={(e) => setDefaultValue(e.target.value)}
+                          className="border-border text-[14px]"
+                        />
+                      )}
+                      {fieldType === 'date_time_picker' && (
+                        <Input
+                          type="datetime-local"
+                          value={defaultValue}
+                          onChange={(e) => setDefaultValue(e.target.value)}
+                          className="border-border text-[14px]"
+                        />
+                      )}
+                      {fieldType === 'single_checkbox' && (
+                        <Select value={defaultValue} onValueChange={setDefaultValue}>
+                          <SelectTrigger className="border-border text-[14px]">
+                            <SelectValue placeholder="Select default value" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none_selected_boolean">None</SelectItem>
+                            <SelectItem value="true">Yes / True</SelectItem>
+                            <SelectItem value="false">No / False</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {fieldType === 'score' && (
+                        <Select value={defaultValue} onValueChange={setDefaultValue}>
+                          <SelectTrigger className="border-border text-[14px]">
+                            <SelectValue placeholder="Select default rating" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="1">1 Star</SelectItem>
+                            <SelectItem value="2">2 Stars</SelectItem>
+                            <SelectItem value="3">3 Stars</SelectItem>
+                            <SelectItem value="4">4 Stars</SelectItem>
+                            <SelectItem value="5">5 Stars</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {fieldType === 'color_picker' && (
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={defaultValue || '#000000'}
+                            onChange={(e) => setDefaultValue(e.target.value)}
+                            className="w-10 h-10 rounded-[6px] border border-border cursor-pointer shrink-0"
+                          />
+                          <Input
+                            value={defaultValue}
+                            onChange={(e) => setDefaultValue(e.target.value)}
+                            placeholder="#ffffff"
+                            className="flex-1 border-border text-[14px] font-mono"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Date Display Format */}
+                  {fieldType === 'date_picker' && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-foreground">Date display format</Label>
+                      <Select value={dateDisplayFormat} onValueChange={setDateDisplayFormat}>
+                        <SelectTrigger className="border-border text-[14px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="date_only">Show date only</SelectItem>
+                          <SelectItem value="date_with_relative">Show date with relative time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* DateTime Display Format */}
+                  {fieldType === 'date_time_picker' && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-foreground">Date and time display format</Label>
+                      <Select value={datetimeDisplayFormat} onValueChange={setDatetimeDisplayFormat}>
+                        <SelectTrigger className="border-border text-[14px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="date_time_only">Show date and time only</SelectItem>
+                          <SelectItem value="date_time_relative">Show date, time, and relative time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="rounded-[6px] border border-border bg-[var(--color-hs-light-bg)] px-3 py-2 mt-2">
+                        <p className="text-[12px] text-muted-foreground">
+                          Viewing and editing uses your device timezone. Filtering uses the account timezone.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Options - for choice fields */}
+                  {isChoiceField && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-foreground">Options</Label>
+                      <p className="text-[12px] text-muted-foreground">Add and manage options for this {fieldType.replace('_', ' ')} field.</p>
+
+                      {/* Option Style */}
+                      <div className="space-y-1 mt-3">
+                        <Label className="text-[12px] font-medium text-foreground">Option style</Label>
+                        <Select value={optionStyle} onValueChange={setOptionStyle}>
+                          <SelectTrigger className="border-border text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default</SelectItem>
+                            <SelectItem value="with_dot">With dot indicator</SelectItem>
+                            <SelectItem value="badge">Badge style</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                       {/* Options List */}
+                      <div className="space-y-2 mt-3">
+                        {options.map((opt, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <Input
+                              placeholder="Label"
+                              value={opt.label}
+                              onChange={(e) => {
+                                const newOptions = [...options];
+                                newOptions[i].label = e.target.value;
+                                if (!newOptions[i].value || newOptions[i].value === options[i].label.toLowerCase().replace(/\s+/g, '_')) {
+                                  newOptions[i].value = e.target.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                                }
+                                setOptions(newOptions);
+                              }}
+                              className="flex-1 border-border text-[13px]"
+                            />
+                            <Input
+                              placeholder="Internal value"
+                              value={opt.value}
+                              onChange={(e) => {
+                                const newOptions = [...options];
+                                newOptions[i].value = e.target.value;
+                                setOptions(newOptions);
+                              }}
+                              className="flex-1 border-border bg-[var(--color-hs-light-bg)] text-[13px] font-mono"
+                            />
+                            <div className="shrink-0" title="Option color">
+                              <input
+                                type="color"
+                                value={opt.color || '#3b82f6'}
+                                onChange={(e) => {
+                                  const newOptions = [...options];
+                                  newOptions[i].color = e.target.value;
+                                  setOptions(newOptions);
+                                }}
+                                className="w-8 h-8 rounded-[6px] border border-border cursor-pointer"
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive/80 hover:bg-destructive/10 shrink-0 h-8 w-8"
+                              onClick={() => {
+                                if (options.length <= 1) return;
+                                setOptions(options.filter((_, idx) => idx !== i));
+                              }}
+                              disabled={options.length <= 1}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          className="w-full border-dashed border-border text-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue)]/5 hover:border-[var(--color-hs-blue)] text-[13px]"
+                          onClick={() => setOptions([...options, { label: '', value: '', color: '' }])}
+                        >
+                          <Plus className="w-4 h-4 mr-1.5" />
+                          Add another option
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}

@@ -43,10 +43,19 @@ class SetCurrentWorkspace
                         ->exists();
 
                     if (!$isMember) {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Forbidden.',
-                        ], 403);
+                        $fallbackId = $user->workspace_id ?? $user->workspaces()
+                            ->wherePivot('is_active', true)
+                            ->orderByDesc('workspace_user.updated_at')
+                            ->value('workspaces.id');
+
+                        if ($fallbackId && $fallbackId !== $workspaceId) {
+                            $workspaceId = $fallbackId;
+                        } else {
+                            return response()->json([
+                                'status' => 'error',
+                                'message' => 'Forbidden.',
+                            ], 403);
+                        }
                     }
 
                     $workspace = \App\Models\Workspace::find($workspaceId);

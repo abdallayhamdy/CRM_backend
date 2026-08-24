@@ -5,6 +5,10 @@ import { TasksCard, TasksCardSkeleton } from "@/components/dashboard/TasksCard";
 import { RecentActivityCard, RecentActivityCardSkeleton } from "@/components/dashboard/RecentActivityCard";
 import { PhoneCallCard, PhoneCallCardSkeleton } from "@/components/dashboard/PhoneCallCard";
 import { OverdueCard, OverdueCardSkeleton } from "@/components/dashboard/OverdueCard";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { SalesStatsCards, SalesStatsCardsSkeleton } from "@/components/dashboard/SalesStatsCards";
+import { CallOutcomeCards, CallOutcomeCardsSkeleton } from "@/components/dashboard/CallOutcomeCards";
+import { IntegrationCards } from "@/components/dashboard/IntegrationCards";
 
 export default function DashboardPage() {
   return (
@@ -12,8 +16,14 @@ export default function DashboardPage() {
       <div className="w-full px-6 py-6 flex flex-col gap-3">
         <DashboardHeader />
 
+        <OnboardingChecklist />
+
         <Suspense fallback={<CrmOverviewCardsSkeleton />}>
           <CrmOverviewCards />
+        </Suspense>
+
+        <Suspense fallback={<SalesStatsCardsSkeleton />}>
+          <SalesStatsCards />
         </Suspense>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -35,10 +45,11 @@ export default function DashboardPage() {
               <RecentActivityCard />
             </Suspense>
           </div>
-          <div className="lg:col-span-1">
-            <Suspense fallback={<PhoneCallCardSkeleton />}>
-              <PhoneCallCard />
+          <div className="lg:col-span-1 flex flex-col gap-3">
+            <Suspense fallback={<CallOutcomeCardsSkeleton />}>
+              <CallOutcomeCards />
             </Suspense>
+            <IntegrationCards />
           </div>
         </div>
       </div>

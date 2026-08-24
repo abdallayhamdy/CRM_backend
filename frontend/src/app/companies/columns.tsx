@@ -54,7 +54,7 @@ export function getCompanyColumns(lifecycleStages: StageConfig[]): ColumnDef<Com
              lastName=""
              size="sm"
           />
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1 min-w-0">
             <Link
               href={`/companies/${company.id}`}
               onClick={(e) => e.stopPropagation()}

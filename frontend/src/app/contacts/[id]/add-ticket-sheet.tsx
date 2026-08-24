@@ -9,7 +9,7 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FormField } from "@/components/shared/FormField"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -421,29 +421,26 @@ function InlineCreateTicketForm({
   })
 
   const renderField = (prop: FormFieldGroup) => {
-    const requiredIndicator = prop.required ? " after:content-['*'] after:ml-0.5 after:text-destructive" : ""
-
     switch (prop.id) {
       case "ticket_name":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="subject" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="subject"
+            error={errors.subject?.message}
+          >
             <Input
               id="subject"
               className="border-border focus-visible:ring-primary text-[13px]"
               {...register("subject")}
             />
-            {errors.subject && <p className="text-xs text-destructive">{errors.subject.message}</p>}
-          </div>
+          </FormField>
         )
       case "pipeline":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="pipeline"
               control={control}
@@ -458,14 +455,11 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "ticket_status":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="status"
               control={control}
@@ -483,27 +477,26 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "ticket_description":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="description" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="description"
+          >
             <Textarea
               id="description"
               className="border-border focus-visible:ring-primary min-h-[80px] text-[13px]"
               {...register("description")}
             />
-          </div>
+          </FormField>
         )
       case "source":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="source"
               control={control}
@@ -520,14 +513,11 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "ticket_owner":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="owner"
               control={control}
@@ -542,14 +532,11 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "priority":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="priority"
               control={control}
@@ -567,14 +554,16 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "create_date":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="createDate" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="createDate"
+          >
             <Controller
               name="createDate"
               control={control}
@@ -582,14 +571,16 @@ function InlineCreateTicketForm({
                 <DatePicker value={field.value} onChange={field.onChange} />
               )}
             />
-          </div>
+          </FormField>
         )
       case "close_date":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="closeDate" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="closeDate"
+          >
             <Controller
               name="closeDate"
               control={control}
@@ -597,14 +588,16 @@ function InlineCreateTicketForm({
                 <DatePicker value={field.value} onChange={field.onChange} />
               )}
             />
-          </div>
+          </FormField>
         )
       case "last_closed_date":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="lastClosedDate" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="lastClosedDate"
+          >
             <Controller
               name="lastClosedDate"
               control={control}
@@ -612,14 +605,11 @@ function InlineCreateTicketForm({
                 <DatePicker value={field.value} onChange={field.onChange} />
               )}
             />
-          </div>
+          </FormField>
         )
       case "assigned_teams":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="assignedTeams"
               control={control}
@@ -635,14 +625,11 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "category":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="category"
               control={control}
@@ -658,25 +645,19 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "file_upload":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px] block mb-1${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Button type="button" variant="outline" size="sm" className="bg-background border-border h-8 font-normal text-foreground/70">
               <span className="text-lg leading-none mr-1 font-light">+</span> Add file
             </Button>
-          </div>
+          </FormField>
         )
       case "resolution":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="resolution"
               control={control}
@@ -692,42 +673,43 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "time_to_close":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="timeToClose" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="timeToClose"
+          >
             <Input
               id="timeToClose"
               readOnly
               disabled
               className="bg-muted/50 border-border text-[13px]"
             />
-          </div>
+          </FormField>
         )
       case "time_to_first_response":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="timeToFirstResponse" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="timeToFirstResponse"
+          >
             <Input
               id="timeToFirstResponse"
               readOnly
               disabled
               className="bg-muted/50 border-border text-[13px]"
             />
-          </div>
+          </FormField>
         )
       case "customer_agent_ticket_status":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="customer_agent_ticket_status"
               control={control}
@@ -743,7 +725,7 @@ function InlineCreateTicketForm({
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       default:
         return null

@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown, MessageCircle, Send } from 'lucide-react'
-import Footer4Col from '../ui/footer-column'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Footer4Col from '../landing/footer-column'
 import Link from 'next/link'
 import { contactContent, type Locale } from './contact-data'
-import { Navbar } from '../ui/Navbar'
+import { Navbar } from '../landing/Navbar'
 
 export function ContactPage() {
   const [locale, setLocale] = useState<Locale>('ar')
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
+  const [interestedIn, setInterestedIn] = useState('')
+  const [timeline, setTimeline] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem('landing-locale') as Locale | null
@@ -114,21 +117,29 @@ export function ContactPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-white/50 mb-2">{content.smart.form.interestedIn}</label>
-                  <select className="w-full px-4 py-3 rounded-lg bg-[#00d4ff]/[0.03] border border-[#00d4ff]/30 text-white text-sm focus:outline-none focus:border-[#00d4ff]/50 transition-all duration-300 appearance-none cursor-pointer">
-                    <option value="" className="bg-[#0a0a0f] text-white/40">{content.smart.form.interestedInPlaceholder}</option>
-                    {content.smart.form.interestedInOptions.map((opt, i) => (
-                      <option key={i} value={opt} className="bg-[#0a0a0f] text-white">{opt}</option>
-                    ))}
-                  </select>
+                  <Select value={interestedIn} onValueChange={setInterestedIn}>
+                    <SelectTrigger className="w-full px-4 py-3 rounded-lg bg-[#00d4ff]/[0.03] border border-[#00d4ff]/30 text-white text-sm focus:outline-none focus:border-[#00d4ff]/50 transition-all duration-300 appearance-none cursor-pointer">
+                      <SelectValue placeholder={content.smart.form.interestedInPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {content.smart.form.interestedInOptions.map((opt, i) => (
+                        <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-xs text-white/50 mb-2">{content.smart.form.timeline}</label>
-                  <select className="w-full px-4 py-3 rounded-lg bg-[#00d4ff]/[0.03] border border-[#00d4ff]/30 text-white text-sm focus:outline-none focus:border-[#00d4ff]/50 transition-all duration-300 appearance-none cursor-pointer">
-                    <option value="" className="bg-[#0a0a0f] text-white/40">{content.smart.form.timelinePlaceholder}</option>
-                    {content.smart.form.timelineOptions.map((opt, i) => (
-                      <option key={i} value={opt} className="bg-[#0a0a0f] text-white">{opt}</option>
-                    ))}
-                  </select>
+                  <Select value={timeline} onValueChange={setTimeline}>
+                    <SelectTrigger className="w-full px-4 py-3 rounded-lg bg-[#00d4ff]/[0.03] border border-[#00d4ff]/30 text-white text-sm focus:outline-none focus:border-[#00d4ff]/50 transition-all duration-300 appearance-none cursor-pointer">
+                      <SelectValue placeholder={content.smart.form.timelinePlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {content.smart.form.timelineOptions.map((opt, i) => (
+                        <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

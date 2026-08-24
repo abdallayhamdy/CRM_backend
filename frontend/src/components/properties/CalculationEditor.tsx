@@ -6,6 +6,7 @@ import { FORMULA_FUNCTIONS } from "./CreatePropertyConstants";
 import { PropertySearchDropdown } from "./PropertySearchDropdown";
 import { PropertyFormState } from "./CreatePropertyFormState";
 import { laravelApi } from "@/lib/laravel-api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FormulaToken =
   | { type: "text"; value: string }
@@ -183,21 +184,25 @@ export function CalculationEditor({ form, setForm, objectType }: CalculationEdit
         <label className="text-sm font-medium">
           Calculated property type
         </label>
-        <select
+        <Select
           value={form.calc_property_type}
-          onChange={(e) =>
+          onValueChange={(v) =>
             setForm((p) => ({
               ...p,
-              calc_property_type: e.target.value as any,
+              calc_property_type: v as any,
             }))
           }
-          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="custom_equation">Custom equation</option>
-          <option value="time_between">Time between</option>
-          <option value="time_since">Time since</option>
-          <option value="time_until">Time until</option>
-        </select>
+          <SelectTrigger className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="custom_equation">Custom equation</SelectItem>
+            <SelectItem value="time_between">Time between</SelectItem>
+            <SelectItem value="time_since">Time since</SelectItem>
+            <SelectItem value="time_until">Time until</SelectItem>
+          </SelectContent>
+        </Select>
         {isTimeBased && (
           <p className="text-xs text-muted-foreground">
             Choose the time between two dates.
@@ -211,22 +216,26 @@ export function CalculationEditor({ form, setForm, objectType }: CalculationEdit
           {/* Output type */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Output type</label>
-            <select
+            <Select
               value={form.calc_output_type}
-              onChange={(e) =>
+              onValueChange={(v) =>
                 setForm((p) => ({
                   ...p,
-                  calc_output_type: e.target.value as any,
+                  calc_output_type: v as any,
                 }))
               }
-              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="number">Number</option>
-              <option value="boolean">Boolean</option>
-              <option value="string">String</option>
-              <option value="date">Date</option>
-              <option value="datetime">Date Time</option>
-            </select>
+              <SelectTrigger className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="number">Number</SelectItem>
+                <SelectItem value="boolean">Boolean</SelectItem>
+                <SelectItem value="string">String</SelectItem>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="datetime">Date Time</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Date/Datetime info */}

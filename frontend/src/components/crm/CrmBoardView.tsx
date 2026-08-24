@@ -1,7 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Eye, MoreHorizontal, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import {
   DndContext,
@@ -29,11 +35,14 @@ export interface BoardColumn {
   weight?: number
 }
 
+export type CardAction = 'full-preview' | 'sidebar-preview' | 'edit' | 'delete'
+
 interface CrmBoardViewProps<T> {
   data: T[]
   columns: BoardColumn[]
   groupField: keyof T
   onItemClick?: (item: T) => void
+  onCardAction?: (item: T, action: CardAction) => void
   onDragEnd?: (result: { active: string; over: string | null; overColumn?: string }) => void
   renderCard: (item: T) => React.ReactNode
   renderFooter?: (items: T[], column: BoardColumn) => React.ReactNode
@@ -43,11 +52,13 @@ interface CrmBoardViewProps<T> {
 function SortableCardInner<T extends { id: string }>({
   item,
   onItemClick,
+  onCardAction,
   renderCard,
   overlay = false,
 }: {
   item: T
   onItemClick?: (item: T) => void
+  onCardAction?: (item: T, action: CardAction) => void
   renderCard: (item: T) => React.ReactNode
   overlay?: boolean
 }) {
@@ -81,6 +92,37 @@ function SortableCardInner<T extends { id: string }>({
       )}
     >
       {renderCard(item)}
+
+      {onCardAction && (
+        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-150">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                aria-label="Card options"
+                onClick={(e) => e.stopPropagation()}
+                className="p-1.5 bg-background/80 backdrop-blur-sm border border-border/60 hover:bg-muted/80 rounded-md transition-colors"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" sideOffset={4}>
+              <DropdownMenuItem
+                onClick={(e) => { e.stopPropagation(); onCardAction(item, 'full-preview') }}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Full preview
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={(e) => { e.stopPropagation(); onCardAction(item, 'delete') }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </div>
   )
 }
@@ -91,12 +133,14 @@ function ColumnInner<T extends { id: string }>({
   column,
   columnItems,
   onItemClick,
+  onCardAction,
   renderCard,
   renderFooter,
 }: {
   column: BoardColumn
   columnItems: T[]
   onItemClick?: (item: T) => void
+  onCardAction?: (item: T, action: CardAction) => void
   renderCard: (item: T) => React.ReactNode
   renderFooter?: (items: T[], column: BoardColumn) => React.ReactNode
 }) {
@@ -141,6 +185,7 @@ function ColumnInner<T extends { id: string }>({
               key={item.id}
               item={item}
               onItemClick={onItemClick}
+              onCardAction={onCardAction}
               renderCard={renderCard}
             />
           ))}
@@ -164,6 +209,7 @@ export function CrmBoardView<T extends { id: string }>({
   columns,
   groupField,
   onItemClick,
+  onCardAction,
   onDragEnd,
   renderCard,
   renderFooter,
@@ -304,6 +350,7 @@ export function CrmBoardView<T extends { id: string }>({
                 column={column}
                 columnItems={groupedData.get(column.id) || []}
                 onItemClick={onItemClick}
+                onCardAction={onCardAction}
                 renderCard={renderCard}
                 renderFooter={renderFooter}
               />

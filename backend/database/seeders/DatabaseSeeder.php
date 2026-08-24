@@ -93,6 +93,7 @@ class DatabaseSeeder extends Seeder
         $this->seedNotes($workspace, $allWorkspaceUsers, $deals, $contacts, $companies);
         $this->seedTasks($workspace, $allWorkspaceUsers, $workspaceOwner, $deals, $contacts, $companies);
         $this->seedActivityComments($workspace, $allWorkspaceUsers);
+        $this->call(PropertyDefinitionSeeder::class);
 
         // =====================================================================
         //  Output summary
@@ -234,6 +235,7 @@ class DatabaseSeeder extends Seeder
         DB::table('products')->where('workspace_id', $workspace->id)->delete();
         DB::table('invitations')->where('workspace_id', $workspace->id)->delete();
         DB::table('teams')->where('workspace_id', $workspace->id)->delete();
+        DB::table('properties')->where('workspace_id', $workspace->id)->delete();
         DB::table('personal_access_tokens')->delete();
         DB::table('audit_logs')->delete();
         DB::table('model_has_roles')->where('model_id', '!=', DB::raw("(SELECT id FROM users WHERE email='owner@crm.com' LIMIT 1)"))->delete();

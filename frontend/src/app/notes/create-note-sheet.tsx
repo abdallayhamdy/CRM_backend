@@ -4,7 +4,6 @@ import * as React from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { notesService } from "@/services/notes"
 import { contactsService } from "@/services/contacts"
 import { toast } from "sonner"
@@ -74,11 +73,11 @@ export function CreateNoteSheet({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <SheetContent side="right" className="sm:max-w-md">
-        <SheetHeader>
+      <SheetContent side="right" className="sm:max-w-lg flex flex-col gap-0">
+        <SheetHeader className="shrink-0">
           <SheetTitle>Create new note</SheetTitle>
         </SheetHeader>
-      <div className="flex flex-col h-full bg-muted/50">
+      <div className="flex-1 flex flex-col min-h-0 bg-muted/50 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="bg-background rounded-xl border border-border shadow-sm overflow-hidden">
             <div className="p-4 border-b border-border bg-muted/50 flex items-center gap-2">
@@ -149,18 +148,18 @@ export function CreateNoteSheet({
           </p>
         </div>
 
-        <div className="p-4 bg-background border-t border-border flex items-center justify-end gap-3">
+        <div className="shrink-0 px-6 py-4 bg-background border-t border-border flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-border text-foreground font-bold"
+            className="h-9 text-[13px] font-semibold border-border text-foreground hover:bg-muted/50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleCreate}
             disabled={isSaving || !content.trim()}
-            className="bg-status-danger hover:bg-status-danger/90 text-primary-foreground font-bold"
+            className="h-9 text-[13px] font-semibold bg-status-danger hover:bg-status-danger/90 text-primary-foreground shadow-sm disabled:opacity-50"
           >
             {isSaving ? "Creating..." : "Create note"}
           </Button>

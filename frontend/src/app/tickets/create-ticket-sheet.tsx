@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FormField } from "@/components/shared/FormField"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -187,29 +187,26 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
   }, [open, reset])
 
   const renderField = (prop: Property) => {
-    const requiredIndicator = prop.required ? " after:content-['*'] after:ml-0.5 after:text-destructive" : ""
-    
     switch (prop.id) {
       case "ticket_name":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="subject" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="subject"
+            error={errors.subject?.message}
+          >
             <Input
               id="subject"
               className="border-border focus-visible:ring-[var(--color-hs-teal)] text-[13px]"
               {...register("subject")}
             />
-            {errors.subject && <p className="text-xs text-destructive">{errors.subject.message}</p>}
-          </div>
+          </FormField>
         )
       case "ticket_status":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="status"
               control={control}
@@ -227,27 +224,26 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       case "ticket_description":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label htmlFor="description" className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField
+            key={prop.id}
+            label={prop.label}
+            required={prop.required}
+            htmlFor="description"
+          >
             <Textarea
               id="description"
               className="border-border focus-visible:ring-[var(--color-hs-teal)] min-h-[80px] text-[13px]"
               {...register("description")}
             />
-          </div>
+          </FormField>
         )
       case "priority":
         return (
-          <div key={prop.id} className="space-y-2">
-            <Label className={`text-foreground font-semibold text-[13px]${requiredIndicator}`}>
-              {prop.label}
-            </Label>
+          <FormField key={prop.id} label={prop.label} required={prop.required}>
             <Controller
               name="priority"
               control={control}
@@ -265,7 +261,7 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         )
       default:
         return null
@@ -340,10 +336,7 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
             <div className="mt-8 pt-4 space-y-4 border-t border-border">
               <h3 className="font-bold text-foreground text-[15px]">Associate Ticket with</h3>
               
-              <div className="space-y-2">
-                <Label className="text-foreground font-semibold text-[13px]">
-                  Contact
-                </Label>
+              <FormField label="Contact">
                 <Controller
                   name="contactId"
                   control={control}
@@ -358,10 +351,10 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
                     </Select>
                   )}
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="w-4 h-4 rounded border border-border bg-[color:var(--color-slate-50)] flex-shrink-0" />
-                  <span className="text-[13px] text-muted-foreground">Add timeline activity from this Contact ⓘ</span>
-                </div>
+              </FormField>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="w-4 h-4 rounded border border-border bg-[color:var(--color-slate-50)] flex-shrink-0" />
+                <span className="text-[13px] text-muted-foreground">Add timeline activity from this Contact ⓘ</span>
               </div>
             </div>
 

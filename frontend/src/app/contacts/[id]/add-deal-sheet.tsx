@@ -8,6 +8,7 @@ import { CreateDealSheet } from "@/app/deals/create-deal-sheet"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { DatePicker } from "@/components/ui/date-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CustomFieldsForm } from "@/components/properties/CustomFieldsForm"
 import type { CustomFieldError } from "@/components/properties/CustomFieldsForm"
 
@@ -435,15 +436,14 @@ function InlineCreateDealForm({
         <label className="block text-[13px] font-bold text-foreground mb-1">
           Pipeline <span className="text-destructive">*</span>
         </label>
-        <div className="relative">
-          <select
-            className="w-full appearance-none px-3 py-2 text-[13px] border border-border rounded focus:outline-none focus:border-primary"
-            defaultValue="new"
-          >
-            <option value="new">new</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        </div>
+        <Select defaultValue="new">
+          <SelectTrigger className="w-full appearance-none px-3 py-2 text-[13px] border border-border rounded focus:outline-none focus:border-primary">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="new">new</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Deal stage */}
@@ -451,18 +451,16 @@ function InlineCreateDealForm({
         <label className="block text-[13px] font-bold text-foreground mb-1">
           Deal stage <span className="text-destructive">*</span>
         </label>
-        <div className="relative">
-          <select
-            value={stage}
-            onChange={e => setStage(e.target.value)}
-            className="w-full appearance-none px-3 py-2 text-[13px] border border-border rounded focus:outline-none focus:border-primary"
-          >
+        <Select value={stage} onValueChange={setStage}>
+          <SelectTrigger className="w-full appearance-none px-3 py-2 text-[13px] border border-border rounded focus:outline-none focus:border-primary">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
             {Object.entries(STAGE_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
+              <SelectItem key={val} value={val}>{label}</SelectItem>
             ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        </div>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Amount */}

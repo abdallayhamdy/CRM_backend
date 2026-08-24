@@ -47,7 +47,7 @@ export const columns: ColumnDef<Deal>[] = [
       return (
         <Link
           href={`/deals/${row.original.id}`}
-          className="font-semibold text-primary hover:underline hover:text-primary/80 cursor-pointer"
+          className="font-semibold text-primary hover:underline hover:text-primary/80 cursor-pointer flex-1 min-w-0"
           onClick={(e) => e.stopPropagation()}
         >
           {row.getValue("title")}

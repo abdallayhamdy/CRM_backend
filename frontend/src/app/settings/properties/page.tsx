@@ -21,6 +21,11 @@ const CreatePropertySidebar = dynamic(
   { ssr: false }
 );
 
+const PropertyFormWizard = dynamic(
+  () => import('@/components/properties/PropertyFormWizard'),
+  { ssr: false }
+);
+
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 
 
@@ -121,6 +126,7 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [groups, setGroups] = useState<PropertyGroup[]>([]);
   const [isCreateSidebarOpen, setIsCreateSidebarOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [propertyToArchive, setPropertyToArchive] = useState<Property | null>(null);
   const [filters, setFilters] = useState({
     group: 'all',
@@ -539,7 +545,7 @@ export default function PropertiesPage() {
                 {dataQualityOn ? 'Data quality monitoring is on' : 'Data quality monitoring is off'}
               </span>
             </div>
-            <CreatePropertyButton onClick={() => setIsCreateSidebarOpen(true)} />
+            <CreatePropertyButton onClick={() => setIsWizardOpen(true)} />
           </div>
         </div>
 
@@ -900,6 +906,24 @@ export default function PropertiesPage() {
         )}
       </div>
       </div>
+
+      {/* Full-screen Wizard Dialog */}
+      {isWizardOpen && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <PropertyFormWizard
+            initialObjectType={objectType}
+            onCancel={() => setIsWizardOpen(false)}
+            onSuccess={() => {
+              setIsWizardOpen(false);
+              fetchProperties();
+              fetchGroups();
+              fetchStats();
+              clearPropertiesCache();
+              window.dispatchEvent(new Event('properties-count-changed'));
+            }}
+          />
+        </div>
+      )}
 
       <CreatePropertySidebar
         isOpen={isCreateSidebarOpen}

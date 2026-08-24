@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Loader2, Info, Save, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { Loader2, Save, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/shared/FormField";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,17 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
   const [uniqueLimit, setUniqueLimit] = useState<number>(10);
 
   const [testValue, setTestValue] = useState("");
-  const [testResult, setTestResult] = useState<'empty' | 'valid' | 'invalid' | 'regex_error'>('empty');
+
+  const testResult = React.useMemo<'empty' | 'valid' | 'invalid' | 'regex_error'>(() => {
+    if (!rules || rules.validation.type !== 'custom') return 'empty';
+    if (!testValue) return 'empty';
+    if (!rules.validation.regex) return 'valid';
+    try {
+      return new RegExp(rules.validation.regex).test(testValue) ? 'valid' : 'invalid';
+    } catch {
+      return 'regex_error';
+    }
+  }, [testValue, rules?.validation.regex, rules?.validation.type]);
 
   const isTextField = new Set([
     "single_line_text",
@@ -108,31 +119,6 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
   useEffect(() => {
     fetchRules();
   }, [fetchRules]);
-
-  useEffect(() => {
-    if (!rules || rules.validation.type !== 'custom') {
-      setTestResult('empty');
-      return;
-    }
-    if (!testValue) {
-      setTestResult('empty');
-      return;
-    }
-    if (!rules.validation.regex) {
-      setTestResult('valid');
-      return;
-    }
-    try {
-      const regex = new RegExp(rules.validation.regex);
-      if (regex.test(testValue)) {
-        setTestResult('valid');
-      } else {
-        setTestResult('invalid');
-      }
-    } catch {
-      setTestResult('regex_error');
-    }
-  }, [testValue, rules?.validation.regex, rules?.validation.type]);
 
   const handleSave = async () => {
     if (!rules) return;
@@ -403,23 +389,20 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
 
         {rules.validation.type === 'custom' && (
           <div className="space-y-6 pl-6 border-l-2 border-border py-2">
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Custom rule regex *</Label>
+            <FormField label="Custom rule regex *" required>
               <div className="text-[12px] text-primary hover:underline cursor-pointer mb-1 inline-block">
                 Learn more about writing regex validation rules
               </div>
-              <Input 
+              <Input
                 placeholder="Add your regex expression here."
                 value={rules.validation.regex}
                 onChange={(e) => updateRule(r => { r.validation.regex = e.target.value; })}
                 className="font-mono text-sm"
               />
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Invalid value message *</Label>
-              <p className="text-[12px] text-muted-foreground">This message will be shown when a user adds an invalid value.</p>
-              <Textarea 
+            <FormField label="Invalid value message *" required description="This message will be shown when a user adds an invalid value.">
+              <Textarea
                 placeholder="Briefly describe your custom rule."
                 value={rules.validation.invalid_message}
                 maxLength={100}
@@ -429,12 +412,10 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
               <div className="text-[12px] text-muted-foreground/60 text-right">
                 {rules.validation.invalid_message.length}/100 characters
               </div>
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-foreground">Additional invalid value message</Label>
-              <p className="text-[12px] text-muted-foreground">This tooltip message can give more detailed instructions if needed.</p>
-              <Textarea 
+            <FormField label="Additional invalid value message" description="This tooltip message can give more detailed instructions if needed.">
+              <Textarea
                 placeholder="Describe the specific requirements in detail."
                 value={rules.validation.additional_message}
                 maxLength={550}
@@ -444,19 +425,18 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
               <div className="text-[12px] text-muted-foreground/60 text-right">
                 {rules.validation.additional_message.length}/550 characters
               </div>
-            </div>
+            </FormField>
 
             <Card className="bg-accent border-border p-4 shadow-none">
               <h4 className="text-sm font-semibold text-foreground mb-3">Test custom rules</h4>
-              <div className="space-y-2">
-                <Label className="text-[13px] text-muted-foreground">Property value</Label>
-                <Input 
+              <FormField label="Property value">
+                <Input
                   value={testValue}
                   onChange={(e) => setTestValue(e.target.value)}
                   placeholder="Type a value to test..."
                   className={`bg-background ${testResult === 'invalid' ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                
+
                 <div className="h-6 mt-1 flex items-center">
                   {testResult === 'regex_error' && (
                     <div className="flex items-center text-destructive text-[12px]">
@@ -477,7 +457,7 @@ export default function RulesTab({ propertyId, isSystemProperty, fieldType }: Ru
                     </div>
                   )}
                 </div>
-              </div>
+              </FormField>
             </Card>
 
             <div className="flex items-center gap-2 pt-2">

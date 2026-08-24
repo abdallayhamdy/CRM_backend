@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { DealType, DealPriority } from "@/lib/types/crm"
 import { useAuth } from "@/hooks/use-auth"
 import Link from "next/link"
@@ -84,84 +86,49 @@ function SearchableSelect({
   valueKey?: string
 }) {
   const [open, setOpen] = React.useState(false)
-  const [search, setSearch] = React.useState('')
-  const ref = React.useRef<HTMLDivElement>(null)
-
   const selected = options.find(o => o[valueKey] === value)
 
-  React.useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-        setSearch('')
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  React.useEffect(() => {
-    if (open && search && onSearch) {
-      onSearch(search)
-    }
-  }, [search, open, onSearch])
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        className="w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-left text-[13px] text-foreground flex items-center focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer"
-      >
-        {selected
-          ? <span className="truncate">{String(selected[labelKey])}</span>
-          : <span className="text-muted-foreground">{placeholder}</span>}
-        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </span>
-      </button>
-
-      {open && (
-        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-xs shadow-lg">
-          <div className="p-2 border-b border-border">
-            <div className="relative">
-              <input
-                autoFocus
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search"
-                className="w-full h-8 pl-3 pr-8 border border-primary rounded-full text-[13px] text-foreground focus:outline-none"
-              />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              </span>
-            </div>
-          </div>
-          <div className="max-h-48 overflow-y-auto py-1">
-            {options.filter(o =>
-              !search || String(o[labelKey]).toLowerCase().includes(search.toLowerCase())
-            ).length === 0
-              ? <div className="px-3 py-2 text-[12px] text-muted-foreground">No results</div>
-              : options
-                  .filter(o => !search || String(o[labelKey]).toLowerCase().includes(search.toLowerCase()))
-                  .map((opt) => (
-                <button
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="relative w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-left text-[13px] text-foreground flex items-center focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer"
+        >
+          {selected
+            ? <span className="truncate">{String(selected[labelKey])}</span>
+            : <span className="text-muted-foreground">{placeholder}</span>}
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+        <Command shouldFilter={!onSearch}>
+          <CommandInput
+            placeholder={placeholder}
+            onValueChange={(val) => onSearch?.(val)}
+          />
+          <CommandList>
+            <CommandEmpty>No results</CommandEmpty>
+            <CommandGroup>
+              {options.map((opt) => (
+                <CommandItem
                   key={String(opt[valueKey])}
-                  type="button"
-                  onClick={() => { onChange(String(opt[valueKey]), opt); setOpen(false); setSearch('') }}
-                  className={cn(
-                    'w-full text-left px-3 py-1.5 hover:bg-muted/50 flex items-center text-[13px]',
-                    value === String(opt[valueKey]) && 'bg-muted'
-                  )}
+                  value={String(opt[labelKey])}
+                  onSelect={() => {
+                    onChange(String(opt[valueKey]), opt)
+                    setOpen(false)
+                  }}
                 >
                   {String(opt[labelKey])}
-                </button>
+                </CommandItem>
               ))}
-          </div>
-        </div>
-      )}
-    </div>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -546,15 +513,16 @@ export function CreateDealSheet({ open, onOpenChange, onDealCreated }: CreateDea
                   name="deal_type"
                   control={control}
                   render={({ field }) => (
-                    <select
-                      {...field}
-                      className="w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-[13px] text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer"
-                    >
-                      <option value=""></option>
-                      {DEAL_TYPES.map(dt => (
-                        <option key={dt.value} value={dt.value}>{dt.label}</option>
-                      ))}
-                    </select>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-[13px] text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer">
+                        <SelectValue placeholder=" " />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEAL_TYPES.map(dt => (
+                          <SelectItem key={dt.value} value={dt.value}>{dt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 />
               </div>
@@ -566,15 +534,16 @@ export function CreateDealSheet({ open, onOpenChange, onDealCreated }: CreateDea
                   name="priority"
                   control={control}
                   render={({ field }) => (
-                    <select
-                      {...field}
-                      className="w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-[13px] text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer"
-                    >
-                      <option value=""></option>
-                      {PRIORITY_OPTIONS.map(p => (
-                        <option key={p.value} value={p.value}>{p.label}</option>
-                      ))}
-                    </select>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full h-10 pl-3 pr-8 bg-background border border-border rounded-xs text-[13px] text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer">
+                        <SelectValue placeholder=" " />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRIORITY_OPTIONS.map(p => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 />
               </div>

@@ -29,7 +29,7 @@ function GlobalSearch() {
           type="text"
           placeholder="Find or Ask"
           aria-label="Global search"
-          className="h-[34px] w-full min-w-0 rounded-full bg-white/[0.07] border border-white/[0.08] pl-9 pr-14 text-[13px] text-white placeholder:text-white/40 hover:bg-white/[0.1] hover:border-white/[0.12] focus:outline-none focus:bg-white/[0.12] focus:border-white/[0.18] transition-all duration-200"
+          className="h-[34px] w-full min-w-0 rounded-full bg-white/[0.07] border border-white/[0.08] pl-9 pr-14 text-[13px] text-white placeholder:text-white/40 hover:bg-white/[0.1] hover:border-white/[0.12] focus:outline-none focus:bg-white/[0.12] focus:border-white/[0.18] focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] transition-all duration-200"
         />
         <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-white/30 leading-none pointer-events-none">
           ⌘K

@@ -3,7 +3,7 @@ import { Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/shared/FormField";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -64,16 +64,15 @@ export function DetailsStep({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <Label className="font-normal cursor-pointer">
-          Property label <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          name="label"
-          value={form.label}
-          onChange={handleInputChange}
-          placeholder="Enter property label"
-          className="w-full"
-        />
+        <FormField label="Property label" required>
+          <Input
+            name="label"
+            value={form.label}
+            onChange={handleInputChange}
+            placeholder="Enter property label"
+            className="w-full"
+          />
+        </FormField>
         {form.label && (
           <div className="mt-2 flex items-center gap-3 text-muted-foreground text-[12px]">
             <span>Internal name ⓘ</span>
@@ -91,61 +90,58 @@ export function DetailsStep({
       </div>
 
       <div className="space-y-4">
-        <Label className="font-normal cursor-pointer">
-          Object type <span className="text-destructive">*</span>
-        </Label>
-        <Select
-          value={form.object_type}
-          onValueChange={handleObjectTypeChange}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-[200] max-h-[320px]">
-            {OBJECT_TYPES.map((obj) => (
-              <SelectItem key={obj.value} value={obj.value}>
-                {obj.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FormField label="Object type" required>
+          <Select
+            value={form.object_type}
+            onValueChange={handleObjectTypeChange}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-[200] max-h-[320px]">
+              {OBJECT_TYPES.map((obj) => (
+                <SelectItem key={obj.value} value={obj.value}>
+                  {obj.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
       </div>
 
       <div className="space-y-4">
-        <Label className="font-normal cursor-pointer">
-          Group <span className="text-destructive">*</span>
-        </Label>
-        <Select
-          value={form.group_name}
-          onValueChange={(val) =>
-            setForm((prev) => ({ ...prev, group_name: val }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a group" />
-          </SelectTrigger>
-          <SelectContent className="z-[200] max-h-[320px]">
-            {groups.map((group) => (
-              <SelectItem key={group} value={group}>
-                {group}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FormField label="Group" required>
+          <Select
+            value={form.group_name}
+            onValueChange={(val) =>
+              setForm((prev) => ({ ...prev, group_name: val }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a group" />
+            </SelectTrigger>
+            <SelectContent className="z-[200] max-h-[320px]">
+              {groups.map((group) => (
+                <SelectItem key={group} value={group}>
+                  {group}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
       </div>
 
       <div className="space-y-4">
-        <Label className="font-normal cursor-pointer">
-          Description
-        </Label>
-        <Textarea
-          name="description"
-          value={form.description}
-          onChange={handleInputChange}
-          placeholder="Enter description for this property"
-          className="w-full"
-          rows={4}
-        />
+        <FormField label="Description">
+          <Textarea
+            name="description"
+            value={form.description}
+            onChange={handleInputChange}
+            placeholder="Enter description for this property"
+            className="w-full"
+            rows={4}
+          />
+        </FormField>
       </div>
 
       <Separator className="bg-border my-6" />
@@ -190,19 +186,17 @@ export function DetailsStep({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Internal name</Label>
-            <Input
-              value={draftName}
-              onChange={(e) => {
-                setDraftName(e.target.value);
-                setNameError(null);
-              }}
-              placeholder="e.g. property_label"
-              className="w-full font-mono"
-            />
-            {nameError && (
-              <p className="text-xs text-destructive">{nameError}</p>
-            )}
+            <FormField label="Internal name" error={nameError ?? undefined}>
+              <Input
+                value={draftName}
+                onChange={(e) => {
+                  setDraftName(e.target.value);
+                  setNameError(null);
+                }}
+                placeholder="e.g. property_label"
+                className="w-full font-mono"
+              />
+            </FormField>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={() => setEditNameOpen(false)}>

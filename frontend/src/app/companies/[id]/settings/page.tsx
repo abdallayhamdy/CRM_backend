@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Checkbox } from "@/components/ui/checkbox"
 import { EditCardDrawer } from "@/components/crm/EditCardDrawer"
 import { ConditionalLogicModal } from "@/components/crm/ConditionalLogicModal"
 import { ConditionalLogic } from "@/hooks/use-panel-cards"
@@ -923,11 +924,11 @@ export default function LayoutEditorPage() {
 
               <div className="flex flex-col gap-4 mb-6">
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" defaultChecked aria-label="Show left sidebar" className="w-4 h-4 rounded border-input accent-primary" />
+                  <Checkbox defaultChecked aria-label="Show left sidebar" className="w-4 h-4 rounded border-input accent-primary" />
                   <span className="text-[14px] text-foreground">Left sidebar</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" defaultChecked aria-label="Show right sidebar" className="w-4 h-4 rounded border-input accent-primary" />
+                  <Checkbox defaultChecked aria-label="Show right sidebar" className="w-4 h-4 rounded border-input accent-primary" />
                   <span className="text-[14px] text-foreground">Right sidebar</span>
                 </label>
               </div>

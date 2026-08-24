@@ -278,6 +278,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const me = data.data.user
       const { firstName, lastName } = parseName(me.name)
 
+      if (me.workspace_id) {
+        localStorage.setItem('active_workspace_id', me.workspace_id)
+      }
+
       setUser({
         id: me.id,
         email: me.email,

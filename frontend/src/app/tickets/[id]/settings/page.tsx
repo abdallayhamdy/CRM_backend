@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Checkbox } from "@/components/ui/checkbox"
 import { EditCardDrawer } from "@/components/crm/EditCardDrawer"
 import { ConditionalLogicModal } from "@/components/crm/ConditionalLogicModal"
 import { ConditionalLogic } from "@/hooks/use-panel-cards"
@@ -542,8 +543,8 @@ export default function LayoutEditorPage() {
               <h2 className="text-[16px] font-bold text-foreground mb-1">User customization</h2>
               <p className="text-[14px] text-muted-foreground mb-6">Specify where users are allowed to reorder cards within this view.</p>
               <div className="flex flex-col gap-4 mb-6">
-                <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" defaultChecked aria-label="Show left sidebar" className="w-4 h-4 rounded border-input accent-primary" /><span className="text-[14px] text-foreground">Left sidebar</span></label>
-                <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" defaultChecked aria-label="Show right sidebar" className="w-4 h-4 rounded border-input accent-primary" /><span className="text-[14px] text-foreground">Right sidebar</span></label>
+                <label className="flex items-center gap-3 cursor-pointer"><Checkbox defaultChecked aria-label="Show left sidebar" className="w-4 h-4 rounded border-input accent-primary" /><span className="text-[14px] text-foreground">Left sidebar</span></label>
+                <label className="flex items-center gap-3 cursor-pointer"><Checkbox defaultChecked aria-label="Show right sidebar" className="w-4 h-4 rounded border-input accent-primary" /><span className="text-[14px] text-foreground">Right sidebar</span></label>
               </div>
               <div className="bg-muted/50 border border-border rounded-md p-4"><p className="text-[14px] text-muted-foreground">Any new cards added to this view will display, even if users have customized and reordered their cards.</p></div>
             </div>
