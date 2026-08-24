@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, VisuallyHidden } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FormField } from "@/components/shared/FormField"
+import DateTimePicker from "@/components/shared/date-time-picker"
 import { Textarea } from "@/components/ui/textarea"
 import { tasksService } from "@/services/tasks"
 import { contactsService } from "@/services/contacts"
@@ -120,6 +121,9 @@ export function CreateTaskSheet({
       <SheetContent side="right" className="sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Create new task</SheetTitle>
+          <VisuallyHidden>
+            <SheetDescription>Fill in the details to create a new task</SheetDescription>
+          </VisuallyHidden>
         </SheetHeader>
         <div className="flex flex-col h-full bg-muted/50">
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -129,8 +133,7 @@ export function CreateTaskSheet({
                 <span className="text-[13px] font-bold text-foreground">Task details</span>
               </div>
               <div className="p-4 space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="title">Title *</Label>
+                <FormField label="Title" required htmlFor="title">
                   <Input
                     id="title"
                     value={title}
@@ -138,9 +141,8 @@ export function CreateTaskSheet({
                     placeholder="Enter task title"
                     autoFocus
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="description">Description</Label>
+                </FormField>
+                <FormField label="Description" htmlFor="description">
                   <Textarea
                     id="description"
                     value={description}
@@ -148,10 +150,9 @@ export function CreateTaskSheet({
                     placeholder="Enter task description"
                     rows={3}
                   />
-                </div>
+                </FormField>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Task Type</Label>
+                  <FormField label="Task Type">
                     <Select value={taskSubtype} onValueChange={setTaskSubtype}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select type" />
@@ -164,25 +165,21 @@ export function CreateTaskSheet({
                         <SelectItem value="email">Email</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="dueDate">Due date</Label>
-                    <Input
-                      id="dueDate"
-                      type="date"
+                  </FormField>
+                  <FormField label="Due date">
+                    <DateTimePicker
                       value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
+                      onChange={(v) => setDueDate(v.split(" ")[0])}
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="assignedTo">Assigned to (user ID)</Label>
+                  </FormField>
+                  <FormField label="Assigned to (user ID)" htmlFor="assignedTo">
                     <Input
                       id="assignedTo"
                       value={assignedTo}
                       onChange={(e) => setAssignedTo(e.target.value)}
                       placeholder="User UUID"
                     />
-                  </div>
+                  </FormField>
                 </div>
               </div>
             </div>

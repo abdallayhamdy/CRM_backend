@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { FormField } from "@/components/shared/FormField"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -189,37 +190,27 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
           <h3 className="text-sm font-semibold text-foreground">Product information</h3>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground font-semibold after:content-['*'] after:ml-0.5 after:text-destructive">
-                Name
-              </Label>
+            <FormField label="Name" htmlFor="name" required error={errors.name?.message}>
               <Input
                 id="name"
                 placeholder="e.g. Enterprise Subscription"
                 className="border-border focus-visible:ring-[var(--color-hs-teal)]"
                 {...register("name")}
               />
-              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label htmlFor="sku" className="text-foreground font-semibold">
-                SKU
-              </Label>
+            <FormField label="SKU" htmlFor="sku">
               <Input
                 id="sku"
                 placeholder="e.g. CRM-001"
                 className="border-border focus-visible:ring-[var(--color-hs-teal)]"
                 {...register("sku")}
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="product_type" className="text-foreground font-semibold">
-                Product Type
-              </Label>
+            <FormField label="Product Type">
               <Controller
                 name="product_type"
                 control={control}
@@ -236,13 +227,10 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                   </Select>
                 )}
               />
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label className="text-foreground font-semibold">
-                Product Image
-              </Label>
-              <div className="border-2 border-dashed border-border rounded-md p-4 text-center">
+          <FormField label="Product Image">
+            <div className="border-2 border-dashed border-border rounded-md p-4 text-center">
                 {imagePreview ? (
                   <div className="space-y-2">
                     <Image src={imagePreview} alt="Preview" width={80} height={80} className="mx-auto h-20 w-auto object-contain" />
@@ -281,20 +269,17 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                   </div>
                 )}
               </div>
-            </div>
+            </FormField>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="product_description" className="text-foreground font-semibold">
-              Product Description
-            </Label>
+          <FormField label="Product Description">
             <Textarea
               id="product_description"
               placeholder="Describe your product..."
               className="border-border focus-visible:ring-[var(--color-hs-teal)] min-h-[100px]"
               {...register("product_description")}
             />
-          </div>
+          </FormField>
         </div>
 
         {/* Section 2: Additional Product Information (Collapsible) */}
@@ -306,8 +291,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-foreground font-semibold">Owner</Label>
+                <FormField label="Owner">
                   <Controller
                     name="owner_id"
                     control={control}
@@ -327,25 +311,20 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                       </Select>
                     )}
                   />
-                </div>
+                </FormField>
 
-                <div className="space-y-2">
-                  <Label htmlFor="url" className="text-foreground font-semibold">
-                    URL
-                  </Label>
+                <FormField label="URL" htmlFor="url" error={errors.url?.message}>
                   <Input
                     id="url"
                     placeholder="https://example.com"
                     className="border-border focus-visible:ring-[var(--color-hs-teal)]"
                     {...register("url")}
                   />
-                  {errors.url && <p className="text-xs text-destructive">{errors.url.message}</p>}
-                </div>
+                </FormField>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-foreground font-semibold">Create Date</Label>
-                <Popover>
+                <FormField label="Create Date">
+                  <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -368,7 +347,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
+              </FormField>
             </CollapsibleContent>
           </div>
         </Collapsible>
@@ -377,8 +356,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground">Billing details</h3>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground font-semibold">Billing Frequency</Label>
+            <FormField label="Billing Frequency">
               <Controller
                 name="billing_frequency"
                 control={control}
@@ -395,7 +373,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                   </Select>
                 )}
               />
-            </div>
+            </FormField>
           </div>
         </div>
 
@@ -414,10 +392,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
           </Tabs>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="unit_price" className="text-foreground font-semibold after:content-['*'] after:ml-0.5 after:text-destructive">
-                Unit Price
-              </Label>
+            <FormField label="Unit Price" htmlFor="unit_price" required error={errors.unit_price?.message}>
               <Input
                 id="unit_price"
                 type="number"
@@ -426,8 +401,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                 className="border-border focus-visible:ring-[var(--color-hs-teal)]"
                 {...register("unit_price", { valueAsNumber: true })}
               />
-              {errors.unit_price && <p className="text-xs text-destructive">{errors.unit_price.message}</p>}
-            </div>
+            </FormField>
 
             <div className="space-y-2">
               <Label htmlFor="unit_cost" className="text-foreground font-semibold flex items-center gap-1">
@@ -476,8 +450,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
 
         {/* Status and Folder (existing fields) */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-foreground font-semibold">Status</Label>
+          <FormField label="Status">
             <Controller
               name="status"
               control={control}
@@ -493,10 +466,9 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                 </Select>
               )}
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-2">
-            <Label className="text-foreground font-semibold">Folder</Label>
+          <FormField label="Folder">
             <Controller
               name="product_folder"
               control={control}
@@ -513,7 +485,7 @@ export function CreateProductSheet({ open, onOpenChange, onSuccess }: CreateProd
                 </Select>
               )}
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="border-t border-border pt-4">
