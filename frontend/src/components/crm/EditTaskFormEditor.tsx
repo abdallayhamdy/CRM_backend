@@ -25,7 +25,7 @@ interface EditTaskFormEditorProps {
 }
 
 export function EditTaskFormEditor({ onClose }: EditTaskFormEditorProps) {
-  const { formFields, setFormFields, loading, saving, hasChanges, save, reset: resetLayout } = useFormLayout('task', TASK_DEFAULT_FIELDS)
+  const { formFields, loading, saving, hasChanges, save, reset: resetLayout, updateFormField } = useFormLayout('task', TASK_DEFAULT_FIELDS)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [expandedGroups, setExpandedGroups] = React.useState<string[]>(["TASK DETAILS", "ASSIGNMENT & QUEUE"])
   const [showResetConfirm, setShowResetConfirm] = React.useState(false)
@@ -36,7 +36,7 @@ export function EditTaskFormEditor({ onClose }: EditTaskFormEditorProps) {
   )
 
   const handleReorder = (newFields: typeof formFields) => {
-    setFormFields(newFields)
+    updateFormField(() => newFields)
   }
 
   React.useEffect(() => {
@@ -93,7 +93,7 @@ export function EditTaskFormEditor({ onClose }: EditTaskFormEditorProps) {
   }
 
   const toggleProperty = (propertyId: string) => {
-    setFormFields(prev => {
+    updateFormField(prev => {
       const field = prev.find(f => f.id === propertyId)
       if (field) {
         if (field.required) {
@@ -113,7 +113,7 @@ export function EditTaskFormEditor({ onClose }: EditTaskFormEditorProps) {
   }
 
   const toggleRequired = (propertyId: string) => {
-    setFormFields(prev => {
+    updateFormField(prev => {
       const coreRequired = ["title"]
       if (coreRequired.includes(propertyId)) {
         const field = prev.find(f => f.id === propertyId)

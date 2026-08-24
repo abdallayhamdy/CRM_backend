@@ -31,7 +31,7 @@ interface EditContactFormEditorProps {
 }
 
 export function EditContactFormEditor({ onClose }: EditContactFormEditorProps) {
-  const { formFields, setFormFields, loading, saving, hasChanges, save, reset: resetLayout } = useFormLayout('contact', DEFAULT_FIELDS)
+  const { formFields, loading, saving, hasChanges, save, reset: resetLayout, updateFormField } = useFormLayout('contact', DEFAULT_FIELDS)
   const [groups, setGroups] = React.useState<PropertyGroup[]>([])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [expandedGroups, setExpandedGroups] = React.useState<string[]>(["CONTACT INFORMATION", "SALES PROPERTIES"])
@@ -43,7 +43,7 @@ export function EditContactFormEditor({ onClose }: EditContactFormEditorProps) {
   )
 
   const handleReorder = (newFields: typeof formFields) => {
-    setFormFields(newFields)
+    updateFormField(() => newFields)
   }
 
   // Warn before leaving with unsaved changes
@@ -115,7 +115,7 @@ export function EditContactFormEditor({ onClose }: EditContactFormEditorProps) {
   }
 
   const toggleProperty = (propertyId: string) => {
-    setFormFields(prev => {
+    updateFormField(prev => {
       const field = prev.find(f => f.id === propertyId)
       if (field) {
         // Don't allow removing required fields from the sidebar
@@ -136,7 +136,7 @@ export function EditContactFormEditor({ onClose }: EditContactFormEditorProps) {
   }
 
   const toggleRequired = (propertyId: string) => {
-    setFormFields(prev => {
+    updateFormField(prev => {
       // Check if it's one of the core required fields that shouldn't be toggled off
       const coreRequired = ["email", "first_name", "last_name"]
       if (coreRequired.includes(propertyId)) {
