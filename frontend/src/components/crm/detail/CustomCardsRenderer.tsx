@@ -49,7 +49,7 @@ export function CustomCardsRenderer({
               )}
               <button
                 onClick={() => router.push(`${basePath}?edit=${card.id}`)}
-                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
               >
                 <Settings className="w-4 h-4" />
               </button>

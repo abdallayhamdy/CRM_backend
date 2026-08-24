@@ -137,7 +137,7 @@ export function TicketPreviewSheet({ ticket: initialTicket, open, onOpenChange, 
           </VisuallyHidden>
         </SheetHeader>
         {/* Header Section */}
-        <div className="bg-[color:var(--color-slate-50)] border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
+        <div className="bg-muted/30 border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex gap-4 items-center">
               <div className={`h-16 w-16 rounded-md border-2 border-[var(--color-hs-card-bg)] shadow-sm flex items-center justify-center overflow-hidden shrink-0 bg-status-warning/10`}>
@@ -342,7 +342,7 @@ export function TicketPreviewSheet({ ticket: initialTicket, open, onOpenChange, 
                   Associated Records
                </h3>
                {ticket.contact && (
-                 <div className="p-4 bg-[color:var(--color-slate-50)] border rounded-md flex items-center gap-3 mt-2">
+                 <div className="p-4 bg-muted/30 border rounded-md flex items-center gap-3 mt-2">
                     <div className="h-10 w-10 bg-background border rounded-full flex items-center justify-center font-bold text-muted-foreground/70">
                       {ticket.contact.first_name.substring(0, 1)}
                     </div>

@@ -1228,7 +1228,7 @@ export default function CompanyDetailPage() {
             <div className="p-8 flex flex-col items-center text-center">
               {card.type === 'association' ? (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-[color:var(--color-slate-50)] border border-border flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/30 border border-border flex items-center justify-center mb-3">
                     <Search className="w-6 h-6 text-muted-foreground/50" />
                   </div>
                   <p className="text-[13px] text-muted-foreground">No associations found.</p>

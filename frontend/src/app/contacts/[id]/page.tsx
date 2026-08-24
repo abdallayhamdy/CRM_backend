@@ -904,7 +904,7 @@ export default function ContactDetailPage() {
               </button>
               <button
                 onClick={() => setAboutEditOpen(true)}
-                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
               >
                 <Pencil className="w-4 h-4" />
               </button>
@@ -979,7 +979,7 @@ export default function ContactDetailPage() {
                   </button>
                   <button
                     onClick={() => router.push(`/contacts/${id}/settings?edit=${card.id}`)}
-                    className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+                    className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
                   >
                     <Settings className="w-4 h-4" />
                   </button>
@@ -1049,7 +1049,7 @@ export default function ContactDetailPage() {
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -1097,7 +1097,7 @@ export default function ContactDetailPage() {
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -1151,7 +1151,7 @@ export default function ContactDetailPage() {
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -1208,7 +1208,7 @@ export default function ContactDetailPage() {
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -1259,7 +1259,7 @@ export default function ContactDetailPage() {
                 <button className="text-[12px] font-bold text-foreground hover:text-primary">+ Add</button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
                 >
                   <Settings className="w-4 h-4" />
                 </button>
@@ -1269,18 +1269,18 @@ export default function ContactDetailPage() {
             <div className="p-8 flex flex-col items-center text-center">
               {card.type === 'association' ? (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-[color:var(--color-slate-50)] border border-border flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-full bg-muted/30 border border-border flex items-center justify-center mb-3">
                     <Search className="w-6 h-6 text-muted-foreground/50" />
                   </div>
                   <p className="text-[13px] text-muted-foreground">No associations found.</p>
                 </>
               ) : (
                 <div className="w-full space-y-3 px-4 py-2">
-                  <div className="p-2 border border-border rounded text-[12px] text-left text-foreground/70 font-medium hover:bg-[color:var(--color-slate-50)] cursor-pointer transition-colors">
+                  <div className="p-2 border border-border rounded text-[12px] text-left text-foreground/70 font-medium hover:bg-muted/30 cursor-pointer transition-colors">
                     Summarize record
                     <div className="text-[10px] text-muted-foreground">Last enrolled April 28, 2025 3:14PM</div>
                   </div>
-                  <div className="p-2 border border-border rounded text-[12px] text-left text-foreground/70 font-medium hover:bg-[color:var(--color-slate-50)] cursor-pointer transition-colors">
+                  <div className="p-2 border border-border rounded text-[12px] text-left text-foreground/70 font-medium hover:bg-muted/30 cursor-pointer transition-colors">
                     Sync record to 3rd party
                   </div>
                   <button className="w-full py-1.5 border border-border rounded text-[12px] font-bold text-foreground hover:bg-accent">

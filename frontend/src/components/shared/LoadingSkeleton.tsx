@@ -195,7 +195,7 @@ export function PreviewSheetSkeleton() {
   return (
     <div className="p-0 flex flex-col h-full">
       {/* Header section */}
-      <div className="bg-[color:var(--color-slate-50)] border-b border-border/60 px-6 py-6">
+      <div className="bg-muted/30 border-b border-border/60 px-6 py-6">
         <div className="flex items-start justify-between">
           <div className="flex gap-4 items-center">
             <Skeleton className="w-12 h-12 rounded-full shrink-0" />

@@ -164,7 +164,7 @@ export function ContactPreviewSheet({ contact: initialContact, open, onOpenChang
         </SheetHeader>
 
         {/* Header Section */}
-        <div className="bg-[color:var(--color-slate-50)] border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
+        <div className="bg-muted/30 border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex gap-4 items-center">
               <div className={`h-16 w-16 rounded-full border-2 border-[var(--color-hs-card-bg)] shadow-sm flex items-center justify-center overflow-hidden shrink-0 bg-status-info-light`}>
@@ -353,7 +353,7 @@ export function ContactPreviewSheet({ contact: initialContact, open, onOpenChang
                   Company
                 </h3>
               </div>
-              <div className="p-4 bg-[color:var(--color-slate-50)] border rounded-md flex flex-col gap-3">
+              <div className="p-4 bg-muted/30 border rounded-md flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-background border shadow-sm rounded-sm flex items-center justify-center font-bold text-muted-foreground/70 text-sm">
@@ -383,7 +383,7 @@ export function ContactPreviewSheet({ contact: initialContact, open, onOpenChang
                   <div className="flex flex-col text-[13px]">
                     <span className="font-semibold text-foreground">Note created</span>
                     <span className="text-muted-foreground">Today at 10:24 AM by {ownerName}</span>
-                    <div className="mt-2 text-foreground bg-[color:var(--color-slate-50)] p-3 rounded-md border text-[13px] italic">
+                    <div className="mt-2 text-foreground bg-muted/30 p-3 rounded-md border text-[13px] italic">
                       &quot;Left a voicemail to introduce our new enterprise features. Will follow up next week.&quot;
                     </div>
                   </div>

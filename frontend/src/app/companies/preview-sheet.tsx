@@ -146,7 +146,7 @@ export function CompanyPreviewSheet({ company: initialCompany, open, onOpenChang
           </VisuallyHidden>
         </SheetHeader>
         {/* Header Section */}
-        <div className="bg-[color:var(--color-slate-50)] border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
+        <div className="bg-muted/30 border-b border-border/60 px-6 py-6 sticky top-0 z-10 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex gap-4 items-center">
               <div className={`h-16 w-16 rounded-sm border-2 border-primary-foreground shadow-sm flex items-center justify-center overflow-hidden shrink-0 bg-status-info-light`}>
@@ -333,11 +333,11 @@ export function CompanyPreviewSheet({ company: initialCompany, open, onOpenChang
             
             {/* Contacts and Deals counts */}
             <div className="grid grid-cols-2 gap-4">
-               <div className="p-4 bg-[color:var(--color-slate-50)] border rounded-md">
+               <div className="p-4 bg-muted/30 border rounded-md">
                   <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Contacts</span>
                   <div className="text-2xl font-bold text-foreground mt-1">{(company.contacts as unknown as { count: number }[])?.[0]?.count || 0}</div>
                </div>
-               <div className="p-4 bg-[color:var(--color-slate-50)] border rounded-md">
+               <div className="p-4 bg-muted/30 border rounded-md">
                   <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Deals</span>
                   <div className="text-2xl font-bold text-foreground mt-1">{(company.deals as unknown as { count: number }[])?.[0]?.count || 0}</div>
                </div>

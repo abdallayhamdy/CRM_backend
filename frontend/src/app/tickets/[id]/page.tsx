@@ -432,7 +432,7 @@ export default function TicketDetailPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setAboutEditOpen(true)}
-                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+                className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
               >
                 <Pencil className="w-4 h-4" />
               </button>
@@ -531,7 +531,7 @@ export default function TicketDetailPage() {
                 </button>
                 <button
                   onClick={() => router.push(`/tickets/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -574,7 +574,7 @@ export default function TicketDetailPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push(`/tickets/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -620,7 +620,7 @@ export default function TicketDetailPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push(`/tickets/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -643,7 +643,7 @@ export default function TicketDetailPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push(`/tickets/${id}/settings`)}
-                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground transition-colors shrink-0"
+                  className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground transition-colors shrink-0"
                   title="Customize right panel"
                 >
                   <Settings className="w-3.5 h-3.5" />

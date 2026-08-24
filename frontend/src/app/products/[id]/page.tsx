@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
             <h3 className="font-semibold text-sm text-foreground tracking-wide">About this product</h3>
             <button
               onClick={() => setAboutEditOpen(true)}
-              className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-[color:var(--color-slate-50)] text-muted-foreground"
+              className="w-7 h-7 rounded border border-input flex items-center justify-center hover:bg-muted/30 text-muted-foreground"
             >
               <Pencil className="w-4 h-4" />
             </button>

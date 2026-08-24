@@ -273,7 +273,7 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
       <Button 
         type="button"
         disabled={!isValid || isSubmitting}
-        className="px-4 py-2 text-[13px] font-bold text-foreground bg-background border border-border hover:bg-[color:var(--color-slate-50)] rounded transition-colors"
+        className="px-4 py-2 text-[13px] font-bold text-foreground bg-background border border-border hover:bg-muted/30 rounded transition-colors"
       >
         Create and add another
       </Button>
@@ -353,14 +353,14 @@ export function CreateTicketSheet({ open, onOpenChange, onSuccess }: CreateTicke
                 />
               </FormField>
               <div className="flex items-center gap-2 mt-2">
-                <div className="w-4 h-4 rounded border border-border bg-[color:var(--color-slate-50)] flex-shrink-0" />
+                <div className="w-4 h-4 rounded border border-border bg-muted/30 flex-shrink-0" />
                 <span className="text-[13px] text-muted-foreground">Add timeline activity from this Contact ⓘ</span>
               </div>
             </div>
 
           </div>
           
-          <div className="mt-auto py-4 px-6 border-t border-[var(--color-hs-border)] bg-[color:var(--color-slate-50)]">
+          <div className="mt-auto py-4 px-6 border-t border-[var(--color-hs-border)] bg-muted/30">
             {footerActions}
           </div>
         </form>
