@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { usePanelCards } from "@/hooks/use-panel-cards"
 import { CrmDetailLayout, CrmDetailLeftPanel, CrmDetailCenterPanel, CrmDetailRightPanel } from "@/components/crm/CrmDetailLayout"
-import { Avatar } from "@/components/crm/Avatar"
 import { contactsService } from "@/services/contacts"
 import { companiesService } from "@/services/companies"
 import { dealsService } from "@/services/deals"
@@ -20,20 +19,13 @@ import { DetailPageSkeleton } from "@/components/crm/Skeletons"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
-  Building2, Mail, Phone, Calendar, CheckSquare, AlignLeft, Building,
+  Building2,
   ChevronLeft, ChevronDown, Settings, ExternalLink,
-  User, Repeat, Search, Plus,
-  FileText, Paperclip, CheckCircle, Settings2, Columns, Sparkles, Pencil,
-  RefreshCw, Ticket
+  User, Search, Plus,
+  FileText, Sparkles, Pencil,
 } from "lucide-react"
-import { ActivityTaskCard } from "@/components/activity/ActivityTaskCard"
-import { ActivityLogCard } from "@/components/activity/ActivityLogCard"
-import { ActivityTicketCard } from "@/components/activity/ActivityTicketCard"
-import { ActivityFilterPopover, ALL_ACTIVITY_TYPES } from "@/components/activity/ActivityFilterPopover"
-const DynamicTiptapEditor = dynamic(
-  () => import("@/components/ui/tiptap-editor").then(mod => ({ default: mod.TiptapEditor })),
-  { ssr: false }
-)
+import { ALL_ACTIVITY_TYPES } from "@/components/activity/ActivityFilterPopover"
+import { ActivityFeedCenterPanel } from "@/components/crm/ActivityFeedCenterPanel"
 
 import dynamic from "next/dynamic"
 const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
@@ -84,8 +76,10 @@ import { Profile } from "@/lib/types/crm"
 import { cn } from "@/lib/utils"
 import { exportToCSV, formatCurrency } from "@/lib/utils"
 import { useRealtime } from "@/hooks/use-realtime"
-import { LifecycleBadge } from "@/components/crm/LifecycleBadge"
 import { useAuth } from "@/hooks/use-auth"
+import { LifecycleDropdown } from "@/components/crm/LifecycleDropdown"
+import { EditableField, type FieldOption } from "@/components/crm/EditableField"
+import { CONTACT_FIELD_CONFIG } from "@/lib/field-configs/contacts"
 import { PropertyHistoryDialog } from "@/components/crm/detail/PropertyHistoryDialog"
 import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
 import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
@@ -239,6 +233,14 @@ export default function ContactDetailPage() {
   const [candidateDeals, setCandidateDeals] = React.useState<Deal[]>([])
   const [linkedCompanies, setLinkedCompanies] = React.useState<Company[]>([])
   const [linkedDeals, setLinkedDeals] = React.useState<Deal[]>([])
+
+  const ownerOptions: FieldOption[] = React.useMemo(() => [
+    { label: "Unassigned", value: "" },
+    ...profiles.map((p: Profile) => ({
+      label: `${p.first_name} ${p.last_name}`,
+      value: p.clerk_user_id || p.id,
+    })),
+  ], [profiles])
 
   const fetchData = React.useCallback(async () => {
     if (!workspaceId) return
@@ -657,7 +659,7 @@ export default function ContactDetailPage() {
   }, [contact, selectedFilters, searchTerm, timeFilter, assignedToFilter, activeTab, notes, activities, tickets, tasks])
 
   const feedCounts = React.useMemo(() => {
-    if (!contact) return { all: 0, notes: 0, tasks: 0, tickets: 0 }
+    if (!contact) return { all: 0, notes: 0, tasks: 0, tickets: 0, calls: 0 }
     const notesItems = notes.map(n => ({ ...n, feedType: 'note' as const }))
     const activitiesItems = activities.map(a => ({ ...a, feedType: 'activity' as const }))
     const ticketsItems = tickets.map(t => ({ ...t, feedType: 'activity' as const, type: 'ticket' }))
@@ -910,44 +912,52 @@ export default function ContactDetailPage() {
           </div>
 
           <div className="p-5 space-y-5">
-            <div className="group relative">
-              <label className="text-[13px] text-muted-foreground block mb-1">Email</label>
-              <div className="text-[14px]">
-                {contact.email ? (
-                  <a href={`mailto:${contact.email}`} className="text-foreground hover:text-primary hover:underline">
-                    {contact.email}
-                  </a>
-                ) : "--"}
-              </div>
-            </div>
-
-            <div className="group relative">
-              <label className="text-[13px] text-muted-foreground block mb-1">Phone Number</label>
-              <div className="text-[14px] text-foreground">
-                {contact.phone || "--"}
-              </div>
-            </div>
-
-            <div className="group relative">
-              <label className="text-[13px] text-muted-foreground block mb-1.5">Lifecycle Stage</label>
-              <div>
-                <LifecycleBadge stageId={contact.lifecycle_stage} objectType="contact" />
-              </div>
-            </div>
-
-            <div className="group relative">
-              <label className="text-[13px] text-muted-foreground block mb-1">Contact owner</label>
-              <div className="text-[14px] text-foreground">
-                {ownerName}
-              </div>
-            </div>
-
-            <div className="group relative">
-              <label className="text-[13px] text-muted-foreground block mb-1">Source</label>
-              <div className="text-[14px] text-foreground">
-                {contact.source || "Unknown"}
-              </div>
-            </div>
+            {CONTACT_FIELD_CONFIG
+              .filter((f) => f.showInFullPage !== false)
+              .map((f) => (
+                <div key={f.key} className="group relative">
+                  <label className="text-[13px] text-muted-foreground block mb-1">{f.label}</label>
+                  {f.type === "lifecycle" ? (
+                    <LifecycleDropdown
+                      value={contact.lifecycle_stage || null}
+                      objectType={f.lifecycleObjectType || "contact"}
+                      onChange={async (v) => { await handleUpdateContact({ lifecycle_stage: v } as any) }}
+                    />
+                  ) : f.key === "owner_id" ? (
+                    <EditableField
+                      value={contact.owner_id || null}
+                      type="owner"
+                      options={ownerOptions}
+                      editable={f.editable}
+                      layout="stacked"
+                      renderReadonly={() => ownerName}
+                      onSave={async (v) => { await handleUpdateContact({ owner_id: v as string || null } as any) }}
+                    />
+                  ) : f.key === "company_id" ? (
+                    <EditableField
+                      value={(contact as any)[f.key] ?? null}
+                      type={f.type as any}
+                      editable={f.editable}
+                      layout="stacked"
+                      renderReadonly={() => companyName === "No company" ? "--" : companyName}
+                      onSave={async (v) => { await handleUpdateContact({ [f.key]: v } as any) }}
+                    />
+                  ) : f.key === "created_at" ? (
+                    <div className="text-[13px] text-foreground font-medium">
+                      {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : "--"}
+                    </div>
+                  ) : (
+                    <EditableField
+                      value={(contact as any)[f.key] ?? null}
+                      type={f.type as any}
+                      options={f.options}
+                      editable={f.editable}
+                      layout="stacked"
+                      onSave={async (v) => { await handleUpdateContact({ [f.key]: v } as any) }}
+                    />
+                  )}
+                </div>
+              ))}
 
             <CustomFieldsDisplay objectType="contact" values={contact.custom_fields || {}} />
           </div>
@@ -998,487 +1008,27 @@ export default function ContactDetailPage() {
 
       {/* CENTER PANEL: Activity & Feed */}
       <CrmDetailCenterPanel>
-        {/* Tab Bar */}
-        <div className="bg-background border-b border-border">
-          <div className="px-6 flex items-center gap-1">
-            {[
-              { id: 'notes', label: 'Notes', icon: AlignLeft },
-              { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-              { id: 'tickets', label: 'Tickets', icon: Ticket },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (tab.id === 'notes') {
-                    setActiveEditor('note');
-                  } else if (tab.id === 'tasks') {
-                    setActiveEditor('task');
-                  } else if (tab.id === 'tickets') {
-                    setActiveEditor('ticket');
-                  }
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 px-4 py-3 text-[14px] font-medium transition-all relative border-b-2",
-                  "text-muted-foreground border-transparent hover:text-foreground hover:border-border"
-                )}
-              >
-                <tab.icon className="w-4 h-4" strokeWidth={1.5} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Activity Input / Inline Editor */}
-        <div className="bg-background border-b border-border px-6 py-3">
-          {activeEditor ? (
-            <div className="bg-background border border-border rounded-lg shadow-sm overflow-hidden">
-              {/* Inline Note Editor */}
-              {activeEditor === 'note' && (
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <AlignLeft className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-[14px] font-semibold text-foreground">New Note</span>
-                    </div>
-                    <button onClick={() => setActiveEditor(null)} className="text-[13px] text-muted-foreground hover:text-foreground">Cancel</button>
-                  </div>
-                  <DynamicTiptapEditor
-                    content=""
-                    onChange={(html) => (window as any).__noteContent = html}
-                    placeholder="Write your note..."
-                    toolbarVariant="note"
-                    minHeight="120px"
-                  />
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-muted-foreground">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " at " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
-                    <button
-                      onClick={async () => {
-                        const content = (window as any).__noteContent
-                        if (!content?.trim()) return
-                        const { sanitizeRichText } = await import("@/components/ui/tiptap-editor")
-                        const html = sanitizeRichText(content)
-                        const { error } = await notesService.create({
-                          content: html,
-                          notable_type: "contact",
-                          notable_id: id as string,
-                        })
-                        if (error) throw error
-                        ;(window as any).__noteContent = ""
-                        setActiveEditor(null)
-                        fetchData()
-                        toast.success("Note created")
-                      }}
-                      className="px-4 py-1.5 text-[13px] font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                    >
-                      Create note
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Inline Task Editor */}
-              {activeEditor === 'task' && (
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckSquare className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-[14px] font-semibold text-foreground">New Task</span>
-                    </div>
-                    <button onClick={() => setActiveEditor(null)} className="text-[13px] text-muted-foreground hover:text-foreground">Cancel</button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Task title"
-                    className="w-full px-3 py-2 text-[14px] border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary bg-background text-foreground"
-                    onChange={(e) => (window as any).__taskTitle = e.target.value}
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Type</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__taskType = e.target.value}>
-                        <option value="To-do">To-do</option>
-                        <option value="Call">Call</option>
-                        <option value="Follow up">Follow up</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Priority</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__taskPriority = e.target.value}>
-                        <option value="None">None</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Queue</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__taskQueue = e.target.value}>
-                        <option value="General">General</option>
-                        <option value="Support">Support</option>
-                        <option value="Sales">Sales</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Assigned to</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__taskAssignee = e.target.value}>
-                        <option value="">Unassigned</option>
-                        {profiles.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <DynamicTiptapEditor
-                    content=""
-                    onChange={(html) => (window as any).__taskNotes = html}
-                    placeholder="Task notes..."
-                    toolbarVariant="task"
-                    minHeight="80px"
-                  />
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-muted-foreground">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " at " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
-                    <button
-                      onClick={async () => {
-                        const title = (window as any).__taskTitle
-                        if (!title?.trim()) return
-                        const { error } = await tasksService.create({
-                          title,
-                          description: (window as any).__taskNotes || "",
-                          assigned_to: (window as any).__taskAssignee || currentUser?.id || null,
-                          due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                          status: "pending",
-                          taskable_type: "contact",
-                          taskable_id: id as string,
-                        })
-                        if (error) throw error
-                        setActiveEditor(null)
-                        fetchData()
-                        toast.success("Task created")
-                      }}
-                      className="px-4 py-1.5 text-[13px] font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                    >
-                      Create task
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Inline Ticket Editor */}
-              {activeEditor === 'ticket' && (
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Ticket className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-[14px] font-semibold text-foreground">New Ticket</span>
-                    </div>
-                    <button onClick={() => setActiveEditor(null)} className="text-[13px] text-muted-foreground hover:text-foreground">Cancel</button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Ticket title"
-                    className="w-full px-3 py-2 text-[14px] border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary bg-background text-foreground"
-                    onChange={(e) => (window as any).__ticketTitle = e.target.value}
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Priority</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__ticketPriority = e.target.value}>
-                        <option value="None">None</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Status</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__ticketStatus = e.target.value}>
-                        <option value="open">Open</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="pending">Pending</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1 block">Assigned to</label>
-                      <select className="w-full px-2 py-1.5 text-[13px] border border-border rounded-md bg-background text-foreground" onChange={(e) => (window as any).__ticketAssignee = e.target.value}>
-                        <option value="">Unassigned</option>
-                        {profiles.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <DynamicTiptapEditor
-                    content=""
-                    onChange={(html) => (window as any).__ticketDescription = html}
-                    placeholder="Description..."
-                    toolbarVariant="note"
-                    minHeight="80px"
-                  />
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-muted-foreground">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " at " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
-                    <button
-                      onClick={async () => {
-                        const title = (window as any).__ticketTitle
-                        if (!title?.trim()) return
-                        await ticketsService.create({
-                          title,
-                          description: (window as any).__ticketDescription || "",
-                          priority: (window as any).__ticketPriority || "None",
-                          status: (window as any).__ticketStatus || "open",
-                          owner_id: (window as any).__ticketAssignee || currentUser?.id,
-                          contact_id: id as string,
-                          workspace_id: contact?.workspace_id as any,
-                        } as any)
-                        setActiveEditor(null)
-                        fetchData()
-                        toast.success("Ticket created")
-                      }}
-                      className="px-4 py-1.5 text-[13px] font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                    >
-                      Create ticket
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div
-              className="w-full px-4 py-2.5 text-[14px] text-muted-foreground bg-muted/50 border border-border rounded-md cursor-pointer hover:bg-muted transition-colors"
-              onClick={() => setActiveEditor('note')}
-            >
-              Click here to add an activity...
-            </div>
-          )}
-        </div>
-
-        <div className="bg-muted/50 p-5 min-h-full">
-          {/* Focus Section */}
-          {upcomingTasks.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ChevronDown className="w-4 h-4 text-foreground" />
-                  <h3 className="text-[16px] font-bold text-foreground">Focus</h3>
-                </div>
-                <button
-                  onClick={() => setIsCollapsedAll(prev => !prev)}
-                  className="flex items-center gap-2 text-[14px] text-muted-foreground"
-                >
-                  <span>Expand all items</span>
-                  <div className={cn(
-                    "w-9 h-5 rounded-full transition-colors relative",
-                    isCollapsedAll ? "bg-border" : "bg-primary"
-                  )}>
-                    <div className={cn(
-                      "w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform",
-                      isCollapsedAll ? "left-0.5" : "left-[18px]"
-                    )} />
-                  </div>
-                </button>
-              </div>
-              <div className="flex flex-col gap-3">
-                {upcomingTasks.map((task: any) => (
-                  <ActivityTaskCard
-                    key={task.id}
-                    id={task.id}
-                    title={task.title}
-                    description={task.description || ''}
-                    assignedTo={task.owner?.first_name ? `${task.owner.first_name} ${task.owner.last_name || ""}` : "Unassigned"}
-                    dueDate={task.due_date}
-                    dueTime={new Date(task.due_date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                    isExpanded={!isCollapsedAll}
-                    associations={getAssociations()}
-                    onSuccess={fetchData}
-                    initialTaskSubtype={task.task_subtype || 'To-do'}
-                    initialPriority={task.task_priority || 'None'}
-                    initialQueue={task.task_queue || 'None'}
-                    initialReminder={task.task_reminder || 'At task due time'}
-                    initialRepeat={task.task_repeat || false}
-                    initialCompleted={task.completed || false}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* History Section */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <ChevronDown className="w-4 h-4 text-foreground" />
-                <h3 className="text-[16px] font-bold text-foreground">History</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {isCollapsedAll ? 'Expand all items' : 'Collapse all items'}
-              </div>
-            </div>
-
-            {/* History Filter Tabs */}
-            <div className="flex items-center gap-1 mb-4 bg-background border border-border rounded-lg p-1">
-              {[
-                { id: 'all', label: `All (${feedCounts.all})` },
-                { id: 'notes', label: `Notes (${feedCounts.notes})` },
-                { id: 'tasks', label: `Tasks (${feedCounts.tasks})` },
-                { id: 'tickets', label: `Tickets (${feedCounts.tickets})` },
-                { id: 'calls', label: `Calls (${feedCounts.calls})` },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id === 'all') {
-                      setSelectedFilters(ALL_ACTIVITY_TYPES);
-                    } else if (tab.id === 'notes') {
-                      setSelectedFilters(['Notes']);
-                    } else if (tab.id === 'tasks') {
-                      setSelectedFilters(['Tasks']);
-                    } else if (tab.id === 'tickets') {
-                      setSelectedFilters(['Tickets']);
-                    } else if (tab.id === 'calls') {
-                      setSelectedFilters(['Calls']);
-                    }
-                  }}
-                  className={cn(
-                    "px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors",
-                    (selectedFilters.length === ALL_ACTIVITY_TYPES.length && tab.id === 'all') ||
-                    (tab.id === 'notes' && selectedFilters.length === 1 && selectedFilters[0] === 'Notes') ||
-                    (tab.id === 'tasks' && selectedFilters.length === 1 && selectedFilters[0] === 'Tasks') ||
-                    (tab.id === 'tickets' && selectedFilters.length === 1 && selectedFilters[0] === 'Tickets') ||
-                    (tab.id === 'calls' && selectedFilters.length === 1 && selectedFilters[0] === 'Calls')
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Activity Feed - Timeline */}
-            <div className="flex flex-col gap-4 relative">
-              {historyItems.length > 0 ? (
-                Object.keys(groupedHistory).length > 0 ? (
-                  <div className="flex flex-col gap-8">
-                    {Object.entries(groupedHistory).map(([monthYear, items]) => (
-                      <div key={monthYear} className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                          <h4 className="text-[14px] text-foreground font-bold whitespace-nowrap">{monthYear}</h4>
-                          <div className="h-[1px] w-full bg-border" />
-                        </div>
-
-                        <div className="relative pl-8">
-                          <div className="flex flex-col gap-3">
-                            {items.map((item: any, idx: number) => {
-                              const isNote = item.feedType === 'note'
-                              const isTask = item.type === 'task'
-                              const isTicket = item.type === 'ticket'
-                              const isCall = item.type === 'call'
-                              const isEmail = item.type === 'email'
-                              const isMeeting = item.type === 'meeting'
-                              const isLifecycle = item.type === 'lifecycle_change'
-
-                              const tlIcon = isNote ? FileText : isTicket ? Ticket : isTask ? CheckSquare : isCall ? Phone : isEmail ? Mail : isMeeting ? Calendar : isLifecycle ? RefreshCw : Repeat
-                              const tlIconColor = isNote ? "text-status-warning" : isTicket ? "text-status-warning" : isTask ? "text-status-success" : isLifecycle ? "text-status-purple" : "text-primary"
-                              const tlIconBg = isNote ? "bg-status-warning/10" : isTicket ? "bg-status-warning/10" : isTask ? "bg-status-success/10" : isLifecycle ? "bg-status-purple/10" : "bg-primary/10"
-
-                              return (
-                                <div key={item.id} className="relative">
-                                  {/* Timeline connector line */}
-                                  {idx < items.length - 1 && (
-                                    <div className="absolute left-[-25px] top-8 bottom-[-12px] w-px bg-border z-0" />
-                                  )}
-                                  {/* Timeline icon */}
-                                  <div className={cn("absolute -left-[37px] top-2 h-6 w-6 rounded-full flex items-center justify-center z-10", tlIconBg)}>
-                                    {React.createElement(tlIcon, { className: cn("h-3 w-3", tlIconColor) })}
-                                  </div>
-
-                                  {isNote ? (
-                                    <ActivityLogCard
-                                      id={item.id}
-                                      feedType="note"
-                                      type="Note"
-                                      author={item.author?.first_name ? `${item.author.first_name} ${item.author.last_name || ""}` : "System"}
-                                      date={new Date(item.created_at).toLocaleString('en-US', {
-                                        month: 'short', day: 'numeric', year: 'numeric',
-                                        hour: '2-digit', minute: '2-digit', hour12: true
-                                      }) + " GMT+2"}
-                                      content={item.content}
-                                      isExpanded={!isCollapsedAll}
-                                      associations={getAssociations()}
-                                      onSuccess={fetchData}
-                                    />
-                                  ) : isTask ? (
-                                    <ActivityTaskCard
-                                      id={item.id}
-                                      title={item.title || ""}
-                                      description={item.description || ""}
-                                      assignedTo={item.owner?.first_name ? `${item.owner.first_name} ${item.owner.last_name || ""}` : "Unassigned"}
-                                      dueDate={item.due_date || new Date().toISOString()}
-                                      dueTime={new Date(item.due_date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                                      isExpanded={!isCollapsedAll}
-                                      initialTaskSubtype={item.task_subtype || 'To-do'}
-                                      initialPriority={item.task_priority || 'None'}
-                                      initialQueue={item.task_queue || 'General'}
-                                      initialReminder={item.task_reminder || 'At task due time'}
-                                      initialRepeat={item.task_repeat || false}
-                                      initialCompleted={item.completed || false}
-                                      associations={getAssociations()}
-                                      onSuccess={fetchData}
-                                    />
-                                  ) : isTicket ? (
-                                    <ActivityTicketCard
-                                      id={item.id}
-                                      subject={item.subject || item.title || ""}
-                                      description={item.description || ""}
-                                      assignedTo={item.assigned_to || "Unassigned"}
-                                      status={item.status || "open"}
-                                      priority={item.priority || "None"}
-                                      category={item.category || "general"}
-                                      createdAt={item.created_at}
-                                      isExpanded={!isCollapsedAll}
-                                      associations={getAssociations()}
-                                      onSuccess={fetchData}
-                                    />
-                                  ) : (
-                                    <ActivityLogCard
-                                      id={item.id}
-                                      feedType="activity"
-                                      type={item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                                      author={item.owner?.first_name ? `${item.owner.first_name} ${item.owner.last_name || ""}` : "System"}
-                                      date={new Date(item.created_at || item.due_date).toLocaleString('en-US', {
-                                        month: 'short', day: 'numeric', year: 'numeric',
-                                        hour: '2-digit', minute: '2-digit', hour12: true
-                                      }) + " GMT+2"}
-                                      icon={
-                                        isCall ? <Phone className="w-5 h-5" /> :
-                                          isEmail ? <Mail className="w-5 h-5" /> :
-                                            isMeeting ? <Calendar className="w-5 h-5" /> :
-                                              isLifecycle ? <RefreshCw className="w-5 h-5 text-status-purple" /> :
-                                                isTicket ? <Ticket className="w-5 h-5 text-status-warning" /> :
-                                                  <Repeat className="w-5 h-5" />
-                                      }
-                                      content={item.formatted_description || item.description || item.title}
-                                      isExpanded={!isCollapsedAll}
-                                      associations={getAssociations()}
-                                    />
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>No activity matches your filters. <button className="text-primary font-bold hover:underline" onClick={() => setSelectedFilters(ALL_ACTIVITY_TYPES)}>Clear all filters</button></p>
-                  </div>
-                )
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No activity matches your filters. <button className="text-primary font-bold hover:underline" onClick={() => setSelectedFilters(ALL_ACTIVITY_TYPES)}>Clear all filters</button></p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ActivityFeedCenterPanel
+          entityType="contact"
+          entityId={id}
+          workspaceId={contact?.workspace_id ?? undefined}
+          profiles={profiles}
+          currentUser={currentUser}
+          showTabs={['notes', 'tasks', 'tickets']}
+          showFilterTabs={['all', 'notes', 'tasks', 'tickets', 'calls']}
+          feedItems={combinedFeed}
+          feedCounts={feedCounts}
+          upcomingTasks={upcomingTasks}
+          groupedHistory={groupedHistory}
+          activeEditor={activeEditor}
+          setActiveEditor={setActiveEditor}
+          isCollapsedAll={isCollapsedAll}
+          setIsCollapsedAll={setIsCollapsedAll}
+          selectedFilters={selectedFilters}
+          setSelectedFilters={setSelectedFilters}
+          onRefresh={fetchData}
+          getAssociations={getAssociations}
+        />
       </CrmDetailCenterPanel>
 
       {/* RIGHT PANEL: Associated Objects */}
@@ -1621,7 +1171,7 @@ export default function ContactDetailPage() {
                     </span>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[13px] font-bold text-foreground">${deal.amount?.toLocaleString() ?? '0'}</span>
-                      <span className="text-[11px] text-muted-foreground uppercase font-bold">• {deal.stage?.replace(/_/g, ' ')}</span>
+                      <span className="text-[11px] text-muted-foreground uppercase font-bold">â€¢ {deal.stage?.replace(/_/g, ' ')}</span>
                     </div>
                   </div>
                 ))}
@@ -1678,7 +1228,7 @@ export default function ContactDetailPage() {
                       )}>
                         {(ticket.status || 'open').toUpperCase()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground uppercase font-bold">• {ticket.priority}</span>
+                      <span className="text-[11px] text-muted-foreground uppercase font-bold">â€¢ {ticket.priority}</span>
                     </div>
                   </div>
                 ))}
@@ -1743,7 +1293,7 @@ export default function ContactDetailPage() {
         ))}
       </CrmDetailRightPanel>
 
-      {/* Add Deal Sheet — two tabs: Create new / Add existing */}
+      {/* Add Deal Sheet â€” two tabs: Create new / Add existing */}
       <AddDealSheet
         open={isDealSheetOpen}
         onClose={() => setIsDealSheetOpen(false)}
@@ -1961,7 +1511,7 @@ export default function ContactDetailPage() {
                   return days <= 0 ? "today" : `${days} day${days === 1 ? "" : "s"} ago`
                 })()})</li>
                 <li>Lifecycle stage: {contact.lifecycle_stage || "Unknown"}</li>
-                <li>Following: {contact.isFollowing ? "Yes" : "No"} · Email opted out: {contact.emailOptOut ? "Yes" : "No"}</li>
+                <li>Following: {contact.isFollowing ? "Yes" : "No"} آ· Email opted out: {contact.emailOptOut ? "Yes" : "No"}</li>
               </ul>
             </div>
           )}
@@ -1983,7 +1533,7 @@ export default function ContactDetailPage() {
               <Building2 className="w-4 h-4 text-muted-foreground" />
               <div className="text-[13px]">
                 <div className="font-medium text-foreground">All members of {activeWorkspace?.name || "this workspace"}</div>
-                <div className="text-muted-foreground">Workspace-level access — no per-record permission granularity exists in this build.</div>
+                <div className="text-muted-foreground">Workspace-level access â€” no per-record permission granularity exists in this build.</div>
               </div>
             </div>
             <div className="text-[12px] text-muted-foreground">
