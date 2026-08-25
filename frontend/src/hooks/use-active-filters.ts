@@ -103,7 +103,7 @@ export function useActiveFilters({
             item.type === "number" ? "number" :
               item.type === "check" ? "simple-property" : "text") as GenericActiveFilter['type'],
           // For picklists, use defined options or fallback to standard ones
-          options: item.type === "check" ? (item.options || ["Option 1", "Option 2", "Option 3"]) : undefined,
+          options: item.type === "check" ? ((item as { options?: string[] }).options || ["Option 1", "Option 2", "Option 3"]) : undefined,
           value: item.type === "date" ? (filters.dateRanges[item.id] || "all") :
             item.type === "check" ? (filters.properties[item.id] || []) :
               (filters.properties[item.id] || ""),

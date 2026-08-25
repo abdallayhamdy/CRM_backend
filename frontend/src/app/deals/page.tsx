@@ -32,7 +32,6 @@ const DealsBoardView = dynamic(
 )
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
-import { DEAL_MORE_FILTERS } from "@/lib/filter-data"
 import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { CreateDealSheet } from "./create-deal-sheet"
 import dynamic from "next/dynamic"
@@ -225,7 +224,7 @@ export default function DealsPage() {
     removeAdvancedFilter,
     addAdvancedFilter,
   } = useCrmFilters(
-    ["owner", "stage", "closeDate"], 
+    ["owner", "stage", "closeDate"],
     "deals-pinned-filters",
     activeTab
   )
@@ -793,7 +792,6 @@ export default function DealsPage() {
         pinnedFilterIds={pinnedFilterIds}
         onAddPinnedFilter={addPinnedFilter}
         onRemovePinnedFilter={removePinnedFilter}
-        moreFilters={DEAL_MORE_FILTERS}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onEditColumnsClick={() => setColumnEditorOpen(true)}
@@ -891,7 +889,7 @@ export default function DealsPage() {
         activeFilterCount={activeFilterCount}
       />
 
-      <CrmColumnEditor 
+      <CrmColumnEditor
         open={columnEditorOpen}
         onOpenChange={setColumnEditorOpen}
         columns={allColumnOptions}
@@ -901,9 +899,9 @@ export default function DealsPage() {
         description="Choose which columns to show in your table and their order."
       />
 
-      <CreateDealSheet 
-        open={isCreateOpen} 
-        onOpenChange={setIsCreateOpen} 
+      <CreateDealSheet
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
         onDealCreated={loadDeals}
       />
 

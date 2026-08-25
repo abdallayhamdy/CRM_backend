@@ -2,7 +2,6 @@
 
 import { GenericActiveFilter } from "@/components/crm/CrmFilterBar"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
-import { DEAL_MORE_FILTERS } from "@/lib/filter-data"
 import { DEAL_STAGES } from "@/lib/types/crm"
 import { Profile } from "@/lib/types/crm"
 
@@ -20,13 +19,10 @@ interface UseDealsActiveFiltersParams {
   handleToggleProperty: (id: string, value: string) => void
 }
 
-// Helper: look up a filter config from DEAL_MORE_FILTERS by id
+// NOTE: DEAL_MORE_FILTERS was removed from filter-data.ts (orphaned after the
+// "+ More" popover removal). Unknown pinned ids now resolve to a generic text filter.
 function getDealFilterConfig(id: string) {
-  for (const category of DEAL_MORE_FILTERS) {
-    const item = category.items.find(i => i.id === id)
-    if (item) return item
-  }
-  return null
+  return null as null | { name: string; type: string }
 }
 
 export function useDealsActiveFilters({
@@ -71,7 +67,7 @@ export function useDealsActiveFilters({
       value: type === "date" ? filters.dateRanges[id] || "all"
            : type === "number" ? (filters.properties[id] ? JSON.parse(filters.properties[id][0] || "null") : null)
            : type === "text" ? (filters.properties[id]?.[0] || "")
-           : id === "owner" || id === "deal-owner" 
+           : id === "owner" || id === "deal-owner"
              ? (filters.properties[id] || []).map(oid => {
                  const p = owners.find(o => o.id === oid)
                  return p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : oid
