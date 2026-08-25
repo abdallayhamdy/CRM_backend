@@ -66,6 +66,7 @@ import { useProperties } from "@/hooks/use-properties"
 import { authService } from "@/services/auth"
 import { LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
 import { useObjectConfig } from "@/hooks/use-object-config"
+import { useRouter } from "next/navigation"
 
 export default function ContactsPage() {
   const [data, setData] = React.useState<Contact[]>([])
@@ -123,6 +124,7 @@ export default function ContactsPage() {
   const { properties } = useProperties("contact")
   const { canCreateContact, canExportContacts, canEditContact, canDeleteContact, canCreateTask } = usePermissions()
   const { stages: lifecycleStages } = useObjectConfig("contact")
+  const router = useRouter()
 
   const [sortBy, setSortBy] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -913,6 +915,7 @@ export default function ContactsPage() {
         columns={allColumnOptions}
         propertyGroups={propertyGroups}
         onSave={handleColumnSave}
+        onCreateProperty={() => router.push("/settings/properties/create?objectType=contact")}
       />
 
       {count > 0 && canDeleteContact && (

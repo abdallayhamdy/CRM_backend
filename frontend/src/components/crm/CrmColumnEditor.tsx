@@ -37,6 +37,7 @@ interface CrmColumnEditorProps {
   onSave: (columns: ColumnItem[], frozenCount: number) => void
   title?: string
   description?: string
+  onCreateProperty?: () => void
 }
 
 function ColumnItem({
@@ -71,7 +72,8 @@ export function CrmColumnEditor({
   propertyGroups = PROPERTY_GROUPS_CONFIG,
   onSave,
   title = "Edit columns",
-  description = "Choose which columns to show in your table and their order."
+  description = "Choose which columns to show in your table and their order.",
+  onCreateProperty
 }: CrmColumnEditorProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [frozenCount, setFrozenCount] = React.useState("0")
@@ -250,7 +252,10 @@ export function CrmColumnEditor({
               <div className="mt-8 mb-4 text-[12px] text-muted-foreground px-2 border-t border-border pt-4">
                 <p>
                   Don&apos;t see the property you&apos;re looking for?{" "}
-                  <button className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                  <button
+                    onClick={onCreateProperty}
+                    className="text-primary font-bold hover:underline inline-flex items-center gap-1"
+                  >
                     Create a property <ExternalLink className="h-3 w-3" />
                   </button>
                 </p>
