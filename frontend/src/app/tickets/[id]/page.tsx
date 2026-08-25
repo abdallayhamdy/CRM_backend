@@ -29,7 +29,7 @@ import { CustomCardsRenderer } from "@/components/crm/detail/CustomCardsRenderer
 import { CustomFieldsDisplay } from "@/components/properties/CustomFieldsDisplay"
 import { EditRecordSheet, type EditFieldConfig } from "@/components/properties/EditRecordSheet"
 import {
-  LifeBuoy, ChevronLeft, ChevronDown, Settings, Search, Plus, Users, Pencil
+  LifeBuoy, ChevronLeft, ChevronDown, Settings, Search, Users, Pencil
 } from "lucide-react"
 import dynamic from "next/dynamic"
 const NoteEditorSheet = dynamic(() => import("@/components/activities/NoteEditorSheet").then(m => ({ default: m.NoteEditorSheet })), { ssr: false })
@@ -527,7 +527,7 @@ export default function TicketDetailPage() {
                   onClick={() => setIsNoteSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/tickets/${id}/settings`)}

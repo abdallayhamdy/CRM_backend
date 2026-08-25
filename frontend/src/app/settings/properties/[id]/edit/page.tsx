@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   AlertTriangle, ArrowLeft, Save, BarChart2, Database, CheckCircle2,
   Info, Lock, Users, Loader2, ChevronRight, FileText, Settings2, Shield,
-  Eye, ShieldCheck, Plus, X, Type
+  Eye, ShieldCheck, X, Type
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -641,8 +641,7 @@ export default function PropertyEditPage() {
                           className="w-full border-dashed border-border text-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue)]/5 hover:border-[var(--color-hs-blue)] text-[13px]"
                           onClick={() => setOptions([...options, { label: '', value: '', color: '' }])}
                         >
-                          <Plus className="w-4 h-4 mr-1.5" />
-                          Add another option
+                           Add another option
                         </Button>
                       </div>
                     </div>

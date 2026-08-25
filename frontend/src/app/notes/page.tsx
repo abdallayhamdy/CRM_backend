@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { FileText, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { FileText, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { format } from "date-fns"
@@ -277,7 +277,6 @@ export default function NotesPage() {
                 onClick={() => setCreateOpen(true)}
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4" />
                 Create note
               </Button>
             )}

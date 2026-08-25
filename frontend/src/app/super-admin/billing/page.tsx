@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { toast } from "sonner"
-import { DollarSign, CalendarClock, AlertTriangle, TrendingUp, Plus, Loader2 } from "lucide-react"
+import { DollarSign, CalendarClock, AlertTriangle, TrendingUp, Loader2 } from "lucide-react"
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
 import { ChartContainer, ChartTooltipContent, ChartLegendContent, type ChartConfig } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
@@ -204,7 +204,7 @@ export default function BillingPage() {
                 </ReportsChartCard>
               </div>
             </div>
-            <ReportsChartCard title="Invoices" action={<Button size="sm" className="h-8 px-3 text-[12px] font-bold gap-1.5" onClick={() => setCreateOpen(true)}><Plus className="h-3.5 w-3.5" />Create Invoice</Button>}>
+            <ReportsChartCard title="Invoices" action={<Button size="sm" className="h-8 px-3 text-[12px] font-bold gap-1.5" onClick={() => setCreateOpen(true)}>Create Invoice</Button>}>
               <DataTable columns={columns} data={filteredInvoices} searchKey="tenant_name" emptyTitle="No invoices found" emptyDescription="No invoices match your current filters." />
             </ReportsChartCard>
           </div>

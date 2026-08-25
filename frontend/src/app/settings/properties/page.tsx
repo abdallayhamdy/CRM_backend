@@ -9,7 +9,7 @@ import { laravelApi } from '@/lib/laravel-api';
 import { clearPropertiesCache } from '@/hooks/use-properties';
 
 import {
-  Search, ChevronDown, Plus, Lock, ExternalLink,
+  Search, ChevronDown, Lock, ExternalLink,
   Filter, SlidersHorizontal, Database, Trash2, Edit3,
   Eye, MoreHorizontal
 } from 'lucide-react';
@@ -964,7 +964,6 @@ function CreatePropertyButton({ onClick }: { onClick: () => void }) {
       className="bg-primary hover:bg-[var(--color-hs-blue-hover)] text-primary-foreground gap-2 font-bold"
       onClick={onClick}
     >
-      <Plus className="w-4 h-4" />
       Create property
     </Button>
   );

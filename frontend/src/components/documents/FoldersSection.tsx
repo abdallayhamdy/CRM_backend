@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Folder, FolderOpen, Plus, Trash2, Pencil } from "lucide-react"
+import { Folder, FolderOpen, Trash2, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -146,7 +146,6 @@ export function FoldersSection({
           className="flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-all text-muted-foreground hover:text-foreground"
         >
           <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center">
-            <Plus className="h-4 w-4" />
           </div>
           <span className="text-sm font-medium">New folder</span>
         </button>

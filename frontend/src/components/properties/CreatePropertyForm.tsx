@@ -18,7 +18,6 @@ import {
   Lock,
   Sparkles,
   X,
-  Plus,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -403,8 +402,7 @@ const CreatePropertyForm = forwardRef<CreatePropertyFormRef, CreatePropertyFormP
                   className="w-full border-dashed border-border text-primary hover:bg-primary/5 hover:border-primary"
                   onClick={addOption}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add another option
+                   Add another option
                 </Button>
               </div>
             </div>

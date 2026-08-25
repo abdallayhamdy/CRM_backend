@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { columns } from "./columns"
-import { Phone, ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { Phone, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
@@ -294,7 +294,6 @@ export default function CallsPage() {
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
                 onClick={() => setCallEditorOpen(true)}
               >
-                <Plus className="h-4 w-4" />
                 Log call
               </Button>
             )}

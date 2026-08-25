@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { ordersService } from "@/services/orders"
 import { CustomFieldsForm } from "@/components/properties/CustomFieldsForm"
@@ -129,7 +129,6 @@ export function CreateOrderSheet({ isOpen, onClose, onCreated }: CreateOrderShee
           <div className="flex items-center justify-between">
             <Label>Line Items</Label>
             <Button type="button" variant="outline" size="sm" onClick={handleAddLineItem}>
-              <Plus className="h-4 w-4 mr-1" />
               Add Item
             </Button>
           </div>

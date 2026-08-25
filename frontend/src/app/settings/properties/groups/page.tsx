@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit3, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Trash2, Edit3, MoreHorizontal, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -159,7 +159,7 @@ export default function GroupsPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue-hover)] text-[var(--color-hs-card-bg)] gap-2 font-bold">
-              <Plus className="w-4 h-4" /> Create group
+               Create group
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[480px]">

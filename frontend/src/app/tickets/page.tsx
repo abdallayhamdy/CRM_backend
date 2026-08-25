@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { columns } from "./columns"
-import { TicketCheck, Plus } from "lucide-react"
+import { TicketCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Generic CRM Components
@@ -616,7 +616,6 @@ export default function TicketsPage() {
                 onClick={() => setIsCreateSheetOpen(true)}
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4" />
                 Create ticket
               </Button>
             )}

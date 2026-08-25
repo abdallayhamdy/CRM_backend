@@ -3,7 +3,7 @@
 import * as React from "react"
 import { columns } from "./columns"
 import { productsService } from "@/services/products"
-import { ShoppingBag, Plus, Package } from "lucide-react"
+import { ShoppingBag, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
@@ -462,7 +462,6 @@ export default function ProductsPage() {
                 onClick={() => setIsCreateSheetOpen(true)}
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4" />
                 Create product
               </Button>
             )}

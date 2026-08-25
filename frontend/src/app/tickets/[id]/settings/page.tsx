@@ -8,7 +8,7 @@ import { CreateRightCardView } from "@/components/crm/CreateRightCardView"
 import { EditDefaultCardView } from "@/components/crm/EditDefaultCardView"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import {
-  Pencil, MoreHorizontal, Plus, Info,
+  Pencil, MoreHorizontal, Info,
   Check, RotateCcw, X, Search
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -160,7 +160,6 @@ function AddCardDivider({ onAdd }: { onAdd: () => void }) {
     <div className="relative flex items-center justify-center h-7 cursor-pointer select-none z-10" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={onAdd}>
       <div className={cn("absolute inset-x-0 top-1/2 -translate-y-1/2 h-px transition-colors duration-150", hovered ? "bg-primary" : "bg-transparent")} />
       <div className={cn("relative z-10 w-5 h-5 rounded border flex items-center justify-center bg-background transition-all duration-150", hovered ? "border-primary text-primary shadow-sm scale-110" : "border-border text-border")}>
-        <Plus className="w-3 h-3" />
       </div>
       {hovered && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-foreground text-primary-foreground text-[11px] font-bold px-2.5 py-1 rounded z-20 whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-100">
@@ -480,7 +479,7 @@ export default function LayoutEditorPage() {
               <div className="bg-background border border-border rounded-md flex items-center justify-between px-4 py-2.5 shadow-sm">
                 <span className="text-[13px] font-bold text-foreground">History</span>
                 <div className="flex items-center gap-2 text-muted-foreground/60">
-                  <button aria-label="Add activity" className="w-8 h-8 flex items-center justify-center hover:text-foreground transition-colors rounded hover:bg-accent"><Plus className="w-4 h-4" aria-hidden="true" /></button>
+                  <button aria-label="Add activity" className="w-8 h-8 flex items-center justify-center hover:text-foreground transition-colors rounded hover:bg-accent"></button>
                   <button aria-label="Refresh activities" className="w-8 h-8 flex items-center justify-center hover:text-foreground transition-colors rounded hover:bg-accent"><RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /></button>
                 </div>
               </div>

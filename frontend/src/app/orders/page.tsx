@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ShoppingCart, Plus, Settings2, Package } from "lucide-react"
+import { ShoppingCart, Settings2, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/CrmPageLayout"
 import { CrmTabs } from "@/components/crm/CrmTabs"
@@ -656,7 +656,6 @@ export default function OrdersPage() {
             </Button>
             {canCreateOrder && (
               <Button onClick={() => setCreateSheetOpen(true)} className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95">
-                <Plus className="h-4 w-4" />
                 Create order
               </Button>
             )}

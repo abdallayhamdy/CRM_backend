@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Search, ChevronDown, ChevronRight, Plus, Trash2, SlidersHorizontal } from "lucide-react"
+import { X, Search, ChevronDown, ChevronRight, Trash2, SlidersHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -323,7 +323,6 @@ function AddFilterSection({ config, onAdd }: { config: SidebarFilterConfig[], on
             }
             className="flex items-center gap-3 px-2 py-2 hover:bg-muted/50 rounded-md text-left transition-colors group"
           >
-            <Plus className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="text-[13px] text-foreground group-hover:text-foreground font-medium">{prop.label}</span>
           </button>
         ))}

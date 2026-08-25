@@ -24,7 +24,6 @@ import {
   ListTodo,
   Trash2,
   Pencil,
-  Plus,
 } from "lucide-react"
 import { LifecycleBadge } from "@/components/crm/LifecycleBadge"
 import { LifecycleDropdown } from "@/components/crm/LifecycleDropdown"
@@ -1620,7 +1619,7 @@ function PreviewAssociations({
                 onClick={(e) => e.stopPropagation()}
                 className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-0.5"
               >
-                <Plus className="h-3 w-3" /> Add
+                Add
               </button>
             </div>
             {assoc.items.length > 0 ? (

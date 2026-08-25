@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button"
 import {
   Building2,
   ChevronLeft, ChevronDown, Settings, ExternalLink,
-  User, Search, Plus,
+  User, Search,
   FileText, Sparkles, Pencil,
 } from "lucide-react"
 import { ALL_ACTIVITY_TYPES } from "@/components/activity/ActivityFilterPopover"
@@ -1045,7 +1045,7 @@ export default function ContactDetailPage() {
                   onClick={() => setIsNoteSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
@@ -1093,7 +1093,7 @@ export default function ContactDetailPage() {
                   onClick={() => setIsCompanySheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
@@ -1147,7 +1147,7 @@ export default function ContactDetailPage() {
                   onClick={() => setIsDealSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}
@@ -1204,7 +1204,7 @@ export default function ContactDetailPage() {
                   onClick={() => setIsTicketSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/contacts/${id}/settings`)}

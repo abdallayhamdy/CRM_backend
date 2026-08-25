@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   Search,
   ChevronDown,
-  Plus,
   Lock,
   ExternalLink,
   Filter,

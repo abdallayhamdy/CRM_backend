@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { toast } from "sonner"
-import { Settings2, Mail, Key, Webhook as WebhookIcon, Plus, Copy, Check, Trash2, Loader2, AlertTriangle } from "lucide-react"
+import { Settings2, Mail, Key, Webhook as WebhookIcon, Copy, Check, Trash2, Loader2, AlertTriangle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { getSaBadgeClassName } from "@/lib/badge-colors"
 import { Button } from "@/components/ui/button"
@@ -185,7 +185,6 @@ function ApiKeysSection({ keys, onRefresh }: { keys: ApiKey[]; onRefresh: () => 
             <CardTitle className="text-[15px] font-bold text-foreground">API Keys</CardTitle>
           </div>
           <Button size="sm" className="h-8 px-3 text-[12px] font-bold gap-1.5" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-3.5 w-3.5" />
             Generate New Key
           </Button>
         </div>
@@ -316,7 +315,6 @@ function WebhooksSection({ webhooks, onRefresh }: { webhooks: Webhook[]; onRefre
             <CardTitle className="text-[15px] font-bold text-foreground">Webhooks</CardTitle>
           </div>
           <Button size="sm" className="h-8 px-3 text-[12px] font-bold gap-1.5" onClick={() => setAddOpen(true)}>
-            <Plus className="h-3.5 w-3.5" />
             Add Webhook
           </Button>
         </div>

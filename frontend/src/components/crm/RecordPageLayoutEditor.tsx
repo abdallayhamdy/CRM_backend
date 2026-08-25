@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
-  Pencil, MoreHorizontal, Plus, Info, GripVertical,
+  Pencil, MoreHorizontal, Info, GripVertical,
   Check, RotateCcw, X, Search, ChevronLeft
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -77,7 +77,6 @@ function AddCardDivider({ onAdd }: { onAdd: () => void }) {
     >
       <div className={cn("absolute inset-x-0 top-1/2 -translate-y-1/2 h-px transition-colors duration-150", hovered ? "bg-primary" : "bg-transparent")} />
       <div className={cn("relative z-10 w-5 h-5 rounded border flex items-center justify-center bg-background transition-all duration-150", hovered ? "border-primary text-primary shadow-sm scale-110" : "border-border text-border")}>
-        <Plus className="w-3 h-3" />
       </div>
       {hovered && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-foreground text-primary-foreground text-[11px] font-bold px-2.5 py-1 rounded z-20 whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-100">
@@ -198,7 +197,6 @@ export function RecordPageLayoutEditor({
               <span className="text-[13px] font-bold text-foreground">History</span>
               <div className="flex items-center gap-2 text-muted-foreground/60">
                 <button className="w-8 h-8 flex items-center justify-center hover:text-foreground transition-colors rounded hover:bg-accent">
-                  <Plus className="w-4 h-4" />
                 </button>
                 <button className="w-8 h-8 flex items-center justify-center hover:text-foreground transition-colors rounded hover:bg-accent">
                   <RotateCcw className="w-3.5 h-3.5" />

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Plus, ChevronDown, Pencil, Palette, Trash2, GripVertical } from "lucide-react"
+import { ChevronDown, Pencil, Palette, Trash2, GripVertical } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -770,7 +770,6 @@ export function CrmTabs({
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
             >
-              <Plus className="h-4 w-4" />
             </button>
           </div>
         </SortableContext>

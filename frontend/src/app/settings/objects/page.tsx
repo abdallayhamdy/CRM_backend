@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, GripVertical, Info, Trash2, Loader2, Plus } from 'lucide-react';
+import { ExternalLink, GripVertical, Info, Trash2, Loader2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from '@/lib/utils';
 import { ColorPickerPopover } from '@/components/ui/color-picker-popover';
@@ -370,8 +370,7 @@ export default function ObjectsPage() {
                       onClick={() => addStage('New Stage', '#71717A')}
                       className="text-sm text-primary dark:text-primary hover:underline flex items-center gap-1"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add stage
+                       Add stage
                     </button>
                   </div>
                 </div>

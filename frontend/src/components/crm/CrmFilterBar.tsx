@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import {
-  Search, Settings, ChevronDown, Plus, Filter,
+  Search, Settings, ChevronDown, Filter,
   LayoutGrid, Columns2, Sliders, X,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"

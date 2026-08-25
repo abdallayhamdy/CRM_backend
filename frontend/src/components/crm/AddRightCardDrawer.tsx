@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Search, Plus, Info, ChevronRight, Layout, Briefcase, Workflow, Check, ChevronDown } from "lucide-react"
+import { X, Search, Info, ChevronRight, Layout, Briefcase, Workflow, Check, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"

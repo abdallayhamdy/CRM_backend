@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { LucideIcon, Plus } from "lucide-react"
+import { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -36,7 +36,6 @@ export function CrmEmptyState({
         <div className="relative w-24 h-24 bg-background border border-border rounded-2xl shadow-xl flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
           <Icon className="w-10 h-10 text-primary" />
           <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent rounded-lg shadow-lg flex items-center justify-center">
-            <Plus className="w-4 h-4 text-accent-foreground" />
           </div>
         </div>
       </div>

@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import {
   Lock,
   ChevronDown,
-  Plus,
   History,
   Edit3,
   Search,
@@ -160,7 +159,7 @@ export default function CurrencyPage() {
               <CardTitle className="text-[15px] font-bold text-foreground">Available Currencies</CardTitle>
             </div>
             <Button size="sm" className="h-8 bg-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue-hover)] text-[var(--color-hs-card-bg)] font-bold text-[12px] gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Add Currency
+               Add Currency
               <Lock className="h-3 w-3 ml-1 opacity-70" />
             </Button>
           </div>

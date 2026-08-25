@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import {
-  ChevronDown, ChevronLeft, MoreHorizontal, Plus, X, UserPlus, Clock, Users,
+  ChevronDown, ChevronLeft, MoreHorizontal, X, UserPlus, Clock, Users,
   Search, SlidersHorizontal, ArrowUpDown, Copy, Trash2, ExternalLink, Check, Info, Pencil,
   Mail, Shield, AlertCircle,
 } from 'lucide-react';
@@ -771,8 +771,7 @@ export default function UsersTeamsPage() {
             <Dialog open={createTeamOpen} onOpenChange={setCreateTeamOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-[var(--color-hs-blue)] hover:bg-[var(--color-hs-blue-hover)] text-[var(--color-hs-card-bg)] font-bold gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create team
+                   Create team
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[420px]">

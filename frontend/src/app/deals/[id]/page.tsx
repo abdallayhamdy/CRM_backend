@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import {
   DollarSign, Mail, Phone, Calendar, CheckSquare, AlignLeft, Users, Building2,
   ChevronLeft, ChevronDown, Settings, MoreHorizontal,
-  Search, Plus, Pencil, LinkIcon, MessageSquare, MessageCircle,
+  Search, Pencil, LinkIcon, MessageSquare, MessageCircle,
   PhoneOutgoing, CalendarPlus, Mailbox, Repeat, ExternalLink,
   FileText, Sparkles, Copy, Lock, ChevronRight, Columns,
   RefreshCw, Ticket
@@ -828,7 +828,7 @@ export default function DealDetailPage() {
                   onClick={() => setShowAddContact(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/deals/${id}/settings`)}
@@ -886,7 +886,7 @@ export default function DealDetailPage() {
                   onClick={() => setShowAddCompany(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/deals/${id}/settings`)}
@@ -937,7 +937,7 @@ export default function DealDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1">
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </span>
                 <button
                   onClick={() => router.push(`/deals/${id}/settings`)}

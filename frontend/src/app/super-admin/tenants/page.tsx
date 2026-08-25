@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/shared/DataTable"
 import { superAdminService, type Tenant } from "@/services/super-admin"
-import { Building2, Plus, Loader2 } from "lucide-react"
+import { Building2, Loader2 } from "lucide-react"
 
 const PLAN_LABELS: Record<Tenant["plan"], string> = {
   starter: "Starter",
@@ -151,7 +151,6 @@ export default function TenantsPage() {
         </div>
         <Link href="/super-admin/tenants/new">
           <Button size="sm" className="gap-1.5 h-8 px-3 text-xs">
-            <Plus className="w-3.5 h-3.5" />
             Create Client Account
           </Button>
         </Link>

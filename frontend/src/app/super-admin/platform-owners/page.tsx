@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTable } from "@/components/shared/DataTable"
 import { superAdminService, type PlatformOwner } from "@/services/super-admin"
-import { Shield, Loader2, Plus, UserMinus } from "lucide-react"
+import { Shield, Loader2, UserMinus } from "lucide-react"
 
 function getInitials(name: string): string {
   return name
@@ -148,7 +148,6 @@ function CreateDialog({
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
                   Create
                 </>
               )}
@@ -269,7 +268,6 @@ export default function PlatformOwnersPage() {
           </div>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
           Add Platform Owner
         </Button>
       </div>

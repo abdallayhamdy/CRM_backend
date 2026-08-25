@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { columns } from "./columns"
-import { CheckCircle2, Plus } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import dynamic from "next/dynamic"
@@ -556,7 +556,6 @@ export default function TasksPage() {
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
                 onClick={() => setCreateOpen(true)}
               >
-                <Plus className="h-4 w-4" />
                 Create task
               </Button>
             )}

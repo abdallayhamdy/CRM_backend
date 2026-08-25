@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Pencil, Trash2, Layers } from "lucide-react"
+import { Pencil, Trash2, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -133,7 +133,6 @@ function PipelineFormDialog({
                 <Label>Stages</Label>
                 {!isEdit && (
                   <Button type="button" variant="outline" size="sm" onClick={addStage}>
-                    <Plus className="h-4 w-4 mr-1" />
                     Add Stage
                   </Button>
                 )}
@@ -328,7 +327,6 @@ export default function PipelinesPage() {
         actions={
           canCreatePipeline ? (
             <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
               Create Pipeline
             </Button>
           ) : undefined
@@ -355,7 +353,6 @@ export default function PipelinesPage() {
                 <p className="text-muted-foreground">No pipelines yet. Create your first pipeline to get started.</p>
                 {canCreatePipeline && (
                   <Button className="mt-4" onClick={() => setCreateOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1" />
                     Create Pipeline
                   </Button>
                 )}

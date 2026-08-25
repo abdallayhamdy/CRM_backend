@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { FolderOpen, Plus, Download, Folder, Trash2, Pencil, Link2, ExternalLink } from "lucide-react"
+import { FolderOpen, Download, Folder, Trash2, Pencil, Link2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { format } from "date-fns"
@@ -485,7 +485,6 @@ export default function DocumentsPage() {
                 onClick={() => setIsUploadSheetOpen(true)}
                 className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4" />
                 Upload document
               </Button>
             )}

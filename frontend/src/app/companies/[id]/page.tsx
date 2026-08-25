@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input"
 import {
   Building2, Mail, Phone, Calendar, CheckSquare, AlignLeft,
   ChevronLeft, ChevronDown, Settings, MoreHorizontal,
-  Search, Plus, Pencil, LinkIcon, MessageSquare, MessageCircle,
+  Search, Pencil, LinkIcon, MessageSquare, MessageCircle,
   PhoneOutgoing, CalendarPlus, Mailbox, Repeat, ExternalLink,
   FileText, Sparkles, Copy, Lock, ChevronRight, Columns, Users,
   RefreshCw, Ticket
@@ -1075,7 +1075,7 @@ export default function CompanyDetailPage() {
                   onClick={() => setIsContactSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/companies/${id}/settings`)}
@@ -1135,7 +1135,7 @@ export default function CompanyDetailPage() {
                   onClick={() => setIsDealSheetOpen(true)}
                   className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </button>
                 <button
                   onClick={() => router.push(`/companies/${id}/settings`)}
@@ -1190,7 +1190,7 @@ export default function CompanyDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[14px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1">
-                  <Plus className="w-3 h-3" /> Add
+                  Add
                 </span>
                 <button
                   onClick={() => router.push(`/companies/${id}/settings`)}
