@@ -1013,7 +1013,7 @@ export default function CompaniesPage() {
         />
       </CrmPageHeader>
 
-      <div className="flex flex-col h-full border border-border rounded-xl overflow-hidden mx-2 mt-2 mb-2 shadow-sm">
+      <div className="flex flex-col flex-1 min-h-0 border border-border rounded-xl overflow-hidden mx-2 mt-2 mb-2 shadow-sm">
       <CrmFilterBar
         placeholder="Search companies..."
         searchValue={filters.search}
@@ -1034,9 +1034,9 @@ export default function CompaniesPage() {
         onTableSettingsChange={saveTableSettings}
       />
       {/* Main Table */}
-      <div className="flex-1 overflow-hidden bg-muted/30 relative mt-0.5">
-        <div className="p-2 h-full flex flex-col">
-          <div className="bg-card rounded-xl border border-border/60 overflow-hidden shadow-sm flex-1 flex flex-col">
+      <div className="flex-1 min-h-0 overflow-hidden bg-muted/30 relative mt-0.5">
+        <div className="p-2 flex-1 min-h-0 flex flex-col">
+          <div className="bg-card rounded-xl border border-border/60 overflow-hidden shadow-sm flex-1 flex flex-col min-h-0">
             {isLoading ? (
               <CrmTableSkeleton columnCount={visibleColumnIds.length - 1} rowCount={10} />
             ) : totalReady === 0 ? (
