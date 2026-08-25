@@ -767,6 +767,7 @@ export default function OrdersPage() {
         columns={allColumnOptions}
         propertyGroups={propertyGroups}
         onSave={handleColumnSave}
+        onCreateProperty={() => router.push("/settings/properties/create?objectType=order")}
         title="Edit order columns"
       />
 

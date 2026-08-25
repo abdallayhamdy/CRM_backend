@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { getCompanyColumns } from "./columns"
@@ -356,6 +357,7 @@ export default function CompaniesPage() {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false)
   const [selectedCompany, setSelectedCompany] = React.useState<Company | null>(null)
   const [refreshKey, setRefreshKey] = React.useState(0)
+  const router = useRouter()
   const [viewMode, setViewMode] = React.useState<"table" | "board">("table")
   const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
   const [bulkEditOpen, setBulkEditOpen] = React.useState(false)
@@ -1162,6 +1164,7 @@ export default function CompaniesPage() {
         columns={allColumnOptions}
         propertyGroups={propertyGroups}
         onSave={handleColumnSave}
+        onCreateProperty={() => router.push("/settings/properties/create?objectType=company")}
         title="Edit columns"
         description="Choose which columns to show in your table and their order."
       />

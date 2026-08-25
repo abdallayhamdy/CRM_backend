@@ -895,6 +895,7 @@ export default function DealsPage() {
         columns={allColumnOptions}
         propertyGroups={propertyGroups}
         onSave={handleColumnSave}
+        onCreateProperty={() => router.push("/settings/properties/create?objectType=deal")}
         title="Edit columns"
         description="Choose which columns to show in your table and their order."
       />
