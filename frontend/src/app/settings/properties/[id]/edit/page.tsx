@@ -123,11 +123,12 @@ export default function PropertyEditPage() {
       setShowInForms(p.show_in_forms ?? true);
       setFieldType(p.field_type);
       setOptions(p.options?.length > 0 ? p.options.map((o: any) => ({ label: o.label, value: o.value, color: o.color || '' })) : []);
-      setDefaultValue((p as any).default_value || '');
-      setNumberFormat((p as any).number_format || 'formatted');
-      setDateDisplayFormat((p as any).date_display_format || 'date_only');
-      setDatetimeDisplayFormat((p as any).datetime_display_format || 'date_time_only');
-      setOptionStyle((p as any).option_style || 'default');
+      const s = (p as any).settings || {};
+      setDefaultValue(s.default_value || '');
+      setNumberFormat(s.number_format || 'formatted');
+      setDateDisplayFormat(s.date_display_format || 'date_only');
+      setDatetimeDisplayFormat(s.datetime_display_format || 'date_time_only');
+      setOptionStyle(s.option_style || 'default');
     } catch { setError('Failed to load property.'); }
     finally { setLoading(false); }
   }, [propertyId]);
@@ -150,22 +151,28 @@ export default function PropertyEditPage() {
     if (!property) return;
     setSaving(true); setSaved(false);
     try {
+      const existingSettings = (property as any).settings || {};
+      const newSettings: Record<string, any> = { ...existingSettings };
+      newSettings.default_value = defaultValue || null;
+      if (isChoiceField) {
+        newSettings.option_style = optionStyle;
+      }
+      if (isNumberField) {
+        newSettings.number_format = numberFormat;
+      }
+      if (fieldType === 'date_picker') {
+        newSettings.date_display_format = dateDisplayFormat;
+      }
+      if (fieldType === 'date_time_picker') {
+        newSettings.datetime_display_format = datetimeDisplayFormat;
+      }
+
       const body: Record<string, any> = {
         description: description || null, is_required: isRequired, show_in_forms: showInForms,
-        field_type: fieldType, default_value: defaultValue || null,
+        field_type: fieldType, settings: newSettings,
       };
       if (isChoiceField) {
         body.options = options.filter(opt => opt.label.trim() !== '');
-        body.option_style = optionStyle;
-      }
-      if (isNumberField) {
-        body.number_format = numberFormat;
-      }
-      if (fieldType === 'date_picker') {
-        body.date_display_format = dateDisplayFormat;
-      }
-      if (fieldType === 'date_time_picker') {
-        body.datetime_display_format = datetimeDisplayFormat;
       }
       if (!isSystem) { body.label = label.trim(); body.group_name = groupName || null; }
       const { data, error } = await laravelApi.patch<{ data: Property }>(`/properties/${propertyId}`, body);
