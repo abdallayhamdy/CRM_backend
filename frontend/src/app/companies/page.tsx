@@ -545,11 +545,11 @@ export default function CompaniesPage() {
     ].find(t => t.id === id);
 
     if (standardTab) {
-      return { 
-        ...standardTab, 
+      return {
+        ...standardTab,
         label: tabLabels[id] || standardTab.label,
         color: tabColors[id],
-        count: totalReady 
+        count: totalReady
       };
     }
 
@@ -600,12 +600,12 @@ export default function CompaniesPage() {
 
   const activeFilters: GenericActiveFilter[] = pinnedFilterIds.map(id => {
     if (id === "owner" || id === "company-owner") {
-      return { 
-        id: "owner", 
-        label: "Company owner", 
-        type: "searchable-property", 
-        options: allOwners, 
-        value: filters.properties["owner"] || [], 
+      return {
+        id: "owner",
+        label: "Company owner",
+        type: "searchable-property",
+        options: allOwners,
+        value: filters.properties["owner"] || [],
         onChange: (val: string[]) => setProperty("owner", val as string[])
       }
     }
@@ -632,19 +632,19 @@ export default function CompaniesPage() {
 
     const config = getFilterConfig(id);
     if (!config) return null;
-    
+
     let type: GenericActiveFilter["type"] = "generic";
     if (config.type === "text" || config.type === "link") type = "text";
     else if (config.type === "date") type = "date";
     else if (config.type === "number") type = "number";
     else if (config.type === "check" || config.type === "property") type = "simple-property";
-    
+
     return {
       id,
       label: config.name,
       type,
       options: (config as { options?: string[] }).options || (config.type === "check" ? ["Yes", "No"] : []),
-      value: type === "date" ? filters.dateRanges[id] || "all" 
+      value: type === "date" ? filters.dateRanges[id] || "all"
            : type === "number" ? (filters.properties[id] ? JSON.parse(filters.properties[id][0] || "null") : null)
            : type === "text" ? (filters.properties[id]?.[0] || "")
            : filters.properties[id] || [],
@@ -658,21 +658,21 @@ export default function CompaniesPage() {
   }).filter(Boolean) as GenericActiveFilter[];
 
   const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
-    const flattened = COMPANY_MORE_FILTERS.flatMap(cat => 
+    const flattened = COMPANY_MORE_FILTERS.flatMap(cat =>
       cat.items.map(item => ({
         id: item.id,
         label: item.name,
-        type: (item.type === 'check' || item.type === 'property') ? 'property' as const 
+        type: (item.type === 'check' || item.type === 'property') ? 'property' as const
              : (item.type === 'text' || item.type === 'link') ? 'text' as const
              : item.type as 'text' | 'property' | 'number' | 'date',
         options: (item as { options?: string[] }).options || (item.type === 'check' ? ['Yes', 'No'] : [])
       }))
     )
-    
+
     // Add owner manually as it's often missing or differently named in static data
     const ownerFilter = { id: "owner", label: "Company owner", type: "property" as const, options: allOwners.map(o => o.value) }
     const propertyFilters = buildPropertySidebarFilters(properties)
-    
+
     return [
       { id: "company-name", label: "Company name", type: "text" as const },
       ownerFilter,
@@ -698,8 +698,8 @@ export default function CompaniesPage() {
     if (!workspaceId) return
 
     try {
-      const standardFields = ['industry', 'size', 'phone', 'lifecycle_stage']
-      
+      const standardFields = ['name', 'industry', 'size', 'phone', 'lifecycle_stage']
+
       const updates: Partial<Company> = {}
       if (standardFields.includes(columnId)) {
         (updates as Record<string, unknown>)[columnId] = value
@@ -712,7 +712,7 @@ export default function CompaniesPage() {
 
       const { error } = await companiesService.update(company.id, updates, workspaceId)
       if (error) throw error
-      
+
       toast.success("Company updated")
       setRefreshKey(k => k + 1)
     } catch (err: unknown) {
@@ -746,7 +746,7 @@ export default function CompaniesPage() {
         lifecycle_stage: targetStage
       }, workspaceId)
       if (error) throw error
-      
+
       toast.success(`Moved ${company.name} to ${targetStage === "null" ? "Unassigned" : targetStage}`)
     } catch (err) {
       setRefreshKey(k => k + 1)
@@ -956,15 +956,15 @@ export default function CompaniesPage() {
 
   return (
     <CrmPageLayout className="h-full bg-muted/50 pb-0">
-      <CrmPageHeader 
-        title="Companies" 
+      <CrmPageHeader
+        title="Companies"
         icon={<Building2 className="h-5 w-5" />}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             {canCreateCompany && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
+                  <Button
                     className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-4 gap-2 border-0 shadow-sm transition-all active:scale-95"
                   >
                     <span className="hidden sm:inline">Add companies</span>
@@ -972,7 +972,7 @@ export default function CompaniesPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border border-border shadow-lg rounded-lg p-1">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="flex items-center px-4 py-2.5 text-[14px] font-medium text-foreground hover:bg-muted/50 cursor-pointer rounded-md transition-colors"
                     onClick={() => {
                       setIsCreateSheetOpen(true);
@@ -980,7 +980,7 @@ export default function CompaniesPage() {
                   >
                     Create new
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="flex items-center px-4 py-2.5 text-[14px] font-medium text-foreground hover:bg-muted/50 cursor-pointer rounded-md transition-colors"
                     onClick={() => setImportOpen(true)}
                   >
@@ -1000,9 +1000,9 @@ export default function CompaniesPage() {
           </div>
         }
       >
-        <CrmTabs 
-          items={tabItems} 
-          activeTab={activeTab} 
+        <CrmTabs
+          items={tabItems}
+          activeTab={activeTab}
           onTabChange={setActiveTab}
           onTabClose={handleCloseTab}
           onAddTab={() => setIsAddViewOpen(true)}
@@ -1014,8 +1014,8 @@ export default function CompaniesPage() {
       </CrmPageHeader>
 
       <div className="flex flex-col h-full border border-border rounded-xl overflow-hidden mx-2 mt-2 mb-2 shadow-sm">
-      <CrmFilterBar 
-        placeholder="Search companies..." 
+      <CrmFilterBar
+        placeholder="Search companies..."
         searchValue={filters.search}
         onSearchChange={updateSearch}
         activeFilters={activeFilters}
@@ -1041,20 +1041,20 @@ export default function CompaniesPage() {
               <CrmTableSkeleton columnCount={visibleColumnIds.length - 1} rowCount={10} />
             ) : totalReady === 0 ? (
                <div className="p-6">
-                  <CrmEmptyState 
-                    title="No companies yet" 
-                    description="Add your first company to start organizing your accounts." 
-                    icon={Building2} 
+                  <CrmEmptyState
+                    title="No companies yet"
+                    description="Add your first company to start organizing your accounts."
+                    icon={Building2}
                     actionLabel={canCreateCompany ? "Create company" : undefined}
                     onAction={canCreateCompany ? () => setIsCreateSheetOpen(true) : undefined}
                   />
                </div>
             ) : data.length === 0 ? (
                <div className="p-6">
-                  <CrmEmptyState 
-                    title="No companies found" 
-                    description="We couldn't find any companies matching your criteria. Try adjusting your filters or search query." 
-                    icon={Building2} 
+                  <CrmEmptyState
+                    title="No companies found"
+                    description="We couldn't find any companies matching your criteria. Try adjusting your filters or search query."
+                    icon={Building2}
                     actionLabel="Clear Filters"
                     onAction={clearAll}
                   />
@@ -1067,10 +1067,10 @@ export default function CompaniesPage() {
                   activeFilter={summaryFilter}
                   onFilterChange={setSummaryFilter}
                 />
-                <CrmDataTable 
+                <CrmDataTable
                   key={`companies-table-${columnVersion}`}
-                  columns={tableColumns} 
-                  data={summaryFilteredData} 
+                  columns={tableColumns}
+                  data={summaryFilteredData}
                   onRowClick={(company) => setSelectedCompany(company)}
                   onUpdateCell={handleUpdateCell}
                   onHistoryClick={(company) => {
@@ -1156,7 +1156,7 @@ export default function CompaniesPage() {
         </PopoverContent>
       </Popover>
 
-      <CrmColumnEditor 
+      <CrmColumnEditor
         open={columnEditorOpen}
         onOpenChange={setColumnEditorOpen}
         columns={allColumnOptions}
@@ -1166,9 +1166,9 @@ export default function CompaniesPage() {
         description="Choose which columns to show in your table and their order."
       />
 
-      <CreateCompanySheet 
-        open={isCreateSheetOpen} 
-        onOpenChange={setIsCreateSheetOpen} 
+      <CreateCompanySheet
+        open={isCreateSheetOpen}
+        onOpenChange={setIsCreateSheetOpen}
         onCompanyCreated={loadCompanies}
       />
 
