@@ -348,7 +348,7 @@ function CrmDataTableInner<TData, TValue>({
       `}</style>
 
       <div
-        className="flex-1 overflow-auto relative border-t border-border min-w-0"
+        className="flex-1 min-h-0 overflow-auto relative border-t border-border min-w-0"
       >
         <div>
         <table

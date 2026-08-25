@@ -1,22 +1,31 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { companiesService } from "@/services/companies"
 import { toast } from "sonner"
-import { Info, Globe, ExternalLink } from "lucide-react"
+import { Info, Globe, ExternalLink, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import { authService } from "@/services/auth"
 import Link from "next/link"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useObjectConfig } from "@/hooks/use-object-config"
 import { LifecycleDropdown } from "@/components/crm/LifecycleDropdown"
 import { CustomFieldsForm } from "@/components/properties/CustomFieldsForm"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Profile } from "@/lib/types/crm"
 
 interface CreateCompanySheetProps {
   open: boolean
@@ -31,6 +40,7 @@ const companyFormSchema = z.object({
   size: z.string().optional(),
   description: z.string().optional(),
   lifecycle_stage: z.string().optional(),
+  owner_id: z.string().optional().or(z.literal("")),
 })
 
 type CompanyFormValues = z.infer<typeof companyFormSchema>
@@ -38,18 +48,18 @@ type CompanyFormValues = z.infer<typeof companyFormSchema>
 
 
 export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: CreateCompanySheetProps) {
-  const { workspaceId } = useAuth()
+  const { workspaceId, user } = useAuth()
   const { stages: lifecycleStages } = useObjectConfig("company")
   const [formConfig, setFormConfig] = React.useState<{id: string, label: string, required?: boolean}[] | null>(null)
   const [submitMode, setSubmitMode] = React.useState<'create' | 'create-another'>('create')
   const [customValues, setCustomValues] = React.useState<Record<string, any>>({})
   const [customFieldErrors, setCustomFieldErrors] = React.useState<Record<string, string>>({})
+  const [profiles, setProfiles] = React.useState<Profile[]>([])
 
   const setCustomValue = React.useCallback((name: string, value: any) => {
     setCustomValues(prev => ({ ...prev, [name]: value }))
   }, [])
 
-  // Load config on mount or when open changes
   React.useEffect(() => {
     if (open) {
       const saved = localStorage.getItem("company_form_config")
@@ -58,11 +68,9 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
           const parsed = JSON.parse(saved)
           if (Array.isArray(parsed)) {
             if (parsed.length > 0 && parsed[0].properties) {
-              // Handle old format if it still exists
               const selected = parsed.flatMap((g: any) => g.properties.filter((p: any) => p.selected))
               setFormConfig(selected)
             } else {
-              // New format: flat array of properties
               setFormConfig(parsed)
             }
           }
@@ -70,11 +78,14 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
           // Expected in standalone mode
         }
       }
+      authService.listProfiles(workspaceId!).then(({ data }) => {
+        if (data) setProfiles(data)
+      }).catch(err => console.error("[create-company]", err))
     } else {
       setCustomValues({})
       setCustomFieldErrors({})
     }
-  }, [open])
+  }, [open, workspaceId])
 
   const {
     register,
@@ -83,12 +94,14 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
     watch,
     setValue,
     setError,
+    control,
     formState: { errors, isSubmitting }
   } = useForm<CompanyFormValues>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
       name: "",
       domain: "",
+      owner_id: user?.profileId || "",
     }
   })
 
@@ -108,24 +121,24 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
       if (values.lifecycle_stage === undefined || values.lifecycle_stage === null) {
         createData.lifecycle_stage = null
       }
+      if (values.owner_id === "" || values.owner_id === "unassigned") {
+        createData.owner_id = null
+      }
       if (Object.keys(customValues).length > 0) {
         createData.custom_fields = customValues
       }
       const result = await companiesService.create(createData)
 
       if (result.error) {
-        // Map backend 422 validation errors to form fields
         if (result.validationErrors) {
           const mapped: Record<string, { type: string; message: string }> = {}
           for (const [field, messages] of Object.entries(result.validationErrors)) {
-            // Map backend field names to form field names
             const formField = field === 'owner_id' ? 'owner_id' : field
             mapped[formField] = {
               type: 'server',
               message: Array.isArray(messages) ? messages[0] : String(messages),
             }
           }
-          // Use react-hook-form's setError for each field
           for (const [field, error] of Object.entries(mapped)) {
             if (field in values || field === 'owner_id') {
               setError(field as keyof CompanyFormValues, error)
@@ -160,6 +173,7 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
     { id: "phone", label: "Phone number" },
     { id: "size", label: "Company size" },
     { id: "lifecycle_stage", label: "Lifecycle stage" },
+    { id: "owner_id", label: "Company owner" },
     { id: "description", label: "Description" },
   ]
 
@@ -212,6 +226,43 @@ export function CreateCompanySheet({ open, onOpenChange, onCompanyCreated }: Cre
               objectType="company"
             />
           </div>
+        </div>
+      )
+    }
+
+    if (field.id === "owner_id") {
+      return (
+        <div key={field.id} className="space-y-1.5">
+          <label className="text-[13px] font-bold text-foreground flex items-center gap-1">
+            {field.label}
+            {isRequired && <span className="text-destructive">*</span>}
+            <User className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+          </label>
+          <Controller
+            control={control}
+            name="owner_id"
+            render={({ field: controlledField }) => (
+              <Select
+                value={controlledField.value || "unassigned"}
+                onValueChange={(val) => controlledField.onChange(val === "unassigned" ? "" : val)}
+              >
+                <SelectTrigger className="h-10 text-[14px] text-foreground">
+                  <SelectValue placeholder="Select owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.clerk_user_id || p.id}>
+                      {p.first_name} {p.last_name || ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.owner_id && (
+            <p className="text-[12px] text-destructive font-medium">{errors.owner_id.message}</p>
+          )}
         </div>
       )
     }
