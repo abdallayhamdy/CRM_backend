@@ -1062,7 +1062,7 @@ export default function CompaniesPage() {
                   />
                </div>
             ) : viewMode === "table" ? (
-              <div className="flex flex-col flex-1">
+              <div className="flex flex-col flex-1 min-h-0">
                 <SummaryStatsBar
                   data={data}
                   stats={companyStats}
