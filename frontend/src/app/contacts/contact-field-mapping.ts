@@ -73,14 +73,17 @@ export const CONTACT_FIELD_MAPPING: Record<string, string> = {
  * Extracted from contacts/page.tsx handleUpdateCell.
  */
 export const STANDARD_CONTACT_FIELDS = new Set([
-  "email", "phone", "lifecycle_stage", "lead_status", "first_name", "last_name",
+  "email", "phone", "lifecycle_stage", "first_name", "last_name",
   "owner_id", "company_id", "city", "state_region", "country", "country_code",
   "state_region_code", "street_address", "postal_code", "timezone",
   "job_title", "company_name", "industry", "annual_revenue", "num_employees",
   "persona", "salutation", "pref_lang",
   "employment_role", "employment_seniority", "employment_sub_role",
   "mobile_phone", "whatsapp", "fax", "website", "linkedin_url", "twitter",
-  "source", "tags", "lead_status",
+  "source", "tags",
+  // NOTE: lead_status is intentionally NOT a standard column — the Laravel API
+  // stores it inside custom_data (ContactResource reads custom_data['lead_status']).
+  // It must be routed through custom_fields on update or the backend drops it.
   "sales_score", "sales_unworked", "sales_region",
   "record_id", "record_source",
   "email_confirmed", "email_domain", "enrichment_opt_out",
