@@ -27,6 +27,11 @@ class NoteController extends Controller
 
         $query = Note::with('user');
 
+        $workspaceId = $request->user()?->workspace_id;
+        if ($workspaceId) {
+            $query->where('workspace_id', $workspaceId);
+        }
+
         if ($request->q) {
             $query->where(function ($q) use ($request) {
                 $q->where('content', 'like', "%{$request->q}%");

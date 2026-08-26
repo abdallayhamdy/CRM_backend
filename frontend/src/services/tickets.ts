@@ -13,6 +13,8 @@ interface TicketFilters {
   workspace_id: string
   limit?: number
   offset?: number
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
 }
 
 export const ticketsService = {
@@ -43,6 +45,8 @@ export const ticketsService = {
         }
       }
     }
+    if (filters?.sortBy) params.sort_by = filters.sortBy
+    if (filters?.sortDir) params.sort_dir = filters.sortDir
 
     const { data, error } = await laravelApi.get<{ data: Ticket[]; meta: { page: number; limit: number; total: number } }>(
       '/tickets',

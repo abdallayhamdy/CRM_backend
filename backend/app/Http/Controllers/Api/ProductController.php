@@ -30,6 +30,12 @@ class ProductController extends Controller
                       ->orWhere('sku', 'like', "%{$search}%");
                 });
             })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->product_folder, function ($query, $folder) {
+                $query->where('product_folder', $folder);
+            })
             ->when(true, function ($query) use ($request) {
                 $this->applyCustomDataFilters($query, $request, 'product');
             })

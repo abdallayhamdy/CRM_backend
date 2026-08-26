@@ -10,6 +10,8 @@ export const productsService = {
     sortBy = 'created_at',
     sortDir = 'desc',
     properties,
+    status,
+    productFolder,
   }: {
     search?: string
     workspace_id: string
@@ -18,6 +20,8 @@ export const productsService = {
     sortBy?: string
     sortDir?: 'asc' | 'desc'
     properties?: Record<string, string[]>
+    status?: string
+    productFolder?: string
   }) {
     if (!workspace_id) throw new Error('workspace_id is required')
 
@@ -28,6 +32,8 @@ export const productsService = {
       sort_dir: sortDir,
     }
     if (search) params.q = search
+    if (status) params.status = status
+    if (productFolder) params.product_folder = productFolder
 
     if (properties) {
       for (const [key, values] of Object.entries(properties)) {

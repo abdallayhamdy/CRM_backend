@@ -164,6 +164,8 @@ export default function ProductsPage() {
           sortDir,
           limit: 100,
           properties: filters.properties,
+          status: (filters.properties["status"] as any) || undefined,
+          productFolder: (filters.properties["productFolder"] as any) || undefined,
         })
         setProducts(data || [])
       } catch {

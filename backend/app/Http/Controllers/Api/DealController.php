@@ -62,7 +62,14 @@ class DealController extends Controller
 
         $this->applyCustomDataFilters($query, $request, 'deal');
 
-        $sortBy = in_array($request->sort_by, ['title', 'amount', 'status', 'created_at', 'updated_at', 'expected_close_date']) ? $request->sort_by : 'created_at';
+        $sortByRaw = $request->sort_by;
+        $sortFieldMap = [
+            'createDate' => 'created_at',
+            'closeDate' => 'expected_close_date',
+            'amount' => 'amount',
+            'title' => 'title',
+        ];
+        $sortBy = $sortFieldMap[$sortByRaw] ?? (in_array($sortByRaw, ['title', 'amount', 'status', 'created_at', 'updated_at', 'expected_close_date']) ? $sortByRaw : 'created_at');
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 

@@ -245,6 +245,8 @@ export default function TicketsPage() {
           workspace_id: workspaceId,
           limit: 100,
           properties: filters.properties,
+          sortBy,
+          sortDir,
         })
 
         if (error) throw error

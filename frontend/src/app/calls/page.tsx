@@ -159,6 +159,10 @@ export default function CallsPage() {
         workspace_id: workspaceId,
         limit: perPage,
         page: currentPage,
+        search: filters.search || undefined,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+        owner_id: activeTab === "mine" ? user?.id : undefined,
       })
       if (error) throw error
       setCalls(data || [])
@@ -168,7 +172,7 @@ export default function CallsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [workspaceId, currentPage, perPage])
+  }, [workspaceId, currentPage, perPage, filters.search, sortBy, sortDir, activeTab, user])
 
   React.useEffect(() => {
     fetchCalls()

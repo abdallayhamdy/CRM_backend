@@ -55,6 +55,11 @@ class ActivityController extends Controller
             $query->where('user_id', $request->owner_id);
         }
 
+        if ($request->completed !== null && $request->completed !== undefined) {
+            $completed = filter_var($request->completed, FILTER_VALIDATE_BOOLEAN);
+            $query->where('status', $completed ? 'completed' : 'pending');
+        }
+
         if ($request->deal_id) {
             $query->where('activitable_type', 'App\Models\Deal')
                   ->where('activitable_id', $request->deal_id);

@@ -128,7 +128,12 @@ export default function DocumentsPage() {
       if (!workspaceId) return
       setLoading(true)
       try {
-        const { data } = await documentsService.getAll({ workspace_id: workspaceId })
+        const { data } = await documentsService.getAll({
+          workspace_id: workspaceId,
+          search: filters.search || undefined,
+          sortBy,
+          sortDir,
+        })
         setDocs(data || [])
       } catch {
         toast.error("Failed to load documents")
@@ -137,7 +142,7 @@ export default function DocumentsPage() {
       }
     }
     loadDocs()
-  }, [workspaceId, refreshKey])
+  }, [workspaceId, refreshKey, filters.search, sortBy, sortDir])
 
   const filteredData = React.useMemo(() => {
     return docs.filter((doc) => {

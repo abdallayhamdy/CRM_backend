@@ -21,6 +21,11 @@ class DocumentController extends Controller
 
         $query = Document::with('uploader:id,name');
 
+        $workspaceId = $request->user()?->workspace_id;
+        if ($workspaceId) {
+            $query->where('workspace_id', $workspaceId);
+        }
+
         if ($request->has('documentable_type') && $request->has('documentable_id')) {
             $type = $this->getModelClass($request->documentable_type);
             $query->where('documentable_type', $type)
