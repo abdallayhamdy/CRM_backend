@@ -7,6 +7,7 @@ import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/C
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { CrmEmptyState } from "@/components/crm/CrmEmptyState"
@@ -17,7 +18,8 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useProperties } from "@/hooks/use-properties"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
 import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
 import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { ColumnDef } from "@tanstack/react-table"
@@ -77,11 +79,7 @@ export default function OrdersPage() {
 
   const { canCreateOrder, canEditOrder, canDeleteOrder, canCreateTask } = usePermissions()
   const { properties } = useProperties("order")
-  const [tableSettings, setTableSettingsState] = React.useState<TableSettings>(() => loadTableSettings())
-  const handleTableSettingsChange = React.useCallback((settings: TableSettings) => {
-    setTableSettingsState(settings)
-    persistTableSettings(settings)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
   const [activeTab, setActiveTab] = React.useState("all")
   const [orders, setOrders] = React.useState<Order[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -125,14 +123,15 @@ export default function OrdersPage() {
 
   const handleRowClick = React.useCallback((order: any) => setSelectedOrder(order), [])
 
-  const [sortBy, setSortBy] = React.useState<string>(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('crm_orders_sort_by') || 'created_at'
-    return 'created_at'
-  })
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('crm_orders_sort_dir') as "asc" | "desc") || 'desc'
-    return 'desc'
-  })
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_orders_sort", defaultField: "created_at" })
+
+  const orderSortFields: SortField[] = [
+    { value: "title", label: "Order Name" },
+    { value: "status", label: "Status" },
+    { value: "total", label: "Amount" },
+    { value: "pipeline", label: "Pipeline" },
+    { value: "created_at", label: "Created" },
+  ]
 
   const [tabsConfig, setTabsConfig] = React.useState<{ id: string; label: string; closable: boolean; color?: string }[]>(() => {
     if (typeof window === 'undefined') {
@@ -686,6 +685,10 @@ export default function OrdersPage() {
         onAdvancedFilterClick={() => setSidebarOpen(true)}
         onExportClick={() => setExportOpen(true)}
         onEditColumnsClick={() => setColumnEditorOpen(true)}
+        sortFields={orderSortFields}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
       />

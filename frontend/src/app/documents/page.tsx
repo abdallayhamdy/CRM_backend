@@ -13,7 +13,9 @@ import { ExportSlideOver, ExportColumn, ExportFormat, ExportScope } from "@/comp
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { CrmEmptyState } from "@/components/crm/CrmEmptyState"
 import { getBadgeClasses } from "@/lib/badge-colors"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
@@ -29,6 +31,13 @@ import { Input } from "@/components/ui/input"
 
 const DOC_TYPES = ["Proposal", "Contract", "Invoice", "General"]
 
+const docSortFields: SortField[] = [
+  { value: "name", label: "Name" },
+  { value: "type", label: "Type" },
+  { value: "size", label: "Size" },
+  { value: "created_at", label: "Uploaded" },
+]
+
 export default function DocumentsPage() {
   const { workspaceId, user } = useAuth()
   const { canCreateDocument, canEditDocument, canDeleteDocument } = usePermissions()
@@ -42,6 +51,16 @@ export default function DocumentsPage() {
   const [exportOpen, setExportOpen] = React.useState(false)
   const [renamingId, setRenamingId] = React.useState<string | null>(null)
   const [renameValue, setRenameValue] = React.useState("")
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const [sortBy, setSortBy] = React.useState<string>("created_at")
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "name", label: "Name", visible: true },
+    { id: "type", label: "Type", visible: true },
+    { id: "size", label: "Size", visible: true },
+    { id: "created_at", label: "Uploaded", visible: true },
+    { id: "actions", label: "Actions", visible: true },
+  ])
 
   const docStats: SummaryStat<any>[] = React.useMemo(() => {
     const counts = new Map<string, number>()
@@ -464,6 +483,20 @@ export default function DocumentsPage() {
     },
   ]
 
+  const tableColumns = React.useMemo(() => {
+    const visIds = new Set(visibleColumns.filter(c => c.visible).map(c => c.id))
+    return columns.filter(col => visIds.has(col.id || (col as { accessorKey?: string }).accessorKey || ""))
+  }, [columns, visibleColumns])
+
+  const handleColumnSave = React.useCallback((cols: ColumnItem[]) => {
+    setVisibleColumns(cols)
+  }, [])
+
+  const handleSortChange = React.useCallback((field: string, dir: "asc" | "desc") => {
+    setSortBy(field)
+    setSortDir(dir)
+  }, [])
+
   const emptyState = (
     <CrmEmptyState
       title="No documents yet"
@@ -514,7 +547,12 @@ export default function DocumentsPage() {
         onClearAll={clearAll}
         activeFilterCount={activeFilterCount}
         onAdvancedFilterClick={() => setSidebarOpen(true)}
+        onEditColumnsClick={() => setColumnEditorOpen(true)}
         onExportClick={() => setExportOpen(true)}
+        sortFields={docSortFields}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={saveTableSettings}
       />
@@ -537,7 +575,7 @@ export default function DocumentsPage() {
                   onFilterChange={setSummaryFilter}
                 />
                 <CrmDataTable
-                  columns={columns}
+                  columns={tableColumns}
                   data={tabFilteredData}
                   emptyState={emptyState}
                   tableSettings={tableSettings}
@@ -579,6 +617,15 @@ export default function DocumentsPage() {
         selectedCount={0}
         hasActiveFilter={activeFilterCount > 0}
         onExport={handleExportSlideOver}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={handleColumnSave}
+        title="Edit columns"
+        description="Choose which columns to show in your table and their order."
       />
     </CrmPageLayout>
   )

@@ -58,6 +58,14 @@ class NoteController extends Controller
                 ->where('notable_id', $request->ticket_id);
         }
 
+        if ($request->created_from) {
+            $query->where('created_at', '>=', $request->created_from . ' 00:00:00');
+        }
+
+        if ($request->created_to) {
+            $query->where('created_at', '<=', $request->created_to . ' 23:59:59');
+        }
+
         $sortBy = in_array($request->sort_by, ['created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

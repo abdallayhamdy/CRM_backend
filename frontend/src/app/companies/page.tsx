@@ -23,6 +23,7 @@ import {
 import { CrmPageHeader, CrmPageLayout } from "@/components/crm/CrmPageLayout"
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import dynamic from "next/dynamic"
@@ -592,6 +593,17 @@ export default function CompaniesPage() {
     toast.success("Color updated")
   }
 
+  const COMPANY_SORT_FIELDS: SortField[] = [
+    { value: "createDate", label: "Create date" },
+    { value: "updateDate", label: "Update date" },
+    { value: "name", label: "Name" },
+  ]
+
+  const handleSortChange = React.useCallback((field: string, dir: "asc" | "desc") => {
+    setSortBy(field)
+    setSortDir(dir)
+  }, [])
+
   const getFilterConfig = (id: string) => {
     for (const category of COMPANY_MORE_FILTERS) {
       const item = category.items.find(i => i.id === id);
@@ -1034,6 +1046,10 @@ export default function CompaniesPage() {
         onExportClick={() => setExportOpen(true)}
         tableSettings={tableSettings}
         onTableSettingsChange={saveTableSettings}
+        sortFields={COMPANY_SORT_FIELDS}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
       />
       {/* Main Table */}
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-muted/30 relative mt-0.5">

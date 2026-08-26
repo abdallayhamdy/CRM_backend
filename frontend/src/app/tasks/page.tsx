@@ -14,7 +14,9 @@ import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/C
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { BulkActionToolbar } from "@/components/crm/BulkActionToolbar"
@@ -35,7 +37,9 @@ import { useBulkSelection } from "@/hooks/use-bulk-selection"
 import { exportToCSV } from "@/lib/utils"
 import { logAudit } from "@/lib/audit"
 import { authService } from "@/services/auth"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
+import { useOwners } from "@/hooks/use-owners"
 
 // Sheets
 import { CreateTaskSheet } from "./create-task-sheet"
@@ -52,6 +56,15 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   follow_up_after_meeting: "Follow Up After Meeting",
 }
 const TASK_QUEUES = ["General", "Support", "Sales"]
+
+const taskSortFields: SortField[] = [
+  { value: "title", label: "Title" },
+  { value: "task_subtype", label: "Task type" },
+  { value: "due_date", label: "Due date" },
+  { value: "assigned_to", label: "Assigned to" },
+  { value: "task_queue", label: "Queue" },
+  { value: "created_at", label: "Created" },
+]
 
 export default function TasksPage() {
   const [activeTab, setActiveTab] = React.useState("all")
@@ -92,17 +105,23 @@ export default function TasksPage() {
   const [createOpen, setCreateOpen] = React.useState(false)
   const [bulkEditOpen, setBulkEditOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
-  const [owners, setOwners] = React.useState<Profile[]>([])
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_tasks_sort" })
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "select", label: "Select", visible: true },
+    { id: "title", label: "Title", visible: true },
+    { id: "task_subtype", label: "Task type", visible: true },
+    { id: "due_date", label: "Due date", visible: true },
+    { id: "owner", label: "Assigned to", visible: true },
+    { id: "task_queue", label: "Queue", visible: true },
+  ])
   const [editSidebarOpen, setEditSidebarOpen] = React.useState(false)
   const [taskForEdit, setTaskForEdit] = React.useState<Task | null>(null)
   const router = useRouter()
   const { user, workspaceId, loading: authLoading } = useAuth()
   const { canCreateTask, canEditTask, canDeleteTask } = usePermissions()
-  const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
-  const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
-    setTableSettings(s)
-    persistTableSettings(s)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
+  const owners = useOwners(workspaceId)
 
   React.useEffect(() => {
     if (!authLoading && !workspaceId) {
@@ -177,7 +196,7 @@ export default function TasksPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [workspaceId])
+  }, [workspaceId, filters])
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -190,23 +209,6 @@ export default function TasksPage() {
     }
     return () => controller.abort()
   }, [fetchTasks, user])
-
-  React.useEffect(() => {
-    const controller = new AbortController()
-    async function loadOwners() {
-      if (!workspaceId) return
-      try {
-        const { data } = await authService.listProfiles(workspaceId)
-        if (!controller.signal.aborted && data) setOwners(data)
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          // Expected in standalone mode
-        }
-      }
-    }
-    loadOwners()
-    return () => controller.abort()
-  }, [workspaceId])
 
   const ownerOptions = React.useMemo(() => {
     const names = owners.map(o => `${o.first_name ?? ""} ${o.last_name ?? ""}`.trim()).filter(Boolean)
@@ -233,6 +235,15 @@ export default function TasksPage() {
   }, [tasks, workspaceId, fetchTasks, canEditTask])
 
   const taskColumns = React.useMemo(() => columns(handleComplete), [handleComplete])
+
+  const tableColumns = React.useMemo(() => {
+    const visIds = new Set(visibleColumns.filter(c => c.visible).map(c => c.id))
+    return taskColumns.filter(col => visIds.has(col.id || (col as { accessorKey?: string }).accessorKey || ""))
+  }, [taskColumns, visibleColumns])
+
+  const handleColumnSave = React.useCallback((cols: ColumnItem[]) => {
+    setVisibleColumns(cols)
+  }, [])
 
   const filteredData = React.useMemo(() => {
     let data = [...tasks]
@@ -584,7 +595,12 @@ export default function TasksPage() {
         onClearAll={clearAll}
         activeFilterCount={activeFilterCount}
         onAdvancedFilterClick={() => setSidebarOpen(true)}
+        onEditColumnsClick={() => setColumnEditorOpen(true)}
         onExportClick={() => setExportOpen(true)}
+        sortFields={taskSortFields}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
       />
@@ -632,7 +648,7 @@ export default function TasksPage() {
                   onFilterChange={setSummaryFilter}
                 />
                 <CrmDataTable 
-                  columns={taskColumns} 
+                  columns={tableColumns} 
                   data={summaryFilteredData} 
                   onRowClick={(task) => {
                     setSelectedTask(task)
@@ -728,6 +744,15 @@ export default function TasksPage() {
         entityTitle={historyTask?.title || undefined}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={handleColumnSave}
+        title="Edit columns"
+        description="Choose which columns to show in your table and their order."
       />
     </CrmPageLayout>
   )

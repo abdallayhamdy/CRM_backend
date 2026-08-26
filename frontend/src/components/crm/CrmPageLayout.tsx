@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { ChevronDown } from "lucide-react"
 
 interface CrmPageLayoutProps {
   children: React.ReactNode;
@@ -35,13 +34,12 @@ export function CrmPageHeader({ title, count, icon, actions, children, className
       className
     )}>
       <div className="flex items-center h-full gap-1 min-w-0">
-        {/* Left Side: Title Dropdown */}
-        <div className="flex items-center gap-2 h-full px-3 py-1.5 rounded-lg hover:bg-muted/60 cursor-pointer group transition-colors">
-          {icon && <div className="text-primary group-hover:scale-110 transition-transform">{icon}</div>}
+        {/* Left Side: Title */}
+        <div className="flex items-center gap-2 h-full px-3 py-1.5">
+          {icon && <div className="text-primary">{icon}</div>}
           <h1 className="text-[14px] font-semibold tracking-tight text-foreground whitespace-nowrap">
             {title}
           </h1>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
         </div>
 
         {/* Middle: Custom content (like Tabs) */}

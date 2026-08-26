@@ -23,6 +23,8 @@ const RecordPreviewPanel = dynamic(
   { ssr: false }
 )
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
@@ -43,9 +45,21 @@ import { logAudit } from "@/lib/audit"
 import { ExportSlideOver, ExportColumn, ExportFormat, ExportScope } from "@/components/crm/ExportSlideOver"
 import { CrmEmptyState } from "@/components/crm/CrmEmptyState"
 import { CrmTableSkeleton } from "@/components/crm/Skeletons"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
 import { Product } from "@/lib/types/crm"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
+
+const DEFAULT_PRODUCT_COLUMNS = ["name", "sku", "unit_price", "status", "created_at"]
+
+const productSortFields: SortField[] = [
+  { value: "name", label: "Name" },
+  { value: "sku", label: "SKU" },
+  { value: "unit_price", label: "Unit Price" },
+  { value: "status", label: "Status" },
+  { value: "product_folder", label: "Folder" },
+  { value: "created_at", label: "Created" },
+]
 
 export default function ProductsPage() {
   const [activeTab, setActiveTab] = React.useState("all")
@@ -85,19 +99,21 @@ export default function ProductsPage() {
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const [visibleColumns, setVisibleColumns] = React.useState<string[]>(DEFAULT_PRODUCT_COLUMNS)
 
   const handleRowClick = React.useCallback((product: any) => setSelectedProduct(product), [])
 
-  const [sortBy, setSortBy] = React.useState("created_at")
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
+  const handleColumnSave = React.useCallback((cols: ColumnItem[]) => {
+    const newIds = cols.filter(c => c.visible).map(c => c.id)
+    setVisibleColumns(newIds)
+  }, [])
+
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_products_sort" })
   const { workspaceId, user } = useAuth()
   const { canCreateProduct, canDeleteProduct, canEditProduct, canCreateTask } = usePermissions()
   const { properties } = useProperties("product")
-  const [tableSettings, setTableSettingsState] = React.useState<TableSettings>(() => loadTableSettings())
-  const handleTableSettingsChange = React.useCallback((settings: TableSettings) => {
-    setTableSettingsState(settings)
-    persistTableSettings(settings)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
 
   const [tabsConfig, setTabsConfig] = React.useState<{ id: string; label: string; closable: boolean; color?: string }[]>(() => {
     if (typeof window === 'undefined') {
@@ -207,9 +223,35 @@ export default function ProductsPage() {
     return map
   }, [properties])
 
+  const allColumnOptions = React.useMemo(() => {
+    const seen = new Set<string>()
+    const allPotential: ColumnItem[] = []
+    columns.forEach(col => {
+      const colId = col.id || (col as any).accessorKey
+      if (!colId || seen.has(colId)) return
+      seen.add(colId)
+      allPotential.push({ id: colId, label: (col as any).header || colId, visible: visibleColumns.includes(colId) })
+    })
+    propertyGroups.forEach(group => {
+      group.items.forEach(prop => {
+        if (!seen.has(prop.id)) {
+          seen.add(prop.id)
+          allPotential.push({ id: prop.id, label: prop.label, visible: visibleColumns.includes(prop.id) })
+        }
+      })
+    })
+    const visible = visibleColumns.map(id => allPotential.find(c => c.id === id)).filter((c): c is ColumnItem => !!c)
+    const hidden = allPotential.filter(c => !visibleColumns.includes(c.id))
+    return [...visible, ...hidden]
+  }, [visibleColumns, columns, propertyGroups])
+
   const tableColumns = React.useMemo(() => {
-    return [...allPossibleColumns.values()] as ColumnDef<any>[]
-  }, [allPossibleColumns])
+    const visIds = new Set(visibleColumns)
+    return [...allPossibleColumns.values()].filter(col => {
+      const id = col.id || (col as any).accessorKey
+      return id && visIds.has(id)
+    }) as ColumnDef<any>[]
+  }, [allPossibleColumns, visibleColumns])
 
   const {
     selectedIds, selectedItems, toggleOne,
@@ -491,6 +533,11 @@ export default function ProductsPage() {
         activeFilterCount={activeFilterCount}
         onAdvancedFilterClick={() => setSidebarOpen(true)}
         onExportClick={() => setExportOpen(true)}
+        onEditColumnsClick={() => setColumnEditorOpen(true)}
+        sortFields={productSortFields}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
       />
@@ -579,6 +626,16 @@ export default function ProductsPage() {
         open={isCreateSheetOpen} 
         onOpenChange={setIsCreateSheetOpen}
         onSuccess={() => setRefreshKey(k => k + 1)}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={allColumnOptions}
+        propertyGroups={propertyGroups}
+        onSave={handleColumnSave}
+        onCreateProperty={() => {}}
+        title="Edit product columns"
       />
 
       {count > 0 && (canDeleteProduct || canEditProduct) && (

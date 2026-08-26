@@ -13,11 +13,13 @@ import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { CrmEmptyState } from "@/components/crm/CrmEmptyState"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SortField } from "@/components/crm/SortPopover"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { ExportSlideOver, ExportColumn, ExportFormat, ExportScope } from "@/components/crm/ExportSlideOver"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
 
 import { notesService } from "@/services/notes"
 import { Note } from "@/lib/types/crm"
@@ -42,21 +44,22 @@ export default function NotesPage() {
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const [createOpen, setCreateOpen] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState("all")
-  const [sortBy, setSortBy] = React.useState("created_at")
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_notes_sort" })
   const [currentPage, setCurrentPage] = React.useState(1)
   const [totalCount, setTotalCount] = React.useState(0)
   const [perPage] = React.useState(25)
   const [summaryFilter, setSummaryFilter] = React.useState<string | null>(null)
   const [exportOpen, setExportOpen] = React.useState(false)
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "content", label: "Note", visible: true },
+    { id: "author", label: "Author", visible: true },
+    { id: "created_at", label: "Created", visible: true },
+  ])
   const { workspaceId, user } = useAuth()
   const router = useRouter()
   const { canCreateNote } = usePermissions()
-  const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
-  const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
-    setTableSettings(s)
-    persistTableSettings(s)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
 
   const totalPages = Math.ceil(totalCount / perPage)
   const from = (currentPage - 1) * perPage
@@ -113,16 +116,59 @@ export default function NotesPage() {
     addAdvancedFilter,
   } = useCrmFilters()
 
+  const dateRangeParams = React.useMemo(() => {
+    const range = filters.dateRanges["createDate"]
+    if (!range || range === "all") return {}
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
+    const fmt = (d: Date) => d.toISOString().slice(0, 10)
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+
+    switch (range) {
+      case "today": return { created_from: today, created_to: today }
+      case "yesterday": {
+        const y = new Date(now)
+        y.setDate(now.getDate() - 1)
+        const ys = fmt(y)
+        return { created_from: ys, created_to: ys }
+      }
+      case "this_week": return { created_from: fmt(startOfWeek), created_to: today }
+      case "last_7_days": {
+        const d = new Date(now)
+        d.setDate(now.getDate() - 7)
+        return { created_from: fmt(d), created_to: today }
+      }
+      case "last_30_days": {
+        const d = new Date(now)
+        d.setDate(now.getDate() - 30)
+        return { created_from: fmt(d), created_to: today }
+      }
+      case "last_90_days": {
+        const d = new Date(now)
+        d.setDate(now.getDate() - 90)
+        return { created_from: fmt(d), created_to: today }
+      }
+      case "this_month": return { created_from: fmt(startOfMonth), created_to: today }
+      case "last_month": return { created_from: fmt(startOfLastMonth), created_to: fmt(endOfLastMonth) }
+      default: return {}
+    }
+  }, [filters.dateRanges])
+
   const fetchNotes = React.useCallback(async () => {
     if (!workspaceId) return
     setIsLoading(true)
     try {
       const { data, error, meta } = await notesService.getAll({
         workspace_id: workspaceId,
-        search: filters.search || undefined,
+        search: filters.search || filters.properties["content"]?.[0] || undefined,
         sort_by: sortBy,
         sort_dir: sortDir,
         user_id: activeTab === "mine" && user?.id ? user.id : undefined,
+        ...dateRangeParams,
         limit: perPage,
         page: currentPage,
       })
@@ -134,21 +180,24 @@ export default function NotesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [workspaceId, filters.search, sortBy, sortDir, currentPage, perPage, activeTab, user])
+  }, [workspaceId, filters, dateRangeParams, sortBy, sortDir, currentPage, perPage, activeTab, user])
 
   React.useEffect(() => {
     fetchNotes()
   }, [fetchNotes])
 
-  const handleSortChange = React.useCallback((field: string, dir: "asc" | "desc") => {
-    setSortBy(field)
-    setSortDir(dir)
+  const handleSortWithPageReset = React.useCallback((field: string, dir: "asc" | "desc") => {
+    handleSortChange(field, dir)
     setCurrentPage(1)
-  }, [])
+  }, [handleSortChange])
 
   const handleTabChange = React.useCallback((id: string) => {
     setActiveTab(id)
     setCurrentPage(1)
+  }, [])
+
+  const handleColumnSave = React.useCallback((cols: ColumnItem[]) => {
+    setVisibleColumns(cols)
   }, [])
 
   const summaryFilteredData = React.useMemo(() => {
@@ -217,53 +266,57 @@ export default function NotesPage() {
     { id: "createDate", label: "Create date", type: "date" },
   ]
 
-  const columns = [
-    {
-      accessorKey: "content",
-      header: "Note",
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-status-warning/10 flex items-center justify-center shrink-0">
-            <FileText className="h-4 w-4 text-status-warning" />
+  const columns = React.useMemo(() => {
+    const allCols = [
+      {
+        accessorKey: "content",
+        header: "Note",
+        cell: ({ row }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-md bg-status-warning/10 flex items-center justify-center shrink-0">
+              <FileText className="h-4 w-4 text-status-warning" />
+            </div>
+            <span className="font-semibold text-foreground truncate max-w-[300px]">
+              {row.original.content
+                ? (row.original.content.length > 80
+                  ? row.original.content.substring(0, 80) + "..."
+                  : row.original.content)
+                : "Untitled note"}
+            </span>
           </div>
-          <span className="font-semibold text-foreground truncate max-w-[300px]">
-            {row.original.content
-              ? (row.original.content.length > 80
-                ? row.original.content.substring(0, 80) + "..."
-                : row.original.content)
-              : "Untitled note"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "author",
-      header: "Author",
-      cell: ({ row }: any) => {
-        const author = row.original.author
-        return (
-          <span className="text-muted-foreground text-sm">
-            {author ? `${author.first_name} ${author.last_name}` : "—"}
-          </span>
-        )
+        ),
       },
-    },
-    {
-      accessorKey: "created_at",
-      header: "Created",
-      cell: ({ row }: any) => {
-        try {
+      {
+        accessorKey: "author",
+        header: "Author",
+        cell: ({ row }: any) => {
+          const author = row.original.author
           return (
-            <span className="text-muted-foreground whitespace-nowrap">
-              {format(new Date(row.original.created_at), "MMM d, yyyy")}
+            <span className="text-muted-foreground text-sm">
+              {author ? `${author.first_name} ${author.last_name}` : "—"}
             </span>
           )
-        } catch {
-          return <span className="text-muted-foreground">—</span>
-        }
+        },
       },
-    },
-  ]
+      {
+        accessorKey: "created_at",
+        header: "Created",
+        cell: ({ row }: any) => {
+          try {
+            return (
+              <span className="text-muted-foreground whitespace-nowrap">
+                {format(new Date(row.original.created_at), "MMM d, yyyy")}
+              </span>
+            )
+          } catch {
+            return <span className="text-muted-foreground">—</span>
+          }
+        },
+      },
+    ]
+    const visIds = new Set(visibleColumns.filter(c => c.visible).map(c => c.id))
+    return allCols.filter(col => visIds.has(col.accessorKey))
+  }, [visibleColumns])
 
   return (
     <CrmPageLayout>
@@ -307,11 +360,12 @@ export default function NotesPage() {
         onClearAll={clearAll}
         activeFilterCount={activeFilterCount}
         onAdvancedFilterClick={() => setSidebarOpen(true)}
+        onEditColumnsClick={() => setColumnEditorOpen(true)}
         onExportClick={() => setExportOpen(true)}
         sortFields={NOTE_SORT_FIELDS}
         sortBy={sortBy}
         sortDir={sortDir}
-        onSortChange={handleSortChange}
+        onSortChange={handleSortWithPageReset}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
       />
@@ -413,6 +467,15 @@ export default function NotesPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSuccess={fetchNotes}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={handleColumnSave}
+        title="Edit columns"
+        description="Choose which columns to show in your table and their order."
       />
 
       <ExportSlideOver

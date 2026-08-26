@@ -60,9 +60,9 @@ export const columns: ColumnDef<Product>[] = [
       )
     },
     meta: { 
-      editable: true,
-      options: ['Active', 'Inactive']
-    } as any,
+          editable: true,
+          options: ['Active', 'Archived']
+        } as any,
   },
   {
     accessorKey: "sku",

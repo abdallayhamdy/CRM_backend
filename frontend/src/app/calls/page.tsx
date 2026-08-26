@@ -12,6 +12,8 @@ import { CrmTableSkeleton } from "@/components/crm/Skeletons"
 import { ExportSlideOver, ExportColumn, ExportFormat, ExportScope } from "@/components/crm/ExportSlideOver"
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
@@ -29,7 +31,8 @@ import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { exportToCSV } from "@/lib/utils"
 import { logAudit } from "@/lib/audit"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
 
 // Sheets
 import { CallPreviewSheet } from "./preview-sheet"
@@ -60,11 +63,7 @@ export default function CallsPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const { workspaceId, user, loading: authLoading } = useAuth()
   const { canCreateActivity } = usePermissions()
-  const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
-  const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
-    setTableSettings(s)
-    persistTableSettings(s)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
 
   React.useEffect(() => {
     if (!authLoading && !workspaceId) {
@@ -112,6 +111,29 @@ export default function CallsPage() {
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const [callEditorOpen, setCallEditorOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_calls_sort" })
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "contact_name", label: "Contact", visible: true },
+    { id: "type", label: "Type", visible: true },
+    { id: "duration", label: "Duration", visible: true },
+    { id: "status", label: "Status", visible: true },
+    { id: "outcome", label: "Outcome", visible: true },
+    { id: "created_at", label: "Created", visible: true },
+  ])
+
+  const callSortFields: SortField[] = [
+    { value: "title", label: "Title" },
+    { value: "contact_name", label: "Contact" },
+    { value: "call_duration", label: "Duration" },
+    { value: "call_direction", label: "Direction" },
+    { value: "call_outcome", label: "Outcome" },
+    { value: "created_at", label: "Created" },
+  ]
+
+  const handleColumnSave = React.useCallback((cols: ColumnItem[]) => {
+    setVisibleColumns(cols)
+  }, [])
 
   // Filters
   const {
@@ -323,6 +345,11 @@ export default function CallsPage() {
           activeFilterCount={activeFilterCount}
           onAdvancedFilterClick={() => setSidebarOpen(true)}
           onExportClick={() => setExportOpen(true)}
+          onEditColumnsClick={() => setColumnEditorOpen(true)}
+          sortFields={callSortFields}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
       />
@@ -463,6 +490,15 @@ export default function CallsPage() {
         selectedCount={0}
         hasActiveFilter={activeFilterCount > 0}
         onExport={handleExportSlideOver}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={handleColumnSave}
+        title="Edit call columns"
+        description="Choose which columns to show in your table and their order."
       />
     </CrmPageLayout>
   )

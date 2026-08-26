@@ -18,6 +18,7 @@ import { CrmPageLayout, CrmPageHeader, CrmPageContent } from "@/components/crm/C
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
+import { SortField } from "@/components/crm/SortPopover"
 
 
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
@@ -154,6 +155,8 @@ export default function DealsPage() {
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false)
   const [columnVersion, setColumnVersion] = React.useState(0)
   const [exportOpen, setExportOpen] = React.useState(false)
+  const [sortBy, setSortBy] = React.useState("createDate")
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
 
   const [frozenCount, setFrozenCount] = React.useState(() => {
     if (typeof window !== 'undefined') {
@@ -258,7 +261,9 @@ export default function DealsPage() {
         search: debouncedSearch
       }, {
         workspace_id: workspaceId,
-        limit: 100 // Load a bit more for the board
+        limit: 100,
+        sortBy: sortBy,
+        sortDir: sortDir,
       })
 
       if (error) throw error
@@ -270,7 +275,7 @@ export default function DealsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [debouncedSearch, filters, workspaceId])
+  }, [debouncedSearch, filters, workspaceId, sortBy, sortDir])
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -339,6 +344,18 @@ export default function DealsPage() {
       setProperty(propertyId, values)
     }
   }
+
+  const DEAL_SORT_FIELDS: SortField[] = [
+    { value: "createDate", label: "Create date" },
+    { value: "amount", label: "Amount" },
+    { value: "title", label: "Deal name" },
+    { value: "closeDate", label: "Close date" },
+  ]
+
+  const handleSortChange = React.useCallback((field: string, dir: "asc" | "desc") => {
+    setSortBy(field)
+    setSortDir(dir)
+  }, [])
 
   // Column management logic
   const propertyGroups = React.useMemo(
@@ -797,6 +814,10 @@ export default function DealsPage() {
         onViewModeChange={setViewMode}
         onEditColumnsClick={() => setColumnEditorOpen(true)}
         onExportClick={() => setExportOpen(true)}
+        sortFields={DEAL_SORT_FIELDS}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
         tableSettings={tableSettings}
         onTableSettingsChange={saveTableSettings}
       />

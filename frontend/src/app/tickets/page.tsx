@@ -27,6 +27,8 @@ import { useProperties } from "@/hooks/use-properties"
 import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
 
+import { SortField } from "@/components/crm/SortPopover"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { CreateTicketSheet } from "./create-ticket-sheet"
 import { TicketPreviewSheet } from "./preview-sheet"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
@@ -47,7 +49,9 @@ import { exportToCSV } from "@/lib/utils"
 import { logAudit } from "@/lib/audit"
 import { Profile } from "@/lib/types/crm"
 import { authService } from "@/services/auth"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
+import { useOwners } from "@/hooks/use-owners"
 
 export default function TicketsPage() {
   const [data, setData] = React.useState<Ticket[]>([])
@@ -94,10 +98,18 @@ export default function TicketsPage() {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false)
   const [selectedTicket, setSelectedTicket] = React.useState<Ticket | null>(null)
   const [refreshKey, setRefreshKey] = React.useState(0)
-  const [owners, setOwners] = React.useState<Profile[]>([])
   const [bulkEditOpen, setBulkEditOpen] = React.useState(false)
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_tickets_sort" })
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "subject", label: "Subject", visible: true },
+    { id: "status", label: "Status", visible: true },
+    { id: "priority", label: "Priority", visible: true },
+    { id: "owner", label: "Assignee", visible: true },
+    { id: "created_at", label: "Created", visible: true },
+  ])
 
   const [tabsConfig, setTabsConfig] = React.useState<{ id: string; label: string; closable: boolean; color?: string }[]>(() => {
     if (typeof window === 'undefined') {
@@ -130,11 +142,14 @@ export default function TicketsPage() {
   const { workspaceId, user, loading: authLoading } = useAuth()
   const { canCreateTicket, canEditTicket, canDeleteTicket, canCreateTask } = usePermissions()
   const { properties } = useProperties("ticket")
-  const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
-  const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
-    setTableSettings(s)
-    persistTableSettings(s)
-  }, [])
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
+  const owners = useOwners(workspaceId)
+
+  const TICKET_SORT_FIELDS: SortField[] = [
+    { value: "created_at", label: "Create date" },
+    { value: "updated_at", label: "Update date" },
+    { value: "subject", label: "Subject" },
+  ]
 
   React.useEffect(() => {
     if (!authLoading && !workspaceId) {
@@ -162,23 +177,6 @@ export default function TicketsPage() {
   } = useCrmFilters()
 
   const debouncedSearch = useDebounce(filters.search, 300)
-
-  React.useEffect(() => {
-    const controller = new AbortController()
-    async function loadOwners() {
-      if (!workspaceId) return
-      try {
-        const { data } = await authService.listProfiles(workspaceId)
-        if (!controller.signal.aborted && data) setOwners(data)
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          // Expected in standalone mode
-        }
-      }
-    }
-    loadOwners()
-    return () => controller.abort()
-  }, [workspaceId])
 
   const matchDateRange = React.useCallback((dateStr: string, range: string): boolean => {
     if (!range || range === "all") return true
@@ -275,7 +273,7 @@ export default function TicketsPage() {
     }
     loadTickets()
     return () => controller.abort()
-  }, [debouncedSearch, filters.properties, filters.dateRanges, workspaceId, refreshKey, activeTab, user, matchDateRange])
+  }, [debouncedSearch, filters.properties, filters.dateRanges, workspaceId, refreshKey, activeTab, user, matchDateRange, sortBy, sortDir])
 
   const allOwners: string[] = owners.map(o => `${o.first_name} ${o.last_name}`.trim())
   const allStatuses = ["open", "pending", "resolved", "closed"]
@@ -647,6 +645,11 @@ export default function TicketsPage() {
         onExportClick={() => setExportOpen(true)}
         tableSettings={tableSettings}
         onTableSettingsChange={handleTableSettingsChange}
+        sortFields={TICKET_SORT_FIELDS}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSortChange={handleSortChange}
+        onEditColumnsClick={() => setColumnEditorOpen(true)}
       />
 
       <CrmPageContent>
@@ -786,6 +789,15 @@ export default function TicketsPage() {
         entityTitle={historyTicket?.subject || undefined}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={(cols) => setVisibleColumns(cols)}
+        title="Edit columns"
+        description="Choose which columns to show in your table and their order."
       />
     </CrmPageLayout>
   )

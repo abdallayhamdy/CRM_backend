@@ -31,6 +31,7 @@ import { CrmFilterSidebar } from "@/components/crm/CrmFilterSidebar"
 import type { SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
 import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
+import { SortField } from "@/components/crm/SortPopover"
 
 
 import { useCrmFilters, DateRangeFilter } from "@/hooks/use-crm-filters"
@@ -142,6 +143,17 @@ export default function ContactsPage() {
     if (typeof window !== 'undefined') return (localStorage.getItem('crm_contacts_sort_dir') as "asc" | "desc") || 'desc'
     return 'desc'
   })
+
+  const CONTACT_SORT_FIELDS: SortField[] = [
+    { value: "createDate", label: "Create date" },
+    { value: "updateDate", label: "Update date" },
+    { value: "name", label: "Name" },
+  ]
+
+  const handleSortChange = React.useCallback((field: string, dir: "asc" | "desc") => {
+    setSortBy(field)
+    setSortDir(dir)
+  }, [])
 
   const boardColumns = React.useMemo(() => {
     return [
@@ -808,6 +820,10 @@ export default function ContactsPage() {
           onAdvancedFilterClick={() => setSidebarOpen(true)}
           onEditColumnsClick={() => setColumnEditorOpen(true)}
           onExportClick={() => setExportOpen(true)}
+          sortFields={CONTACT_SORT_FIELDS}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={handleSortChange}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           tableSettings={tableSettings}

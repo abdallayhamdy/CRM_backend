@@ -25,6 +25,8 @@ export const notesService = {
     user_id,
     contact_id,
     ticket_id,
+    created_from,
+    created_to,
     limit = 50,
     page = 1,
   }: {
@@ -35,6 +37,8 @@ export const notesService = {
     user_id?: string
     contact_id?: string
     ticket_id?: string
+    created_from?: string
+    created_to?: string
     limit?: number
     page?: number
   }) {
@@ -45,6 +49,8 @@ export const notesService = {
     if (user_id) params.user_id = user_id
     if (contact_id) params.contact_id = contact_id
     if (ticket_id) params.ticket_id = ticket_id
+    if (created_from) params.created_from = created_from
+    if (created_to) params.created_to = created_to
 
     const { data, error } = await laravelApi.get<{ data: Note[]; meta: { page: number; limit: number; total: number; last_page: number } }>('/notes', params)
 

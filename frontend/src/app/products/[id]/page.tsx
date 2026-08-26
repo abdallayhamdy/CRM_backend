@@ -40,12 +40,13 @@ export default function ProductDetailPage() {
   const [propertyHistoryOpen, setPropertyHistoryOpen] = React.useState(false)
 
   const productAboutFields: EditFieldConfig[] = [
-    { name: "name", label: "Name", type: "text" },
-    { name: "sku", label: "SKU", type: "text" },
-    { name: "unit_price", label: "Price", type: "number" },
-    { name: "product_type", label: "Type", type: "text" },
-    { name: "product_description", label: "Description", type: "text" },
-  ]
+      { name: "name", label: "Name", type: "text" },
+      { name: "sku", label: "SKU", type: "text" },
+      { name: "unit_price", label: "Price", type: "number" },
+      { name: "status", label: "Status", type: "select", options: [{ value: "Active", label: "Active" }, { value: "Archived", label: "Archived" }] },
+      { name: "product_type", label: "Type", type: "text" },
+      { name: "product_description", label: "Description", type: "text" },
+    ]
 
   const fetchData = React.useCallback(async () => {
     setIsLoading(true)

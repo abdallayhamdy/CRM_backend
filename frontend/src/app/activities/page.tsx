@@ -12,6 +12,8 @@ import { ExportSlideOver, ExportColumn, ExportFormat, ExportScope } from "@/comp
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
 import { CrmFilterSidebar, SidebarFilterConfig } from "@/components/crm/CrmFilterSidebar"
+import { SortField } from "@/components/crm/SortPopover"
+import { CrmColumnEditor, ColumnItem } from "@/components/crm/CrmColumnEditor"
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { CrmDataTable } from "@/components/crm/CrmDataTable"
@@ -26,7 +28,8 @@ import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { exportToCSV } from "@/lib/utils"
 import { logAudit } from "@/lib/audit"
-import { TableSettings, loadTableSettings, saveTableSettings as persistTableSettings } from "@/components/crm/TableSettingsDialog"
+import { useTableSettings } from "@/hooks/use-table-settings"
+import { useSortState } from "@/hooks/use-sort-state"
 
 const ACTIVITY_TYPE_TABS = [
   { id: "all", label: "All activities", closable: false },
@@ -51,16 +54,23 @@ export default function ActivitiesPage() {
   const [totalCount, setTotalCount] = React.useState(0)
   const [exportOpen, setExportOpen] = React.useState(false)
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
-  const [sortBy, setSortBy] = React.useState<string>("created_at")
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc")
+  const { sortBy, sortDir, handleSortChange } = useSortState({ storageKey: "crm_activities_sort" })
   const [currentPage, setCurrentPage] = React.useState(1)
   const [perPage] = React.useState(25)
-  const [tableSettings, setTableSettings] = React.useState<TableSettings>(loadTableSettings)
+  const { tableSettings, handleTableSettingsChange } = useTableSettings()
+  const [columnEditorOpen, setColumnEditorOpen] = React.useState(false)
+  const [visibleColumns, setVisibleColumns] = React.useState<ColumnItem[]>([
+    { id: "type", label: "Type", visible: true },
+    { id: "title", label: "Title", visible: true },
+    { id: "owner", label: "Owner", visible: true },
+    { id: "created_at", label: "Created", visible: true },
+  ])
 
-  const handleTableSettingsChange = React.useCallback((s: TableSettings) => {
-    setTableSettings(s)
-    persistTableSettings(s)
-  }, [])
+  const ACTIVITY_SORT_FIELDS: SortField[] = [
+    { value: "created_at", label: "Create date" },
+    { value: "updated_at", label: "Update date" },
+    { value: "title", label: "Title" },
+  ]
 
   const {
     filters,
@@ -102,7 +112,7 @@ export default function ActivitiesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [workspaceId, filters.search, activeTab, sortBy, sortDir, perPage, currentPage])
+  }, [workspaceId, filters, activeTab, sortBy, sortDir, perPage, currentPage])
 
   React.useEffect(() => {
     fetchActivities()
@@ -182,7 +192,15 @@ export default function ActivitiesPage() {
     { id: "status", label: "Status", type: "property", options: ["completed", "pending"] },
   ]
 
-  const activeFilters: GenericActiveFilter[] = []
+  const activeFilters: GenericActiveFilter[] = [
+    {
+      id: "createDate",
+      label: "Create date",
+      type: "date",
+      value: filters.dateRanges["createDate"] || "all",
+      onChange: (val) => updateDateRange("createDate", val as any),
+    },
+  ]
 
   return (
     <CrmPageLayout>
@@ -228,6 +246,11 @@ export default function ActivitiesPage() {
             onClearAll={clearAll}
             onAdvancedFilterClick={() => setSidebarOpen(true)}
             activeFilterCount={activeFilterCount}
+            sortFields={ACTIVITY_SORT_FIELDS}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
+            onEditColumnsClick={() => setColumnEditorOpen(true)}
           />
 
           {count > 0 && canDeleteActivity && (
@@ -315,6 +338,15 @@ export default function ActivitiesPage() {
         selectedCount={count}
         hasActiveFilter={summaryFilter !== null || activeFilterCount > 0}
         onExport={handleExportSlideOver}
+      />
+
+      <CrmColumnEditor
+        open={columnEditorOpen}
+        onOpenChange={setColumnEditorOpen}
+        columns={visibleColumns}
+        onSave={(cols) => setVisibleColumns(cols)}
+        title="Edit activity columns"
+        description="Choose which columns to show in your activities table."
       />
     </CrmPageLayout>
   )
