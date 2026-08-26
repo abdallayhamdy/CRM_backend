@@ -41,10 +41,10 @@ export function useDealsActiveFilters({
 
   return pinnedFilterIds.map(id => {
     if (id === "owner") {
-      return { id: "owner", label: "Deal owner", type: "searchable-property", options: allOwners, value: filters.properties["owner"] || [], onChange: (val: string) => toggleProperty("owner", val) }
+      return { id: "owner", label: "Deal owner", type: "searchable-property", options: allOwners, value: filters.properties["owner"] || [], onChange: (val: any) => handleSetProperty("owner", Array.isArray(val) ? val : [val]) }
     }
     if (id === "stage") {
-      return { id: "stage", label: "Deal stage", type: "simple-property", options: [...DEAL_STAGES], value: filters.properties["stage"] || [], onChange: (val: string) => toggleProperty("stage", val) }
+      return { id: "stage", label: "Deal stage", type: "simple-property", options: [...DEAL_STAGES], value: filters.properties["stage"] || [], onChange: (val: any) => handleSetProperty("stage", Array.isArray(val) ? val : [val]) }
     }
     if (id === "closeDate") {
       return { id: "closeDate", label: "Close date", type: "date", value: filters.dateRanges["closeDate"] || "all", onChange: (val: string) => updateDateRange("closeDate", val as any) }

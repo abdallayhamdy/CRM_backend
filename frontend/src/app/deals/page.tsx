@@ -79,6 +79,7 @@ const DEFAULT_BOARD_COLUMNS = [
   { id: "qualified", label: "Qualified", color: "hsl(var(--primary))" },
   { id: "proposal", label: "Proposal", color: "hsl(var(--stage-teal))" },
   { id: "negotiation", label: "Negotiation", color: "hsl(var(--stage-red))" },
+  { id: "appointment_scheduled", label: "Appointment Scheduled", color: "hsl(var(--stage-amber))" },
   { id: "closed_won", label: "Closed Won", color: "hsl(var(--stage-emerald))" },
   { id: "closed_lost", label: "Closed Lost", color: "hsl(var(--stage-red))" },
 ]

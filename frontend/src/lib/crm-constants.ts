@@ -43,6 +43,7 @@ export const DEAL_STAGE_OPTIONS = [
   { value: "qualified", label: "Qualified", color: getBadgeCssVar('deal_stage', 'qualified'), badgeColor: getBadgeClasses('deal_stage', 'qualified', 'solid') },
   { value: "proposal", label: "Proposal", color: getBadgeCssVar('deal_stage', 'proposal'), badgeColor: getBadgeClasses('deal_stage', 'proposal', 'solid') },
   { value: "negotiation", label: "Negotiation", color: getBadgeCssVar('deal_stage', 'negotiation'), badgeColor: getBadgeClasses('deal_stage', 'negotiation', 'solid') },
+  { value: "appointment_scheduled", label: "Appointment Scheduled", color: getBadgeCssVar('deal_stage', 'appointment_scheduled'), badgeColor: getBadgeClasses('deal_stage', 'appointment_scheduled', 'solid') },
   { value: "closed_won", label: "Closed Won", color: getBadgeCssVar('deal_stage', 'closed_won'), badgeColor: getBadgeClasses('deal_stage', 'closed_won', 'solid') },
   { value: "closed_lost", label: "Closed Lost", color: getBadgeCssVar('deal_stage', 'closed_lost'), badgeColor: getBadgeClasses('deal_stage', 'closed_lost', 'solid') },
 ];

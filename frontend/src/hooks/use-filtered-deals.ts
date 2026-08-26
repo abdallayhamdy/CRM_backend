@@ -31,7 +31,10 @@ export function useFilteredDeals({ dealData, filters }: UseFilteredDealsParams):
       if (selectedOwners.length > 0 && !selectedOwners.includes(currOwnerName)) return false
 
       const selectedStages = filters.properties["stage"] || []
-      if (selectedStages.length > 0 && !selectedStages.includes(deal.stage ?? 'discovery')) return false
+      if (selectedStages.length > 0) {
+        const dealStage = deal.stage
+        if (!dealStage || !selectedStages.includes(dealStage)) return false
+      }
 
       // Numbers (Amount)
       const amo = filters.numbers["amount"]

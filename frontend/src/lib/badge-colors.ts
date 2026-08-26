@@ -167,6 +167,12 @@ const BADGE_MAP: Record<string, Record<string, BadgeConfig>> = {
       bordered: "border-[hsl(var(--stage-pink)/0.3)] text-[hsl(var(--stage-pink)/0.85)] bg-[hsl(var(--stage-pink)/0.1)]",
       cssVar: "var(--stage-pink)",
     },
+    appointment_scheduled: {
+      tinted: "bg-status-warning-light text-status-warning",
+      solid: "bg-stage-amber text-white",
+      bordered: "border-status-warning/30 text-status-warning bg-status-warning/10",
+      cssVar: "var(--stage-amber)",
+    },
     closed_won: {
       tinted: "bg-status-success-light text-status-success",
       solid: "bg-stage-emerald text-white",
