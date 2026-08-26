@@ -334,6 +334,8 @@ export interface Task {
   task_priority?: string | null
   task_queue?: string | null
   task_subtype?: string | null
+  set_repeat?: boolean | null
+  reminder?: string | null
   taskable_id?: string | null
   taskable_type?: string
   assigned_to?: { id: string; name: string } | null

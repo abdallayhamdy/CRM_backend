@@ -23,6 +23,10 @@ class Task extends Model
         'due_date',
         'status',
         'task_subtype',
+        'task_priority',
+        'task_queue',
+        'set_repeat',
+        'reminder',
     ];
     protected function casts(): array
     {

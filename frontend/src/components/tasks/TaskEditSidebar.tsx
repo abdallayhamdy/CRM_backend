@@ -60,6 +60,8 @@ export function TaskEditSidebar({ task, open, onOpenChange, onSaved }: TaskEditS
           updates.status = val === 1 || val === "true" ? "completed" : "pending"
         } else if (fieldKey === "owner_id") {
           updates.assigned_to = val
+        } else if (fieldKey === "type") {
+          updates.task_subtype = val
         } else {
           updates[fieldKey] = val
         }
@@ -98,6 +100,7 @@ export function TaskEditSidebar({ task, open, onOpenChange, onSaved }: TaskEditS
     if (!task) return null
     if (fieldKey === "completed") return task.status === "completed" ? 1 : 0
     if (fieldKey === "owner_id") return task.assigned_to?.id || null
+    if (fieldKey === "type") return (task as any).task_subtype || null
     if (fieldKey === "task_priority") return (task as any).task_priority || (task as any).priority || null
     if (fieldKey === "task_queue") return (task as any).task_queue || (task as any).queue || null
     if (fieldKey === "set_repeat") return (task as any).set_repeat ? 1 : 0

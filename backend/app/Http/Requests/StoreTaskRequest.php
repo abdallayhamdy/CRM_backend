@@ -28,6 +28,10 @@ class StoreTaskRequest extends FormRequest
             'due_date' => 'nullable|date',
             'status' => 'nullable|in:pending,in_progress,completed',
             'task_subtype' => 'nullable|string|max:50',
+            'task_priority' => 'nullable|string|in:none,low,medium,high',
+            'task_queue' => 'nullable|string|in:general,support,sales',
+            'set_repeat' => 'nullable|boolean',
+            'reminder' => 'nullable|string|in:none,at_time,5_min,15_min,1_hour,1_day',
         ];
     }
 
