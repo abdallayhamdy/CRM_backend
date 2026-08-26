@@ -221,6 +221,7 @@ export function UploadDocumentSheet({ open, onOpenChange, onSuccess }: UploadDoc
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
             />
             {file ? (
               <div className="flex flex-col items-center gap-2">

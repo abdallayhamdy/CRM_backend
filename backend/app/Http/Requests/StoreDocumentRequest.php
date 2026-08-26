@@ -14,7 +14,7 @@ class StoreDocumentRequest extends FormRequest
         $scope = fn ($q) => $this->user()?->is_super_admin ? $q : $q->where('workspace_id', $this->user()?->workspace_id);
 
         return [
-            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp|max:10240',
+            'file' => 'required|file|extensions:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp|max:10240',
             'documentable_type' => 'required|string|in:deal,contact,company,product,ticket',
             'documentable_id' => 'required|uuid',
             'name' => 'nullable|string|max:255',
