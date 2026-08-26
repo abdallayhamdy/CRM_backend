@@ -209,5 +209,5 @@ function DataTableRowInner<TData>({
   )
 }
 
-export const DataTableRow = React.memo(DataTableRowInner) as typeof DataTableRowInner & { displayName: string }
+export const DataTableRow = DataTableRowInner as typeof DataTableRowInner & { displayName: string }
 DataTableRow.displayName = "DataTableRow"
