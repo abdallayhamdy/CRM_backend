@@ -1036,7 +1036,7 @@ export default function CompaniesPage() {
         onTableSettingsChange={saveTableSettings}
       />
       {/* Main Table */}
-      <div className="flex-1 min-h-0 overflow-hidden bg-muted/30 relative mt-0.5">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-muted/30 relative mt-0.5">
         <div className="p-2 flex-1 min-h-0 flex flex-col">
           <div className="bg-card rounded-xl border border-border/60 overflow-hidden shadow-sm flex-1 flex flex-col min-h-0">
             {isLoading ? (
