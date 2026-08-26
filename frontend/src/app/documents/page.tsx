@@ -96,6 +96,7 @@ export default function DocumentsPage() {
     setSidebarOpen,
     updateSearch,
     toggleProperty,
+    setProperty,
     updateDateRange,
     updateNumber,
     clearAll,
@@ -288,7 +289,7 @@ export default function DocumentsPage() {
       type: "simple-property",
       options: DOC_TYPES,
       value: filters.properties["type"] || [],
-      onChange: (val) => toggleProperty("type", val),
+      onChange: (val) => setProperty("type", val),
     },
     {
       id: "createDate",
