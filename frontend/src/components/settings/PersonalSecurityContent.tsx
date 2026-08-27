@@ -2,13 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Info, ChevronDown, ExternalLink, Loader2
+  Info, ChevronDown, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { laravelApi } from '@/lib/laravel-api';
 import { useAuth } from '@/hooks/use-auth';
@@ -56,8 +55,6 @@ function timeAgo(ts: number): string {
 
 export function PersonalSecurityContent() {
   const { user, signOut } = useAuth();
-
-  const [twoFactor, setTwoFactor] = React.useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -164,9 +161,6 @@ export function PersonalSecurityContent() {
           <div className="bg-muted/50 border border-border rounded-xs px-3 py-2 text-[13px] text-foreground w-full max-w-[400px] mb-3">
             {user?.email || '—'}
           </div>
-          <button className="px-4 py-1.5 bg-background border border-border rounded-xs text-[13px] font-bold text-foreground hover:bg-accent transition-colors">
-            Edit email address
-          </button>
         </div>
 
         {/* Change Password */}
@@ -214,66 +208,6 @@ export function PersonalSecurityContent() {
               {changingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Update Password
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Deprecation */}
-        <div className="mb-10">
-          <h3 className="text-[15px] font-bold text-foreground mb-1">Deprecation</h3>
-          <p className="text-[13px] text-muted-foreground mb-6">If you don&apos;t use a password to log in for over 90 days, SalesHub will remove your password.</p>
-
-          <div className="bg-background border border-border rounded-xs overflow-hidden max-w-[400px]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th scope="col" className="px-4 py-2.5 text-[11px] font-bold text-foreground uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-4 py-2.5 text-[11px] font-bold text-foreground uppercase tracking-wider">Deprecation Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 text-[13px] text-foreground">
-                      <div className="w-2 h-2 bg-[var(--color-hs-muted-blue)] rounded-full"></div>
-                      Ineligible
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] text-foreground">None</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Passkeys */}
-        <div className="mb-10 pt-8 border-t border-border">
-          <h3 className="text-[15px] font-bold text-foreground mb-1">Passkeys</h3>
-          <button className="text-primary text-[13px] font-bold hover:underline mb-1 block text-left">Set up passkeys</button>
-          <p className="text-[12px] text-muted-foreground max-w-[600px] mb-4">
-            Passkeys are a replacement for passwords that provide a faster, easier, and more secure sign in across your devices.
-          </p>
-          <a href="#" className="text-primary text-[13px] font-bold hover:underline inline-flex items-center gap-1">
-            Learn more.
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-
-        {/* Two-Factor Authentication (2FA) */}
-        <Card className="border-border shadow-sm mb-10 pt-8 border-t border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-[15px] font-bold text-foreground">Two-Factor Authentication (2FA)</CardTitle>
-            <CardDescription className="text-[13px]">Add an extra layer of security to your account.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between p-6 bg-muted/50 rounded-b-lg">
-            <div className="space-y-0.5">
-              <p className="text-[14px] font-bold text-foreground">Secure your account</p>
-              <p className="text-[12px] text-muted-foreground">Enable 2FA using an authenticator app or SMS.</p>
-            </div>
-            <Switch
-              checked={twoFactor}
-              onCheckedChange={setTwoFactor}
-              className="data-[state=checked]:bg-primary"
-            />
           </CardContent>
         </Card>
 

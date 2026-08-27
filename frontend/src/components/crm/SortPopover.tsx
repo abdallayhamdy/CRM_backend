@@ -68,6 +68,7 @@ export function SortPopover({
                 } else {
                   onSortChange(field.value, "asc")
                 }
+                setOpen(false)
               }}
             >
               <span>{field.label}</span>

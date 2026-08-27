@@ -169,6 +169,7 @@ export default function TicketsPage() {
     setSidebarOpen,
     updateSearch,
     toggleProperty,
+    setProperty,
     updateDateRange,
     updateNumber,
     clearAll,
@@ -365,7 +366,7 @@ export default function TicketsPage() {
       type: "searchable-property",
       options: allOwners,
       value: filters.properties["owner"] || [],
-      onChange: (val) => toggleProperty("owner", val),
+      onChange: (val) => setProperty("owner", val),
     },
     {
       id: "priority",
@@ -373,7 +374,7 @@ export default function TicketsPage() {
       type: "simple-property",
       options: TICKET_PRIORITIES,
       value: filters.properties["priority"] || [],
-      onChange: (val) => toggleProperty("priority", val),
+      onChange: (val) => setProperty("priority", val),
     },
     {
       id: "status",
@@ -381,7 +382,7 @@ export default function TicketsPage() {
       type: "searchable-property",
       options: allStatuses,
       value: filters.properties["status"] || [],
-      onChange: (val) => toggleProperty("status", val),
+      onChange: (val) => setProperty("status", val),
     },
     {
       id: "createDate",
@@ -713,7 +714,7 @@ export default function TicketsPage() {
         onOpenChange={setSidebarOpen}
         filters={filters}
         config={sidebarConfig}
-        onToggleProperty={toggleProperty}
+        onToggleProperty={setProperty}
         onUpdateNumber={updateNumber}
         onClearAll={clearAll}
         onAddAdvancedFilter={addAdvancedFilter}
