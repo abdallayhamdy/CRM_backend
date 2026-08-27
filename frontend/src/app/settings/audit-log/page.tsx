@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, RefreshCw, Copy, Download, ChevronDown, MoreHorizontal, Search } from 'lucide-react';
+import { ExternalLink, RefreshCw, Copy, Download, ChevronDown, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { laravelApi } from '@/lib/laravel-api';
 import { useAuth } from '@/hooks/use-auth';
@@ -227,24 +227,6 @@ export default function AuditLogPage() {
               <TooltipContent>Download</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 text-[13px] text-muted-foreground font-semibold gap-1">
-                More <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => toast.success('Report generated')}>
-                Generate report
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.success('Filter saved')}>
-                Save filter
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.success('Subscribed')}>
-                Subscribe to alerts
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -322,7 +304,7 @@ export default function AuditLogPage() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="outline" size="sm" className="h-8 border-border text-[12px] text-primary font-bold ml-auto">
+        <Button variant="outline" size="sm" className="h-8 border-border text-[12px] text-primary font-bold ml-auto" onClick={handleExport}>
           Export report
         </Button>
       </div>
