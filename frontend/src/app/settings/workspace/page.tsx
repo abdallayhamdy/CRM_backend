@@ -34,6 +34,7 @@ interface WorkspaceSettings {
   id: string;
   name: string;
   status: string;
+  plan: string;
   max_users: number;
   timezone: string | null;
   fiscal_year_start: string | null;
@@ -167,6 +168,11 @@ export default function WorkspaceSettingsPage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  const formatPlan = (plan: string | null | undefined): string => {
+    const label = (plan || 'starter').charAt(0).toUpperCase() + (plan || 'starter').slice(1);
+    return `${label} Plan`;
+  };
+
   return (
     <>
       <div className="w-full pb-32">
@@ -175,7 +181,7 @@ export default function WorkspaceSettingsPage() {
         subtitle="Manage your organization's global environment, team structure, and security protocols."
         actions={
           <Badge variant="outline" className="bg-muted text-foreground border-border font-medium py-1 px-3">
-            Enterprise Plan
+            {formatPlan(settings?.plan)}
           </Badge>
         }
       />

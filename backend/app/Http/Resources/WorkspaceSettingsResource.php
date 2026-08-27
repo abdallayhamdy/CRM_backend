@@ -13,6 +13,7 @@ class WorkspaceSettingsResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'status' => $this->status,
+            'plan' => $this->plan,
             'max_users' => $this->max_users,
             'timezone' => $this->timezone,
             'fiscal_year_start' => $this->fiscal_year_start,
