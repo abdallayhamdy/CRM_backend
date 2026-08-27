@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import {
   ChevronDown, ChevronLeft, MoreHorizontal, X, UserPlus, Clock, Users,
-  Search, SlidersHorizontal, ArrowUpDown, Copy, Trash2, ExternalLink, Check, Info, Pencil,
+  Search, SlidersHorizontal, ArrowUpDown, Copy, Trash2, Check, Info, Pencil,
   Mail, Shield, AlertCircle,
 } from 'lucide-react';
 import { laravelApi } from '@/lib/laravel-api';
@@ -431,9 +431,6 @@ export default function UsersTeamsPage() {
             <p className="text-[13px] text-muted-foreground">
               Create new users, customize user permissions...
             </p>
-            <a href="#" className="text-[var(--color-hs-blue)] text-[13px] font-bold hover:underline inline-flex items-center gap-1">
-              Learn more about user permissions <ExternalLink className="h-3 w-3" />
-            </a>
           </div>
           <div className="border border-border rounded-xs overflow-hidden">
             {/* Sub-header */}

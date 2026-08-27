@@ -35,6 +35,11 @@ class MemberTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonFragment(['id' => $user->id]);
+        $response->assertJsonFragment([
+            'id' => $user->id,
+            'is_active' => 1,
+            'role_name' => 'Workspace Member',
+        ]);
     }
 
     public function test_cannot_list_members_of_another_workspace(): void

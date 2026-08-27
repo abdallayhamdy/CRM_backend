@@ -10,6 +10,7 @@ class WorkspaceMemberResource extends JsonResource
     public function toArray(Request $request): array
     {
         $nameParts = $this->parseName($this->name ?? '');
+        $workspace = $this->relationLoaded('workspaces') ? $this->workspaces->first() : null;
 
         return [
             'id' => $this->id,
@@ -17,16 +18,10 @@ class WorkspaceMemberResource extends JsonResource
             'first_name' => $nameParts['first_name'],
             'last_name' => $nameParts['last_name'],
             'email' => $this->email,
-            'is_active' => $this->whenPivotLoaded('workspace_user', function () {
-                return $this->pivot->is_active ?? true;
-            }),
-            'role_name' => $this->whenPivotLoaded('workspace_user', function () {
-                return $this->pivot->role_name;
-            }),
+            'is_active' => $workspace?->pivot?->is_active ?? true,
+            'role_name' => $workspace?->pivot?->role_name,
             'roles' => $this->getRoleNames(),
-            'joined_at' => $this->whenPivotLoaded('workspace_user', function () {
-                return $this->pivot->created_at?->format('Y-m-d H:i:s');
-            }),
+            'joined_at' => $workspace?->pivot?->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 
