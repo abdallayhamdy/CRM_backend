@@ -381,12 +381,6 @@ export default function ProfileSettingsPage() {
 
               <div className="space-y-2 max-w-md">
                 <Label htmlFor="phone" className="text-[13px] font-bold text-foreground">Phone Number</Label>
-                <p className="text-[12px] text-muted-foreground mb-1">
-                  We may use this to contact you about security events.{' '}
-                  <a href="#" className="text-primary hover:underline inline-flex items-center gap-0.5 font-semibold">
-                    Privacy policy <ExternalLink className="w-3 h-3" />
-                  </a>
-                </p>
                 <div className="flex gap-2">
                   <Select value={phoneCountry} onValueChange={setPhoneCountry} disabled={loading}>
                     <SelectTrigger className="w-28 border-border focus:ring-[var(--color-hs-blue)]">
@@ -397,6 +391,7 @@ export default function ProfileSettingsPage() {
                       <SelectItem value="gb">🇬🇧 +44</SelectItem>
                       <SelectItem value="de">🇩🇪 +49</SelectItem>
                       <SelectItem value="fr">🇫🇷 +33</SelectItem>
+                      <SelectItem value="eg">🇪🇬 +20</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input
