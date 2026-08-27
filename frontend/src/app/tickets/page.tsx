@@ -714,7 +714,7 @@ export default function TicketsPage() {
         onOpenChange={setSidebarOpen}
         filters={filters}
         config={sidebarConfig}
-        onToggleProperty={setProperty}
+        onToggleProperty={toggleProperty}
         onUpdateNumber={updateNumber}
         onClearAll={clearAll}
         onAddAdvancedFilter={addAdvancedFilter}
