@@ -37,6 +37,11 @@ class Stage extends Model
         return $this->hasMany(Contact::class);
     }
 
+    public function companies()
+    {
+        return $this->hasMany(Company::class);
+    }
+
     public function deals()
     {
         return $this->hasMany(Deal::class);

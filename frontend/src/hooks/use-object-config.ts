@@ -39,6 +39,9 @@ export function useObjectConfig(objectType: ObjectType) {
       if (!pendingPromises[cacheKey]) {
         pendingPromises[cacheKey] = laravelApi.get<{ lifecycle_stages: StageConfig[]; display_style: DisplayStyle }>('/settings/object-configs', { object_type: objectType })
           .then(res => {
+            // Real stages + usage counts come from the backend. Defaults are a
+            // last-resort offline fallback and are never shown when the API
+            // returns real stages.
             const rawStages = res.data?.lifecycle_stages?.length
               ? res.data.lifecycle_stages
               : DEFAULT_STAGES_MAP[objectType]

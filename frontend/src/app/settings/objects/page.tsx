@@ -38,18 +38,6 @@ const OBJECT_TYPES = [
   { value: 'task', label: 'Tasks', icon: '✅', description: 'A task represents an action item to be completed.', singular: 'Task' },
 ];
 
-interface ObjectConfig {
-}
-
-const DEFAULT_CONFIG: Record<string, ObjectConfig> = {
-  contact: {},
-  company: {},
-  deal: {},
-  ticket: {},
-  product: {},
-  document: {},
-};
-
 interface StageItem {
   id: string
   name: string
@@ -126,11 +114,7 @@ function SortableStageRow({
         </button>
       </td>
       <td className="px-3 py-2.5 text-sm">
-        {stage.used_in > 0 ? (
-          <button className="text-primary dark:text-primary hover:underline">{stage.used_in}</button>
-        ) : (
-          <span className="text-muted-foreground">0</span>
-        )}
+        <span className="text-muted-foreground">{stage.used_in}</span>
       </td>
       <td className="px-3 py-2.5 text-sm text-muted-foreground font-mono truncate">
         {stage.name.toLowerCase().replace(/\s+/g, '')}
@@ -156,11 +140,10 @@ export default function ObjectsPage() {
 
   const [selectedObject, setSelectedObject] = useState<ObjectType>(initialObject);
   const [activeTab, setActiveTab] = useState('lifecycle');
-  const [config, setConfig] = useState<ObjectConfig>(DEFAULT_CONFIG.contact);
 
   const {
     stages, displayStyle, loading, saving, hasChanges,
-    save, addStage, updateStage, deleteStage, setDefaultStage, reorderStages,
+    save, addStage, updateStage, deleteStage, reorderStages,
     resetToDefaults, updateDisplayStyle
   } = useObjectConfig(selectedObject);
 
@@ -207,7 +190,6 @@ export default function ObjectsPage() {
           <span className="text-[13px] font-semibold text-foreground">Select an object:</span>
           <Select value={selectedObject} onValueChange={(val) => {
             setSelectedObject(val as ObjectType);
-            setConfig(DEFAULT_CONFIG[val] || DEFAULT_CONFIG.contact);
           }}>
             <SelectTrigger className="w-[180px] border-border focus:ring-primary h-8 text-[13px]">
               <SelectValue />
@@ -256,8 +238,7 @@ export default function ObjectsPage() {
           <TabsContent value="lifecycle" className="mt-0 outline-none">
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Track contacts as they move through your marketing and sales processes.{' '}
-                <a href="#" className="text-primary dark:text-primary hover:underline">Learn more about lifecycle stages</a>
+                Track contacts as they move through your marketing and sales processes.
               </p>
 
               <h3 className="text-sm font-bold text-foreground">Customize lifecycle stages</h3>
