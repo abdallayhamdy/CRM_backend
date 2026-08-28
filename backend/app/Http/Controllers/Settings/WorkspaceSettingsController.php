@@ -9,6 +9,8 @@ use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Workspace;
+use App\Models\User;
 
 class WorkspaceSettingsController extends Controller
 {
@@ -16,11 +18,13 @@ class WorkspaceSettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasPermissionTo('manage_settings')) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorizeSettings($user);
 
-        $workspace = $user->currentWorkspace;
+        $workspace = $this->resolveWorkspace($user, $request);
+
+        if (!$workspace) {
+            return response()->json(['data' => null]);
+        }
 
         return response()->json([
             'data' => new WorkspaceSettingsResource($workspace),
@@ -31,11 +35,13 @@ class WorkspaceSettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasPermissionTo('manage_settings')) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorizeSettings($user);
 
-        $workspace = $user->currentWorkspace;
+        $workspace = $this->resolveWorkspace($user, $request);
+
+        if (!$workspace) {
+            return response()->json(['message' => 'Workspace not found.'], 422);
+        }
 
         $original = $workspace->getOriginal();
         $workspace->update($request->validated());
@@ -75,11 +81,9 @@ class WorkspaceSettingsController extends Controller
 
         $user = $request->user();
 
-        if (!$user->hasPermissionTo('manage_settings')) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorizeSettings($user);
 
-        $workspace = $user->currentWorkspace;
+        $workspace = $this->resolveWorkspace($user, $request);
 
         if ($workspace->logo_path) {
             Storage::disk('public')->delete($workspace->logo_path);
@@ -96,5 +100,26 @@ class WorkspaceSettingsController extends Controller
             ],
             'message' => 'Logo uploaded.',
         ]);
+    }
+
+    private function authorizeSettings(User $user): void
+    {
+        if (!$user->is_super_admin && !$user->hasPermissionTo('manage_settings')) {
+            abort(403, 'Forbidden.');
+        }
+    }
+
+    private function resolveWorkspace(User $user, Request $request): ?Workspace
+    {
+        $requestedId = $request->header('X-Workspace-Id')
+            ?? $request->header('X-Workspace-ID')
+            ?? $request->query('workspace_id')
+            ?? $user->workspace_id;
+
+        if ($requestedId && $workspace = Workspace::find($requestedId)) {
+            return $workspace;
+        }
+
+        return $user->currentWorkspace;
     }
 }

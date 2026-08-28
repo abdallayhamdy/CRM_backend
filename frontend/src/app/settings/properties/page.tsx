@@ -282,6 +282,18 @@ export default function PropertiesPage() {
   }, [workspaceId]);
 
   useEffect(() => {
+    if (!workspaceId) return;
+    laravelApi.get<{ data: { data_quality_monitoring?: boolean } }>('/workspace/settings')
+      .then(({ data, error }) => {
+        if (!error && data) {
+          const inner = (data as any)?.data;
+          setDataQualityOn((inner?.data_quality_monitoring ?? false) === true);
+        }
+      })
+      .catch(() => {});
+  }, [workspaceId]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userFilterRef.current && !userFilterRef.current.contains(e.target as Node)) {
         setUserFilterOpen(false);
@@ -402,6 +414,28 @@ export default function PropertiesPage() {
     } catch (err: unknown) {
       console.error('Failed to restore property:', err);
       toast.error('An error occurred while restoring property', { id: toastId });
+    }
+  };
+
+  const handleToggleDataQuality = async () => {
+    const next = !dataQualityOn;
+    const toastId = toast.loading(
+      next ? 'Enabling data quality monitoring...' : 'Disabling data quality monitoring...'
+    );
+    try {
+      const { error } = await laravelApi.patch('/workspace/settings', { data_quality_monitoring: next });
+      if (!error) {
+        setDataQualityOn(next);
+        toast.success(
+          next ? 'Data quality monitoring enabled' : 'Data quality monitoring disabled',
+          { id: toastId }
+        );
+      } else {
+        toast.error(error || 'Failed to update data quality monitoring', { id: toastId });
+      }
+    } catch (err: unknown) {
+      console.error('Failed to update data quality monitoring:', err);
+      toast.error('An error occurred while updating data quality monitoring', { id: toastId });
     }
   };
 
@@ -539,12 +573,16 @@ export default function PropertiesPage() {
                 className="pl-9 pr-3 py-2 h-9 border-border focus-visible:ring-[var(--color-hs-blue)] text-[13px] w-60"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleDataQuality}
+              title={dataQualityOn ? 'Disable data quality monitoring' : 'Enable data quality monitoring'}
+              className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+            >
               <Lock className={`w-4 h-4 ${dataQualityOn ? 'text-primary' : 'text-muted-foreground/60'}`} />
               <span className={`text-[13px] ${dataQualityOn ? 'text-foreground' : 'text-muted-foreground/60'}`}>
                 {dataQualityOn ? 'Data quality monitoring is on' : 'Data quality monitoring is off'}
               </span>
-            </div>
+            </button>
             <CreatePropertyButton onClick={() => setIsWizardOpen(true)} />
           </div>
         </div>

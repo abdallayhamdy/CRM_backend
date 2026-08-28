@@ -31,6 +31,7 @@ class WorkspaceSettingsResource extends JsonResource
             'default_language' => $this->default_language,
             'default_date_format' => $this->default_date_format,
             'logo_path' => $this->logo_path,
+            'data_quality_monitoring' => $this->data_quality_monitoring,
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

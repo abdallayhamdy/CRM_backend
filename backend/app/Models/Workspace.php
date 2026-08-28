@@ -36,6 +36,7 @@ class Workspace extends Model
         'default_language',
         'default_date_format',
         'logo_path',
+        'data_quality_monitoring',
         'billing_email',
         'billing_phone',
         'billing_address',
@@ -50,6 +51,7 @@ class Workspace extends Model
         'created_at' => 'datetime',
         'trial_end_date' => 'date',
         'subscription_start_date' => 'date',
+        'data_quality_monitoring' => 'boolean',
     ];
 
     // --- العلاقات ---

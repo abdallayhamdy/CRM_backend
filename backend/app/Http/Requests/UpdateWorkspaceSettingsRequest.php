@@ -10,7 +10,7 @@ class UpdateWorkspaceSettingsRequest extends FormRequest
     {
         $user = auth()->user();
 
-        return $user->hasPermissionTo('manage_settings');
+        return $user && ($user->is_super_admin || $user->hasPermissionTo('manage_settings'));
     }
 
     public function rules(): array
@@ -32,6 +32,7 @@ class UpdateWorkspaceSettingsRequest extends FormRequest
             'currency_symbol' => 'sometimes|nullable|string|max:10',
             'default_language' => 'sometimes|nullable|string|max:10',
             'default_date_format' => 'sometimes|nullable|string|max:20',
+            'data_quality_monitoring' => 'sometimes|boolean',
         ];
     }
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Trash2, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Trash2, MoreHorizontal, ExternalLink, RotateCcw } from 'lucide-react';
 import { clearPropertiesCache } from '@/hooks/use-properties';
 import { Search } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -42,40 +44,91 @@ interface ApiResponse {
 }
 
 export default function ArchivedPage() {
+  const searchParams = useSearchParams();
+  const objectType = searchParams.get('object_type') || 'contact';
+
   const [archivedProperties, setArchivedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     loadArchivedProperties();
-  }, []);
+  }, [objectType]);
 
   const loadArchivedProperties = async () => {
     setLoading(true);
-    const { data, error } = await laravelApi.get<{ data: ApiResponse }>('/properties', { archived: 1, limit: 100 });
+    const { data, error } = await laravelApi.get<{ data: ApiResponse }>('/properties', {
+      object_type: objectType,
+      archived: 1,
+      limit: 100,
+    });
     if (data && !error) {
       setArchivedProperties(data.data.properties);
+      setSelectedIds([]);
+    } else {
+      toast.error(error || 'Failed to load archived properties');
     }
     setLoading(false);
   };
 
+  const success = () => {
+    clearPropertiesCache();
+    window.dispatchEvent(new Event('properties-count-changed'));
+    loadArchivedProperties();
+  };
+
   const handleRestore = async (id: string) => {
     const { error } = await laravelApi.patch(`/properties/${id}`, { restore: true });
-    if (!error) {
-      setArchivedProperties(prev => prev.filter(p => p.id !== id));
-      clearPropertiesCache();
-      window.dispatchEvent(new Event('properties-count-changed'));
-    }
+    if (!error) success();
+    else toast.error(error || 'Failed to restore property');
   };
 
   const handlePermanentlyDelete = async (id: string) => {
     if (!confirm('This will permanently delete the property. This action cannot be undone.')) return;
     const { error } = await laravelApi.delete(`/properties/${id}?force=1`);
-    if (!error) {
-      setArchivedProperties(prev => prev.filter(p => p.id !== id));
-      clearPropertiesCache();
-      window.dispatchEvent(new Event('properties-count-changed'));
+    if (!error) success();
+    else toast.error(error || 'Failed to delete property');
+  };
+
+  const word = (n: number) => (n === 1 ? 'property' : 'properties');
+
+  const handleBulkRestore = async () => {
+    if (selectedIds.length === 0 || busy) return;
+    setBusy(true);
+    const n = selectedIds.length;
+    const toastId = toast.loading(`Restoring ${n} ${word(n)}...`);
+    const results = await Promise.all(
+      selectedIds.map(id => laravelApi.patch(`/properties/${id}`, { restore: true }))
+    );
+    const failed = results.filter(r => r.error).length;
+    setBusy(false);
+    if (failed === 0) {
+      toast.success(`${n} ${word(n)} restored`, { id: toastId });
+    } else {
+      toast.error(`${failed} ${word(failed)} failed to restore`, { id: toastId });
     }
+    success();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0 || busy) return;
+    const n = selectedIds.length;
+    if (!confirm(`Permanently delete ${n} archived ${word(n)}? This cannot be undone.`)) return;
+    setBusy(true);
+    const toastId = toast.loading(`Deleting ${n} ${word(n)}...`);
+    const results = await Promise.all(
+      selectedIds.map(id => laravelApi.delete(`/properties/${id}?force=1`))
+    );
+    const failed = results.filter(r => r.error).length;
+    setBusy(false);
+    if (failed === 0) {
+      toast.success(`${n} ${word(n)} permanently deleted`, { id: toastId });
+    } else {
+      toast.error(`${failed} ${word(failed)} failed to delete`, { id: toastId });
+    }
+    success();
   };
 
   const FIELD_TYPE_LABELS: Record<string, string> = {
@@ -117,6 +170,16 @@ export default function ArchivedPage() {
     p.field_type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const allSelected = filtered.length > 0 && filtered.every(p => selectedIds.includes(p.id));
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(checked ? filtered.map(p => p.id) : []);
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds(prev => checked ? [...prev, id] : prev.filter(x => x !== id));
+  };
+
   return (
     <div className="space-y-6">
       <p className="text-[14px] text-foreground">
@@ -138,13 +201,56 @@ export default function ArchivedPage() {
         </span>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/50">
+          <span className="text-[13px] font-medium text-foreground">
+            {selectedIds.length} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 border-border text-[13px]"
+              onClick={handleBulkRestore}
+              disabled={busy}
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+              Restore selected
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 border-border text-[13px] text-destructive hover:text-destructive"
+              onClick={handleBulkDelete}
+              disabled={busy}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Delete permanently
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-[13px]"
+              onClick={() => setSelectedIds([])}
+              disabled={busy}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card className="border-border shadow-sm">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border">
                 <TableHead className="w-10">
-                  <Checkbox />
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={(checked) => toggleAll(!!checked)}
+                    aria-label="Select all archived properties"
+                  />
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Field type</TableHead>
@@ -170,7 +276,11 @@ export default function ArchivedPage() {
                 filtered.map((prop) => (
                   <TableRow key={prop.id} className="hover:bg-[var(--color-hs-light-bg)] transition-colors border-b border-border last:border-b-0">
                     <TableCell>
-                      <Checkbox />
+                      <Checkbox
+                        checked={selectedIds.includes(prop.id)}
+                        onCheckedChange={(checked) => toggleOne(prop.id, !!checked)}
+                        aria-label={`Select ${prop.label}`}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">

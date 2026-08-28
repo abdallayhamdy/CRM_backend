@@ -63,7 +63,16 @@ class PropertyController extends Controller
         }
 
         if ($request->access_filter && $request->access_filter !== 'all') {
-            // access filter is a placeholder — full access control comes later
+            $accessFilter = $request->access_filter;
+            $query->where(function ($q) use ($accessFilter) {
+                $q->where('settings->access->type', $accessFilter)
+                    ->when($accessFilter === 'everyone_edit', function ($qq) {
+                        // Default access (no access config stored) is "everyone can view and edit".
+                        $qq->orWhereNull('settings')
+                            ->orWhereNull('settings->access->type')
+                            ->orWhere('settings->access->type', '');
+                    });
+            });
         }
 
         // Default: show active (non-archived), unless specifically requesting archived

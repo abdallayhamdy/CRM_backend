@@ -22,7 +22,7 @@ class ObjectConfigController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->hasPermissionTo('manage_panel_configs')) {
+        if (!$user || (!$user->is_super_admin && !$user->hasPermissionTo('manage_panel_configs'))) {
             return response()->json([
                 'message' => 'Forbidden.',
             ], 403);
@@ -55,7 +55,7 @@ class ObjectConfigController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->hasPermissionTo('manage_panel_configs')) {
+        if (!$user || (!$user->is_super_admin && !$user->hasPermissionTo('manage_panel_configs'))) {
             return response()->json([
                 'message' => 'Forbidden.',
             ], 403);
@@ -63,6 +63,10 @@ class ObjectConfigController extends Controller
 
         $workspace = $user->currentWorkspace;
         $objectType = $request->input('object_type');
+
+        if (!$workspace) {
+            return response()->json(['message' => 'Workspace not found.'], 422);
+        }
 
         $config = ObjectConfig::updateOrCreate(
             ['workspace_id' => $workspace->id, 'object_type' => $objectType],
