@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Contact;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class ContactPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_contacts_all') || $user->hasPermissionTo('view_contacts_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'contacts', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Contact $contact): bool
     {
-        if ($user->workspace_id !== $contact->workspace_id) return false;
-        if ($user->hasPermissionTo('view_contacts_all')) return true;
-        if ($user->hasPermissionTo('view_contacts_own')) {
-            return $contact->isOwnedBy($user);
+        if ($user->workspace_id !== $contact->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $contact->satisfiesScope($user, 'contacts', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class ContactPolicy
 
     public function update(User $user, Contact $contact): bool
     {
-        if ($user->workspace_id !== $contact->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_contacts_all')) return true;
-        if ($user->hasPermissionTo('edit_contacts_own')) {
-            return $contact->isOwnedBy($user);
+        if ($user->workspace_id !== $contact->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $contact->satisfiesScope($user, 'contacts', 'edit');
     }
 
     public function delete(User $user, Contact $contact): bool
     {
-        if ($user->workspace_id !== $contact->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_contacts_all')) return true;
-        if ($user->hasPermissionTo('delete_contacts_own')) {
-            return $contact->isOwnedBy($user);
+        if ($user->workspace_id !== $contact->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $contact->satisfiesScope($user, 'contacts', 'delete');
     }
 }

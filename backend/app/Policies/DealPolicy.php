@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Deal;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class DealPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_deals_all') || $user->hasPermissionTo('view_deals_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'deals', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Deal $deal): bool
     {
-        if ($user->workspace_id !== $deal->workspace_id) return false;
-        if ($user->hasPermissionTo('view_deals_all')) return true;
-        if ($user->hasPermissionTo('view_deals_own')) {
-            return $deal->isOwnedBy($user);
+        if ($user->workspace_id !== $deal->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $deal->satisfiesScope($user, 'deals', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class DealPolicy
 
     public function update(User $user, Deal $deal): bool
     {
-        if ($user->workspace_id !== $deal->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_deals_all')) return true;
-        if ($user->hasPermissionTo('edit_deals_own')) {
-            return $deal->isOwnedBy($user);
+        if ($user->workspace_id !== $deal->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $deal->satisfiesScope($user, 'deals', 'edit');
     }
 
     public function delete(User $user, Deal $deal): bool
     {
-        if ($user->workspace_id !== $deal->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_deals_all')) return true;
-        if ($user->hasPermissionTo('delete_deals_own')) {
-            return $deal->isOwnedBy($user);
+        if ($user->workspace_id !== $deal->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $deal->satisfiesScope($user, 'deals', 'delete');
     }
 }

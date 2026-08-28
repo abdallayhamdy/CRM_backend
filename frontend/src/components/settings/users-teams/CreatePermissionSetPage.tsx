@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronDown, Check, ExternalLink, Pencil, Info, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
+import { authService } from "@/services/auth"
+import { permissionSetsService, PermissionSet } from "@/services/permissionSets"
+import { Profile } from "@/lib/types/crm"
 
 const PERMISSION_CATEGORIES: Record<string, { label: string; subcategories: string[] }> = {
   CRM: { label: "CRM", subcategories: ["CRM objects", "CRM tools"] },
@@ -375,9 +380,61 @@ const TEMPLATE_PRESETS: Record<string, Record<string, any>> = {
 // ─── Component ───────────────────────────────────────────────
 interface CreatePermissionSetPageProps {
   onBack: () => void
+  onSaved?: () => void
+  initialSet?: PermissionSet | null
 }
 
-export function CreatePermissionSetPage({ onBack }: CreatePermissionSetPageProps) {
+function buildPermissionsPayload(permissions: Record<string, Record<string, any>>, objectEnabled: Record<string, boolean>, crmToolsValues: Record<string, any>, crmToolsEnabled: Record<string, boolean>, reportingValues: Record<string, any>, reportingEnabled: Record<string, boolean>, settingsValues: Record<string, boolean>): { object: string; key: string; value: string | null; scope?: string | null }[] {
+  const out: { object: string; key: string; value: string | null; scope?: string | null }[] = []
+
+  CRM_OBJECTS.forEach(obj => {
+    if (!objectEnabled[obj.id]) return
+    obj.permissions.forEach(perm => {
+      const raw = permissions[obj.id]?.[perm.id] ?? perm.defaultValue
+      if (perm.type === 'toggle') {
+        out.push({ object: obj.id, key: perm.id, value: raw ? 'true' : 'false' })
+      } else {
+        const scope = typeof raw === 'string' && raw ? raw : 'none'
+        out.push({ object: obj.id, key: perm.id, value: scope, scope: null })
+      }
+    })
+  })
+
+  CRM_TOOLS.forEach(tool => {
+    if (!crmToolsEnabled[tool.id]) return
+    const raw = crmToolsValues[tool.id]
+    if (tool.type === 'scope') {
+      out.push({ object: 'crm_tools', key: tool.id, value: typeof raw === 'string' ? raw : 'all', scope: null })
+    } else {
+      out.push({ object: 'crm_tools', key: tool.id, value: raw ? 'true' : 'false' })
+    }
+  })
+
+  REPORTING_PERMISSIONS.forEach(item => {
+    if (!reportingEnabled[item.id]) return
+    if (item.permissions) {
+      item.permissions.forEach(perm => {
+        const key = `${item.id}_${perm.id}`
+        out.push({ object: 'reporting', key, value: reportingValues[key] ? 'true' : 'false' })
+      })
+    } else if (item.type === 'toggle') {
+      out.push({ object: 'reporting', key: item.id, value: reportingValues[item.id] ? 'true' : 'false' })
+    }
+  })
+
+  // Settings access: only explicit "On" toggles are pushed when enabled.
+  SETTINGS_ACCESS_PERMISSIONS.forEach(item => {
+    if (!settingsValues[item.id]) return
+    out.push({ object: 'account_settings', key: item.id, value: 'true' })
+  })
+
+  return out
+}
+
+export function CreatePermissionSetPage({ onBack, onSaved, initialSet }: CreatePermissionSetPageProps) {
+  const { workspaceId } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+  const closeAfterSave = onSaved ?? onBack
   const [activeTab, setActiveTab] = useState<"access" | "review" | "users">("access")
   const [name, setName] = useState("")
   const [editingName, setEditingName] = useState(false)
@@ -455,9 +512,154 @@ export function CreatePermissionSetPage({ onBack }: CreatePermissionSetPageProps
 
   // Users tab state
   const [userSearch, setUserSearch] = useState("")
-  const [selectedUsers, _setSelectedUsers] = useState<string[]>([])
+  const [members, setMembers] = useState<Profile[]>([])
   const [assignedUsers, setAssignedUsers] = useState<{id: string, name: string, email: string}[]>([])
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!workspaceId) return
+    authService.listProfiles(workspaceId).then(({ data }) => {
+      if (data) setMembers(data)
+    }).catch(() => {})
+  }, [workspaceId])
+
+  useEffect(() => {
+    if (!initialSet) return
+    setName(initialSet.name)
+    setAssignedUsers(initialSet.users ?? [])
+
+    if (!initialSet.permissions || initialSet.permissions.length === 0) return
+    const stored = initialSet.permissions
+
+    setPermissions(prev => {
+      const next = { ...prev }
+      CRM_OBJECTS.forEach(obj => {
+        const objPerms = stored.filter(p => p.object === obj.id)
+        if (objPerms.length === 0) return
+        next[obj.id] = { ...(next[obj.id] ?? {}) }
+        objPerms.forEach(p => {
+          const def = obj.permissions.find(x => x.id === p.key)
+          if (!def) return
+          next[obj.id][p.key] = def.type === 'toggle'
+            ? p.value === 'true'
+            : (p.value ?? def.defaultValue)
+        })
+      })
+      return next
+    })
+
+    setObjectEnabled(prev => {
+      const next = { ...prev }
+      CRM_OBJECTS.forEach(obj => {
+        if (stored.some(p => p.object === obj.id)) next[obj.id] = true
+      })
+      return next
+    })
+
+    setCrmToolsValues(prev => {
+      const next = { ...prev }
+      stored.filter(p => p.object === 'crm_tools').forEach(p => {
+        const tool = CRM_TOOLS.find(t => t.id === p.key)
+        if (!tool) return
+        next[p.key] = tool.type === 'toggle'
+          ? p.value === 'true'
+          : (p.value ?? tool.defaultValue)
+      })
+      return next
+    })
+
+    setCrmToolsEnabled(prev => {
+      const next = { ...prev }
+      stored.filter(p => p.object === 'crm_tools').forEach(p => {
+        next[p.key] = p.value !== 'false'
+      })
+      return next
+    })
+
+    setReportingValues(prev => {
+      const next = { ...prev }
+      stored.filter(p => p.object === 'reporting').forEach(p => {
+        next[p.key] = p.value === 'true'
+      })
+      return next
+    })
+
+    setSettingsValues(prev => {
+      const next = { ...prev }
+      stored.filter(p => p.object === 'account_settings').forEach(p => {
+        next[p.key] = p.value === 'true'
+      })
+      return next
+    })
+  }, [initialSet])
+
+  const memberName = (m: Profile) =>
+    `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || m.name || m.email || 'Unknown'
+
+  const assignedUserIds = new Set(assignedUsers.map(u => u.id))
+  const candidateMembers = members.filter(m => {
+    if (assignedUserIds.has(m.id)) return false
+    const q = userSearch.toLowerCase()
+    if (!q) return false
+    return memberName(m).toLowerCase().includes(q) || (m.email ?? '').toLowerCase().includes(q)
+  })
+
+  const addCandidate = (m: Profile) => {
+    setAssignedUsers(prev => prev.some(u => u.id === m.id)
+      ? prev
+      : [...prev, { id: m.id, name: memberName(m), email: m.email ?? '' }])
+    setUserSearch("")
+  }
+
+  const handleCreate = async () => {
+    if (!workspaceId) return
+    if (!name.trim()) {
+      toast.error("Please enter a permission set name.")
+      return
+    }
+    setSubmitting(true)
+    const payload = {
+      name: name.trim(),
+      description: null,
+      locked: false,
+      permissions: buildPermissionsPayload(
+        permissions, objectEnabled, crmToolsValues, crmToolsEnabled,
+        reportingValues, reportingEnabled, settingsValues,
+      ),
+    }
+    try {
+      if (initialSet) {
+        const { error } = await permissionSetsService.update(workspaceId, initialSet.id, payload)
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+        if (assignedUsers.length > 0) {
+          const { error: assignErr } = await permissionSetsService.assign(
+            workspaceId, initialSet.id, assignedUsers.map(u => u.id)
+          )
+          if (assignErr) toast.error(assignErr.message)
+        }
+        toast.success("Permission set updated.")
+      } else {
+        const { data, error } = await permissionSetsService.create(workspaceId, payload)
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+        if (data && assignedUsers.length > 0) {
+          const { error: assignErr } = await permissionSetsService.assign(
+            workspaceId, data.id, assignedUsers.map(u => u.id)
+          )
+          if (assignErr) toast.error(assignErr.message)
+        }
+        toast.success("Permission set created.")
+      }
+      closeAfterSave()
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const toggleExpand = (id: string) => {
     setExpandedObjects(prev => {
@@ -1069,8 +1271,8 @@ export function CreatePermissionSetPage({ onBack }: CreatePermissionSetPageProps
             </button>
           )}
         </div>
-        <Button size="sm" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={onBack}>
-          Create
+        <Button size="sm" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={handleCreate} disabled={submitting}>
+          {submitting ? 'Saving...' : 'Create'}
         </Button>
       </div>
 
@@ -1340,19 +1542,39 @@ export function CreatePermissionSetPage({ onBack }: CreatePermissionSetPageProps
           {/* Search + Assign */}
           <div className="flex gap-3 mb-6">
             <div className="relative flex-1">
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search users"
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
                 className="pr-8"
               />
+              {userSearch && candidateMembers.length > 0 && (
+                <div className="absolute z-[300] mt-1 w-full max-h-64 overflow-y-auto border rounded-lg bg-background shadow-lg">
+                  {candidateMembers.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => addCandidate(m)}
+                      className="flex w-full items-center gap-3 px-3 py-2 hover:bg-muted/50 text-left"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground flex-shrink-0">
+                        {memberName(m).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{memberName(m)}</p>
+                        <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <Button
               variant="outline"
-              disabled={!selectedUsers.length}
+              disabled={candidateMembers.length === 0}
               onClick={() => {
-                // UI only — just clear search
+                candidateMembers.forEach(addCandidate)
                 setUserSearch("")
               }}
             >

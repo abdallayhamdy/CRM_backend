@@ -81,6 +81,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Team::class);
     }
 
+    public function permissionSets()
+    {
+        return $this->belongsToMany(PermissionSet::class, 'permission_set_user')->withTimestamps();
+    }
+
     public function impersonationSessions()
     {
         return $this->hasMany(\App\Models\ImpersonationSession::class, 'admin_id');

@@ -83,4 +83,9 @@ class Workspace extends Model
     {
         return $this->hasMany(Deal::class);
     }
+
+    public function permissionSets()
+    {
+        return $this->hasMany(PermissionSet::class);
+    }
 }

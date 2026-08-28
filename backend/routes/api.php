@@ -53,6 +53,7 @@ use App\Http\Controllers\SuperAdmin\ImpersonationController;
 use App\Http\Middleware\IsSuperAdmin;
 use App\Http\Controllers\Workspace\InvitationController;
 use App\Http\Controllers\Workspace\MemberController;
+use App\Http\Controllers\Workspace\PermissionSetController;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
 
@@ -150,6 +151,13 @@ Route::middleware(['auth:sanctum', 'set.workspace', 'check.impersonation.expiry'
     Route::get('/teams/{team}/members', [TeamController::class, 'members']);
     Route::post('/teams/{team}/members/{user}', [TeamController::class, 'addMember']);
     Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember']);
+
+    Route::get('/workspaces/{workspace}/permission-sets', [PermissionSetController::class, 'index']);
+    Route::post('/workspaces/{workspace}/permission-sets', [PermissionSetController::class, 'store']);
+    Route::get('/workspaces/{workspace}/permission-sets/{permission_set}', [PermissionSetController::class, 'show']);
+    Route::put('/workspaces/{workspace}/permission-sets/{permission_set}', [PermissionSetController::class, 'update']);
+    Route::delete('/workspaces/{workspace}/permission-sets/{permission_set}', [PermissionSetController::class, 'destroy']);
+    Route::post('/workspaces/{workspace}/permission-sets/{permission_set}/assign', [PermissionSetController::class, 'assign']);
 
     Route::apiResource('preferences', UserViewPreferenceController::class);
 

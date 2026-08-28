@@ -24,7 +24,12 @@ class DealController extends Controller
     {
         $this->authorize('viewAny', Deal::class);
 
+        $user = auth('sanctum')->user();
+
         $query = Deal::with(['stage', 'pipelineStage.pipeline', 'contact', 'company', 'assignee']);
+
+        // Permission-based scoping (resolves role baseline + permission-set scopes)
+        $query->applyRecordScope($user, 'deals', 'view');
 
         if ($request->q) {
             $query->where(function ($q) use ($request) {

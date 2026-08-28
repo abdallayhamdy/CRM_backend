@@ -99,6 +99,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage_users',           'guard_name' => 'sanctum']);
         Permission::firstOrCreate(['name' => 'manage_roles',           'guard_name' => 'sanctum']);
         Permission::firstOrCreate(['name' => 'manage_teams',           'guard_name' => 'sanctum']);
+        Permission::firstOrCreate(['name' => 'manage_permission_sets', 'guard_name' => 'sanctum']);
         Permission::firstOrCreate(['name' => 'manage_settings',        'guard_name' => 'sanctum']);
         Permission::firstOrCreate(['name' => 'manage_pipelines',       'guard_name' => 'sanctum']);
         Permission::firstOrCreate(['name' => 'manage_custom_fields',   'guard_name' => 'sanctum']);

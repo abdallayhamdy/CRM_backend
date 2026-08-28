@@ -14,7 +14,6 @@ use App\Models\Contact;
 use App\Services\ContactStageService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -121,21 +120,8 @@ class ContactController extends Controller
             ->allowedIncludes('company', 'assignee', 'stage')
             ->with(['company', 'assignee', 'stage']);
 
-        // Permission-based scoping
-        $canViewAll = false;
-        $canViewOwn = false;
-        try {
-            $canViewAll = $user->hasPermissionTo('view_contacts_all');
-        } catch (PermissionDoesNotExist) {
-        }
-        try {
-            $canViewOwn = $user->hasPermissionTo('view_contacts_own');
-        } catch (PermissionDoesNotExist) {
-        }
-
-        if (! $canViewAll && $canViewOwn) {
-            $query->where('contacts.assigned_to', $user->id);
-        }
+        // Permission-based scoping (resolves role baseline + permission-set scopes)
+        $query->applyRecordScope($user, 'contacts', 'view');
 
         // Search query (backwards-compatible ?q= parameter)
         if ($request->q) {
