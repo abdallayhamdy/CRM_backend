@@ -160,7 +160,7 @@ export default function ObjectsPage() {
     const activeStage = stages.find(s => s.id === active.id)
     const overStage = stages.find(s => s.id === over.id)
     if (!activeStage || !overStage) return
-    const activeStages = stages.filter(s => s.is_active).sort((a, b) => a.order - b.order)
+    const activeStages = stages.filter(s => s.is_active && s.id).sort((a, b) => a.order - b.order)
     const oldIndex = activeStages.findIndex(s => s.id === active.id)
     const newIndex = activeStages.findIndex(s => s.id === over.id)
     if (oldIndex === -1 || newIndex === -1) return
@@ -335,7 +335,7 @@ export default function ObjectsPage() {
                         </tr>
                       ) : (
                         (() => {
-                          const activeStages = stages.filter(s => s.is_active).sort((a, b) => a.order - b.order)
+                          const activeStages = stages.filter(s => s.is_active && s.id).sort((a, b) => a.order - b.order)
                           return (
                             <SortableContext items={activeStages.map(s => s.id)} strategy={verticalListSortingStrategy}>
                               {activeStages.map((stage) => (

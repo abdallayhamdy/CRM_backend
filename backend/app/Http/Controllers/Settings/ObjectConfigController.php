@@ -85,9 +85,12 @@ class ObjectConfigController extends Controller
 
         $storedStages = collect($config?->lifecycle_stages ?? []);
 
+        // The API exposes the stage slug as the id; a stage without a slug
+        // cannot be referenced by that id and would break the settings UI.
         return Stage::withoutGlobalScope('workspace')
             ->where('workspace_id', $workspaceId)
             ->where('object_type', $objectType)
+            ->whereNotNull('slug')
             ->orderBy('order')
             ->withCount($countRelation)
             ->get()

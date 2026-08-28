@@ -253,6 +253,39 @@ class ObjectConfigTest extends TestCase
         ]);
     }
 
+    public function test_stages_without_slug_are_excluded(): void
+    {
+        $this->as($this->owner);
+
+        $this->putJson('/api/settings/object-configs', $this->stagePayload([
+            $this->makeStage('subscriber', 'Subscriber', '#1E6FEB', 0, true),
+            $this->makeStage('lead', 'Lead', '#F04444', 1),
+        ]));
+
+        // Simulate a legacy stage row that predates the slug column.
+        Stage::withoutGlobalScope('workspace')->create([
+            'workspace_id' => $this->workspace->id,
+            'object_type' => 'contact',
+            'name' => 'Legacy No Slug',
+            'color' => '#3498db',
+            'order' => 2,
+            'slug' => null,
+        ]);
+        $stagesWithSlug = Stage::withoutGlobalScope('workspace')
+            ->where('workspace_id', $this->workspace->id)
+            ->where('object_type', 'contact')
+            ->whereNotNull('slug')
+            ->pluck('slug')
+            ->all();
+        $this->assertCount(2, $stagesWithSlug);
+
+        $response = $this->getJson('/api/settings/object-configs?object_type=contact');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'lifecycle_stages')
+            ->assertJsonMissing(['id' => null]);
+    }
+
     public function test_saved_config_is_returned_on_get(): void
     {
         $this->as($this->owner);
