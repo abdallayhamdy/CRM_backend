@@ -440,17 +440,6 @@ export default function PropertiesPage() {
   };
 
 
-  const getRouteForObject = (objType: string) => {
-    const routes: Record<string, string> = {
-      contact: '/settings/contacts',
-      company: '/settings/companies',
-      deal: '/settings/deals',
-      ticket: '/settings/tickets',
-      product: '/settings/products',
-    };
-    return routes[objType] || '/settings/contacts';
-  };
-
   const allSelected = properties.length > 0 && properties.every(p => selectedIds.includes(p.id));
   const propertyFieldTypes = [...new Set(properties.map(p => p.field_type))];
 
@@ -480,8 +469,10 @@ export default function PropertiesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="link" className="text-[13px] text-primary">
-              Go to {objectLabel.split(' ')[0]} settings →
+            <Button variant="link" className="text-[13px] text-primary" asChild>
+              <Link href={`/settings/objects?object_type=${objectType}`}>
+                Go to {objectLabel.split(' ')[0]} settings →
+              </Link>
             </Button>
           </div>
         </CardContent>

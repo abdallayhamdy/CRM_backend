@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ExternalLink, GripVertical, Info, Trash2, Loader2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from '@/lib/utils';
@@ -147,7 +148,13 @@ function SortableStageRow({
 }
 
 export default function ObjectsPage() {
-  const [selectedObject, setSelectedObject] = useState<ObjectType>('contact');
+  const searchParams = useSearchParams();
+  const requestedObject = searchParams.get('object_type') as ObjectType | null;
+  const initialObject = requestedObject && OBJECT_TYPES.some(o => o.value === requestedObject)
+    ? requestedObject
+    : 'contact';
+
+  const [selectedObject, setSelectedObject] = useState<ObjectType>(initialObject);
   const [activeTab, setActiveTab] = useState('lifecycle');
   const [config, setConfig] = useState<ObjectConfig>(DEFAULT_CONFIG.contact);
 
@@ -235,7 +242,7 @@ export default function ObjectsPage() {
           </TabsList>
         </Tabs>
         <Link
-          href="/settings/properties"
+          href={`/settings/properties?object_type=${selectedObject}`}
           className="text-[12px] text-primary font-bold hover:underline whitespace-nowrap ml-4"
         >
           View {currentObject.label} in the data model <ExternalLink className="w-3 h-3 inline ml-0.5" />
