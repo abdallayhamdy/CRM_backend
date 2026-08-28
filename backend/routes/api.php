@@ -132,6 +132,7 @@ Route::middleware(['auth:sanctum', 'set.workspace', 'check.impersonation.expiry'
     Route::patch('/workspace/members/{member}/role', [MemberController::class, 'updateRole']);
     Route::post('/workspace/members/{member}/deactivate', [MemberController::class, 'deactivate']);
     Route::post('/workspace/members/{member}/activate', [MemberController::class, 'activate']);
+    Route::post('/workspace/members/bulk-deactivate', [MemberController::class, 'bulkDeactivate']);
     Route::delete('/workspace/members/{member}', [MemberController::class, 'remove']);
 
     Route::get('/workspace/settings', [WorkspaceSettingsController::class, 'show']);

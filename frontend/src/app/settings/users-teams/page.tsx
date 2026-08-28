@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import {
   ChevronDown, ChevronLeft, MoreHorizontal, X, UserPlus, Clock, Users,
   Search, SlidersHorizontal, ArrowUpDown, Copy, Trash2, Check, Info, Pencil,
-  Mail, Shield, AlertCircle,
+  Mail, Shield, AlertCircle, UserX,
 } from 'lucide-react';
 import { laravelApi } from '@/lib/laravel-api';
 
@@ -145,6 +145,9 @@ export default function UsersTeamsPage() {
 
   // Search
   const [userSearch, setUserSearch] = useState('')
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Members & Invitations state
   const [members, setMembers] = useState<Member[]>([])
@@ -400,13 +403,48 @@ export default function UsersTeamsPage() {
     return matchesSearch
   })
 
+  const allFilteredSelected = filteredMembers.length > 0 && filteredMembers.every(m => selectedIds.has(m.id))
+  const someSelected = selectedIds.size > 0 && !allFilteredSelected
+
+  const toggleSelect = (userId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(userId)) {
+        next.delete(userId)
+      } else {
+        next.add(userId)
+      }
+      return next
+    })
+  }
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? new Set(filteredMembers.map(m => m.id)) : new Set())
+  }
+
+  const handleBulkDeactivate = async () => {
+    if (selectedIds.size === 0) return
+    const count = selectedIds.size
+    if (!confirm(`Deactivate ${count} selected user(s)? They will immediately lose access to this workspace.`)) return
+    const { error } = await laravelApi.post('/workspace/members/bulk-deactivate', {
+      user_ids: Array.from(selectedIds),
+    })
+    if (error) {
+      toast.error(error)
+      return
+    }
+    toast.success(`${count} user(s) deactivated.`)
+    setSelectedIds(new Set())
+    fetchMembers()
+  }
+
   return (
     <div className="p-8 bg-background">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Users & Teams</h1>
         <p className="text-[14px] text-muted-foreground mt-1">
-          Manage users, seats, and teams in your account.
+          Manage users, teams, and permission sets in your account.
         </p>
       </div>
 
@@ -515,7 +553,7 @@ export default function UsersTeamsPage() {
                   ].map(v => (
                     <button
                       key={v.key}
-                      onClick={() => setActiveView(v.key)}
+                      onClick={() => { setSelectedIds(new Set()); setActiveView(v.key) }}
                       className={`px-3 py-1.5 text-[12px] font-semibold rounded-[2px] transition-all flex items-center gap-1.5 ${
                         activeView === v.key
                           ? 'bg-background text-foreground shadow-sm border border-border'
@@ -524,7 +562,7 @@ export default function UsersTeamsPage() {
                     >
                       {v.label} <span className="text-muted-foreground/60">{v.count}</span>
                       {activeView === v.key && (
-                        <X className="h-3 w-3 text-muted-foreground/60 cursor-pointer" onClick={e => { e.stopPropagation(); setActiveView('active') }} />
+                        <X className="h-3 w-3 text-muted-foreground/60 cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedIds(new Set()); setActiveView('active') }} />
                       )}
                     </button>
                   ))}
@@ -542,6 +580,34 @@ export default function UsersTeamsPage() {
                       placeholder="Search name or email address"
                       className="pl-9 h-8 border-border text-[12px] focus-visible:ring-[var(--color-hs-blue)]"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk actions bar */}
+              {activeView !== 'invitations' && selectedIds.size > 0 && (
+                <div className="flex items-center justify-between border border-border rounded-xs px-3 py-2 bg-[var(--color-hs-blue)]/5 dark:bg-primary/10">
+                  <p className="text-[13px] font-bold text-foreground">
+                    {selectedIds.size} selected
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px] border-border gap-1.5"
+                      onClick={() => setSelectedIds(new Set())}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Clear
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 text-[12px] bg-destructive text-[var(--color-hs-card-bg)] hover:bg-destructive/90 gap-1.5"
+                      onClick={handleBulkDeactivate}
+                    >
+                      <UserX className="h-3.5 w-3.5" />
+                      Deactivate selected
+                    </Button>
                   </div>
                 </div>
               )}
@@ -637,7 +703,11 @@ export default function UsersTeamsPage() {
                       <TableHeader className="bg-[var(--table-header-bg)]/75 backdrop-blur-sm">
                         <TableRow className="border-b border-border">
                           <TableHead className="w-10 px-4 py-3">
-                            <Checkbox className="data-[state=checked]:bg-[var(--color-hs-blue)]" />
+                            <Checkbox
+                              checked={someSelected ? 'indeterminate' : allFilteredSelected}
+                              onCheckedChange={(checked) => handleToggleSelectAll(!!checked)}
+                              className="data-[state=checked]:bg-[var(--color-hs-blue)]"
+                            />
                           </TableHead>
                           <TableHead className="text-[11px] font-bold text-foreground uppercase tracking-wider px-4 py-3">Name</TableHead>
                           <TableHead className="text-[11px] font-bold text-foreground uppercase tracking-wider px-4 py-3">Email</TableHead>
@@ -660,7 +730,11 @@ export default function UsersTeamsPage() {
                             return (
                               <TableRow key={mem.id} className="border-b border-border last:border-b-0 hover:bg-[var(--color-hs-light-bg)] group">
                                 <TableCell className="px-4 py-3">
-                                  <Checkbox className="data-[state=checked]:bg-[var(--color-hs-blue)]" />
+                                  <Checkbox
+                                    checked={selectedIds.has(mem.id)}
+                                    onCheckedChange={() => toggleSelect(mem.id)}
+                                    className="data-[state=checked]:bg-[var(--color-hs-blue)]"
+                                  />
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
                                   <div className="flex items-center gap-2">

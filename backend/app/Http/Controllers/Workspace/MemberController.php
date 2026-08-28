@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BulkDeactivateMembersRequest;
 use App\Http\Requests\UpdateMemberRoleRequest;
 use App\Http\Resources\WorkspaceMemberResource;
 use App\Models\User;
@@ -169,6 +170,68 @@ class MemberController extends Controller
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Member activated.']);
+    }
+
+    public function bulkDeactivate(BulkDeactivateMembersRequest $request)
+    {
+        $workspaceId = auth()->user()->workspace_id;
+
+        $requestedIds = array_values(array_unique($request->input('user_ids')));
+
+        $members = User::query()
+            ->whereIn('id', $requestedIds)
+            ->whereHas('workspaces', function ($q) use ($workspaceId) {
+                $q->where('workspace_id', $workspaceId);
+            })
+            ->get();
+
+        if ($members->count() !== count($requestedIds)) {
+            return response()->json(['status' => 'error', 'message' => 'One or more users are not members of this workspace.'], 422);
+        }
+
+        if ($members->where('is_super_admin', true)->isNotEmpty()) {
+            return response()->json(['status' => 'error', 'message' => 'Cannot modify Super Admin.'], 403);
+        }
+
+        foreach ($members as $member) {
+            $this->authorize('update', $member);
+        }
+
+        $memberIds = $members->pluck('id');
+
+        $activeOwners = DB::table('workspace_user')
+            ->where('workspace_id', $workspaceId)
+            ->where('role_name', 'Workspace Owner')
+            ->where('is_active', true)
+            ->count();
+
+        $activeOwnersInSelection = DB::table('workspace_user')
+            ->where('workspace_id', $workspaceId)
+            ->where('role_name', 'Workspace Owner')
+            ->where('is_active', true)
+            ->whereIn('user_id', $memberIds)
+            ->count();
+
+        if ($activeOwners - $activeOwnersInSelection < 1) {
+            return response()->json(['status' => 'error', 'message' => 'Cannot deactivate the last active Workspace Owner.'], 403);
+        }
+
+        DB::transaction(function () use ($members, $workspaceId) {
+            foreach ($members as $member) {
+                $member->workspaces()->updateExistingPivot($workspaceId, [
+                    'is_active' => false,
+                ]);
+
+                $member->tokens()->delete();
+            }
+        });
+
+        $count = $members->count();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $count . ' member' . ($count === 1 ? '' : 's') . ' deactivated.',
+        ]);
     }
 
     public function remove(User $member)

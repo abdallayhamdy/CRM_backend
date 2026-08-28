@@ -908,7 +908,7 @@ export function CreatePermissionSetPage({ onBack, onSaved, initialSet }: CreateP
             <div className="mt-6 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/30 dark:border-primary/30 rounded-lg max-w-2xl">
               <p className="font-semibold text-sm">Super Admins can access almost everything.</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Super Admins can manage all users, tools, and settings. If this super admin needs full access to sales or service tools, add a matching seat.
+                Super Admins can manage all users, tools, and settings. If this super admin needs full access to sales or service tools, add a matching permission set.
               </p>
             </div>
           ) : (
