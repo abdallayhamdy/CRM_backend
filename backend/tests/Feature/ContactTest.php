@@ -6,7 +6,10 @@ use Tests\TestCase;
 use Tests\Traits\TestHelpers;
 use App\Models\Contact;
 use App\Models\Company;
+use App\Models\Property;
+use App\Models\Stage;
 use App\Models\User;
+use App\Services\ContactStageService;
 
 class ContactTest extends TestCase
 {
@@ -22,6 +25,52 @@ class ContactTest extends TestCase
         $response = $this->getJson('/api/contacts');
 
         $response->assertStatus(200);
+    }
+
+    public function test_lifecycle_stage_filter_filters_by_stage_slug(): void
+    {
+        $this->authenticateAsAdmin();
+
+        $this->app->make(ContactStageService::class)->ensureStagesExist($this->workspace->id);
+
+        $leadStage = Stage::where('workspace_id', $this->workspace->id)
+            ->where('object_type', 'contact')
+            ->where('slug', 'lead')
+            ->firstOrFail();
+
+        $subscriberStage = Stage::where('workspace_id', $this->workspace->id)
+            ->where('object_type', 'contact')
+            ->where('slug', 'subscriber')
+            ->firstOrFail();
+
+        // A property named lifecycle_stage exists in the properties table; the
+        // dedicated stage-slug filter must win and not be AND-ed with an empty
+        // custom_data JSON filter.
+        Property::factory()->create([
+            'workspace_id' => $this->workspace->id,
+            'object_type' => 'contact',
+            'name' => 'lifecycle_stage',
+            'is_archived' => false,
+        ]);
+
+        Contact::factory()->count(3)->create([
+            'workspace_id' => $this->workspace->id,
+            'stage_id' => $leadStage->id,
+        ]);
+
+        Contact::factory()->count(2)->create([
+            'workspace_id' => $this->workspace->id,
+            'stage_id' => $subscriberStage->id,
+        ]);
+
+        $response = $this->getJson('/api/contacts?filter[lifecycle_stage]=lead');
+        $response->assertStatus(200);
+        $this->assertCount(3, $response->json('data'));
+        $this->assertEquals(3, $response->json('meta.total'));
+
+        $response = $this->getJson('/api/contacts?filter[lifecycle_stage]=lead,subscriber');
+        $response->assertStatus(200);
+        $this->assertEquals(5, $response->json('meta.total'));
     }
 
     public function test_admin_can_create_contact(): void

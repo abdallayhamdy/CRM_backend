@@ -80,7 +80,7 @@ class CompanyController extends Controller
                         });
                     }
                 }),
-                ...$this->customDataFilters('company', 'companies'),
+                ...$this->customDataFilters('company', 'companies', ['lifecycle_stage']),
             )
             ->allowedSorts(
                 AllowedSort::field('name', 'companies.name'),

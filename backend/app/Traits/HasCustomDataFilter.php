@@ -8,11 +8,12 @@ use Spatie\QueryBuilder\AllowedFilter;
 
 trait HasCustomDataFilter
 {
-    protected function customDataFilters(string $objectType, string $tableAlias = ''): array
+    protected function customDataFilters(string $objectType, string $tableAlias = '', array $exclude = []): array
     {
         $propertyNames = Property::where('object_type', $objectType)
             ->where('is_archived', false)
             ->pluck('name')
+            ->filter(fn (string $name) => !in_array($name, $exclude, true))
             ->toArray();
 
         $filters = [];
