@@ -31,7 +31,7 @@ interface SettingsItem {
 
 export function SettingsSidebar() {
   const pathname = usePathname();
-  const { permissions, isSuperAdmin } = useAuth();
+  const { permissions, isSuperAdmin, userRole } = useAuth();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -44,7 +44,7 @@ export function SettingsSidebar() {
   }, [pathname]);
 
   const hasPermission = (requiredPermissions?: string[]): boolean => {
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || userRole === 'owner') return true;
     if (!requiredPermissions || requiredPermissions.length === 0) return true;
     return requiredPermissions.some(p => permissions.includes(p));
   };
@@ -85,7 +85,7 @@ export function SettingsSidebar() {
         items: group.items.filter(item => hasPermission(item.requiredPermissions)),
       }))
       .filter(group => group.items.length > 0);
-  }, [navGroups, permissions, isSuperAdmin]);
+  }, [navGroups, permissions, isSuperAdmin, userRole]);
 
   const renderItem = (item: any, depth = 0) => {
     const hasChildren = item.children && item.children.length > 0;
