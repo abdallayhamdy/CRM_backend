@@ -41,7 +41,7 @@ const RecordPreviewPanel = dynamic(
   { ssr: false }
 )
 import { CrmColumnEditor } from "@/components/crm/CrmColumnEditor"
-import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters, MoreFilterCategory } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { CrmDateCell } from "@/components/crm/CrmDateCell"
 
@@ -410,9 +410,20 @@ export default function DealsPage() {
     clearSelection, isAllSelected, isPartialSelected, count
   } = useBulkSelection(filteredData)
 
-  // Dynamic "+ More" quick filters sourced from real DB-backed deal properties.
-  // owner/stage are excluded (dedicated curated chips already exist).
-  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["owner", "stage"]), [properties])
+  // Dynamic "+ More" quick filters: DB-backed custom properties merged with the
+  // standard sidebar filters the backend genuinely supports (owner/stage/date).
+  // owner/stage are excluded from the property list as standard filters below.
+  const moreFilters = React.useMemo(() => {
+    const standard: MoreFilterCategory = {
+      category: "Standard Filters",
+      items: [
+        { id: "owner", name: "Deal owner", type: "check" },
+        { id: "stage", name: "Deal stage", type: "check" },
+        { id: "closeDate", name: "Close date", type: "date" },
+      ],
+    }
+    return [standard, ...propertiesToMoreFilters(properties, ["owner", "stage"])]
+  }, [properties])
 
   const activeFilters = useDealsActiveFilters({
     pinnedFilterIds,

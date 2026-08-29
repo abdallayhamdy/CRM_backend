@@ -34,7 +34,7 @@ const CompaniesBoardView = dynamic(
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
-import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters, propertiesToSidebarCategories, findProperty, fieldTypeToMoreFilterType, propertyKey, stripPropertyPrefix } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters, propertiesToSidebarCategories, findProperty, fieldTypeToMoreFilterType, propertyKey, stripPropertyPrefix, MoreFilterCategory } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { useBulkSelection } from "@/hooks/use-bulk-selection"
 import { usePanelCards } from "@/hooks/use-panel-cards"
@@ -673,9 +673,22 @@ export default function CompaniesPage() {
     }
   }).filter(Boolean) as GenericActiveFilter[];
 
-  // Dynamic "+ More" quick filters sourced from real DB-backed company properties.
-  // owner/lifecycle_stage are excluded (dedicated curated chips already exist).
-  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["owner", "lifecycle_stage"]), [properties])
+  // Dynamic "+ More" quick filters: DB-backed custom properties merged with the
+  // standard sidebar filters the backend genuinely supports (owner/date fields).
+  // owner/lifecycle_stage are excluded from the property list because they're
+  // surfaced as standard filters below instead.
+  const moreFilters = React.useMemo(() => {
+    const standard: MoreFilterCategory = {
+      category: "Standard Filters",
+      items: [
+        { id: "owner", name: "Company owner", type: "check" },
+        { id: "lifecycle_stage", name: "Lifecycle stage", type: "check" },
+        { id: "createDate", name: "Create date", type: "date" },
+        { id: "lastActivity", name: "Last activity date", type: "date" },
+      ],
+    }
+    return [standard, ...propertiesToMoreFilters(properties, ["owner", "lifecycle_stage"])]
+  }, [properties])
 
   const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
     const ownerFilter: SidebarFilterConfig = { id: "owner", label: "Company owner", type: "property", options: allOwners.map(o => o.value) }

@@ -60,7 +60,7 @@ import { toast } from "sonner"
 import { useActiveFilters } from "@/hooks/use-active-filters"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
-import { propertiesToGroups, propertiesToSidebarCategories, propertiesToMoreFilters } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToSidebarCategories, propertiesToMoreFilters, MoreFilterCategory } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { authService } from "@/services/auth"
 import { LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
@@ -573,9 +573,22 @@ export default function ContactsPage() {
     toast.success(`Exported ${exportData.length} contacts`)
   }
 
-  // Dynamic "+ More" quick filters sourced from real DB properties. lifecycle_stage
-  // is excluded here because it has a dedicated curated quick-filter chip.
-  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["lifecycle_stage"]), [properties])
+  // Dynamic "+ More" quick filters: DB-backed custom properties merged with the
+  // standard sidebar filters that the backend genuinely supports, so everything
+  // the sidebar offers that can actually filter data is pinnable from the
+  // "+ More" dropdown. lifecycle_stage is excluded (dedicated curated chip).
+  const moreFilters = React.useMemo(() => {
+    const standard: MoreFilterCategory = {
+      category: "Standard Filters",
+      items: [
+        { id: "contactOwner", name: "Contact owner", type: "check" },
+        { id: "leadStatus", name: "Lead status", type: "check" },
+        { id: "createDate", name: "Create date", type: "date" },
+        { id: "lastActivity", name: "Last activity date", type: "date" },
+      ],
+    }
+    return [standard, ...propertiesToMoreFilters(properties, ["lifecycle_stage"])]
+  }, [properties])
 
   const sidebarConfig = React.useMemo(() => {
     const ownerOptions = owners
