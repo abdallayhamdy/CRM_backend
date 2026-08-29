@@ -55,16 +55,36 @@ class DashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'status',
-            'data' => ['totalRevenue', 'pipelineValue', 'openDeals', 'conversionRate', 'openTickets'],
+            'data' => [
+                'contacts' => ['total', 'companies', 'duplicatedPhones', 'leadStatuses'],
+                'deals' => ['total', 'stages'],
+                'tasks' => ['total', 'statuses', 'subtypes'],
+                'tickets' => ['total', 'statuses', 'priorities'],
+            ],
         ]);
         $response->assertJson([
             'status' => 'success',
             'data' => [
-                'totalRevenue' => 60000,
-                'pipelineValue' => 50000,
-                'openDeals' => 5,
-                'conversionRate' => 30.0,
-                'openTickets' => 5,
+                'contacts' => [
+                    'total' => 0,
+                    'companies' => 0,
+                    'duplicatedPhones' => 0,
+                    'leadStatuses' => [],
+                ],
+                'deals' => [
+                    'total' => 10,
+                    'stages' => ['unknown' => 10],
+                ],
+                'tasks' => [
+                    'total' => 0,
+                    'statuses' => [],
+                    'subtypes' => [],
+                ],
+                'tickets' => [
+                    'total' => 8,
+                    'statuses' => ['open' => 4, 'pending' => 1, 'resolved' => 1, 'closed' => 2],
+                    'priorities' => ['medium' => 8],
+                ],
             ],
         ]);
     }
@@ -100,15 +120,26 @@ class DashboardTest extends TestCase
         $response->assertJson([
             'status' => 'success',
             'data' => [
-                'totalRevenue' => 0.0,
-                'pipelineValue' => 0.0,
-                'openDeals' => 0,
-                'wonDeals' => 0,
-                'conversionRate' => 0,
-                'openTickets' => 0,
-                'activeTasks' => 0,
-                'contactsCount' => 0,
-                'companiesCount' => 0,
+                'contacts' => [
+                    'total' => 0,
+                    'companies' => 0,
+                    'duplicatedPhones' => 0,
+                    'leadStatuses' => [],
+                ],
+                'deals' => [
+                    'total' => 0,
+                    'stages' => [],
+                ],
+                'tasks' => [
+                    'total' => 0,
+                    'statuses' => [],
+                    'subtypes' => [],
+                ],
+                'tickets' => [
+                    'total' => 0,
+                    'statuses' => [],
+                    'priorities' => [],
+                ],
             ],
         ]);
     }
@@ -155,8 +186,11 @@ class DashboardTest extends TestCase
         $response = $this->getJson('/api/dashboard/overview');
 
         $response->assertStatus(200);
-        $this->assertEquals(30000, $response->json('data.pipelineValue'));
-        $this->assertEquals(3, $response->json('data.openDeals'));
+        $this->assertEquals(3, $response->json('data.deals.total'));
+        $this->assertEquals(['unknown' => 3], $response->json('data.deals.stages'));
+        $this->assertEquals(0, $response->json('data.contacts.total'));
+        $this->assertEquals(0, $response->json('data.tasks.total'));
+        $this->assertEquals(0, $response->json('data.tickets.total'));
     }
 
     public function test_dashboard_recent_activity_is_isolated_by_workspace(): void
