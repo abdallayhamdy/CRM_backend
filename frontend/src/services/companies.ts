@@ -120,6 +120,14 @@ export const companiesService = {
       if (lastActivityRange && lastActivityRange !== 'all') {
         Object.assign(params, dateRangeToParams(lastActivityRange, 'last_activity_at'))
       }
+
+      // Custom property date ranges - prefixed with "custom_"
+      for (const [key, range] of Object.entries(filters.dateRanges)) {
+        if (key.startsWith('custom_') && range && range !== 'all') {
+          const propName = key.slice('custom_'.length)
+          Object.assign(params, dateRangeToParams(range, propName))
+        }
+      }
     }
 
     const { data, error } = await laravelApi.get<any>(

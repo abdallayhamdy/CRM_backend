@@ -35,6 +35,17 @@ abstract class TestCase extends BaseTestCase
                     return null;
                 }
             });
+            // Emulate MySQL JSON_UNQUOTE(JSON_EXTRACT(...)): SQLite returns JSON
+            // booleans as 1/0 (like MySQL does internally before the unquote), so
+            // map 1/0 back to the 'true'/'false' strings MySQL would produce.
+            $pdo->sqliteCreateFunction('JSON_UNQUOTE', function ($value) {
+                if ($value === null) return 'null';
+                if (is_bool($value)) return $value ? 'true' : 'false';
+                if (is_int($value)) {
+                    return $value === 1 ? 'true' : ($value === 0 ? 'false' : (string) $value);
+                }
+                return (string) $value;
+            });
         }
     }
 }

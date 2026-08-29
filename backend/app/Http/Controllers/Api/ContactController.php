@@ -83,7 +83,7 @@ class ContactController extends Controller
                         $query->whereDate('contacts.updated_at', $value);
                     }
                 }),
-                ...$this->customDataFilters('contact', 'contacts', ['lifecycle_stage']),
+                ...$this->customDataFilters('contact', 'contacts', ['lifecycle_stage', 'lead_status']),
                 AllowedFilter::callback('last_activity_at', function (Builder $query, $value) {
                     if (is_array($value)) {
                         if (!empty($value['from'])) {

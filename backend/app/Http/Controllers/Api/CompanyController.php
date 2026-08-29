@@ -57,9 +57,14 @@ class CompanyController extends Controller
                     }
                 }),
                 AllowedFilter::callback('lifecycle_stage', function ($query, $value) {
-                    $slugs = is_array($value) ? $value : explode(',', $value);
-                    $query->whereHas('stage', function ($q) use ($slugs) {
-                        $q->whereIn('slug', $slugs);
+                    $values = is_array($value) ? $value : array_map('trim', explode(',', $value));
+                    $query->whereHas('stage', function ($q) use ($values) {
+                        $q->where(function ($inner) use ($values) {
+                            foreach ($values as $val) {
+                                $inner->orWhere('stages.slug', $val)
+                                    ->orWhereRaw('LOWER(stages.name) = ?', [mb_strtolower(trim($val))]);
+                            }
+                        });
                     });
                 }),
                 AllowedFilter::callback('last_activity_at', function (Builder $query, $value) {
