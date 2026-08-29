@@ -4,6 +4,8 @@ import { GenericActiveFilter } from "@/components/crm/CrmFilterBar"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
 import { DEAL_STAGES } from "@/lib/types/crm"
 import { Profile } from "@/lib/types/crm"
+import { PropertyFromDB } from "@/hooks/use-properties"
+import { fieldTypeToMoreFilterType, findProperty, propertyKey, stripPropertyPrefix } from "@/lib/crm-properties"
 
 interface UseDealsActiveFiltersParams {
   pinnedFilterIds: string[]
@@ -13,16 +15,16 @@ interface UseDealsActiveFiltersParams {
   }
   owners: Profile[]
   allOwners: string[]
+  properties: PropertyFromDB[]
   toggleProperty: (id: string, value: string) => void
   updateDateRange: (id: string, val: DateRangeFilter) => void
   handleSetProperty: (id: string, values: string[]) => void
   handleToggleProperty: (id: string, value: string) => void
 }
 
-// NOTE: DEAL_MORE_FILTERS was removed from filter-data.ts (orphaned after the
-// "+ More" popover removal). Unknown pinned ids now resolve to a generic text filter.
-function getDealFilterConfig(id: string) {
-  return null as null | { name: string; type: string }
+function propertyOptions(prop: PropertyFromDB): string[] {
+  const raw = prop.options || []
+  return raw.map(o => typeof o === "string" ? o : (o.label || o.value || o.name || "")).filter(Boolean)
 }
 
 export function useDealsActiveFilters({
@@ -30,6 +32,7 @@ export function useDealsActiveFilters({
   filters,
   owners,
   allOwners,
+  properties,
   toggleProperty,
   updateDateRange,
   handleSetProperty,
@@ -50,35 +53,31 @@ export function useDealsActiveFilters({
       return { id: "closeDate", label: "Close date", type: "date", value: filters.dateRanges["closeDate"] || "all", onChange: (val: string) => updateDateRange("closeDate", val as any) }
     }
 
-    const config = getDealFilterConfig(id)
-    if (!config) return null
-
-    let type: GenericActiveFilter["type"] = "generic"
-    if (config.type === "text" || config.type === "link") type = "text"
-    else if (config.type === "date") type = "date"
-    else if (config.type === "number") type = "number"
-    else if (config.type === "check" || config.type === "property") type = "simple-property"
-
-    return {
-      id,
-      label: config.name,
-      type,
-      options: config.type === "check" ? [] as string[] : [] as string[],
-      value: type === "date" ? filters.dateRanges[id] || "all"
-           : type === "number" ? (filters.properties[id] ? JSON.parse(filters.properties[id][0] || "null") : null)
-           : type === "text" ? (filters.properties[id]?.[0] || "")
-           : id === "owner" || id === "deal-owner"
-             ? (filters.properties[id] || []).map(oid => {
-                 const p = owners.find(o => o.id === oid)
-                 return p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : oid
-               })
-             : filters.properties[id] || [],
-      onChange: (val: any) => {
-        if (type === "date") updateDateRange(id, val)
-        else if (type === "number") handleSetProperty(id, [JSON.stringify(val)])
-        else if (type === "text") handleSetProperty(id, val ? [val] : [])
-        else handleToggleProperty(id, val)
+    // Dynamic filters from real DB-backed properties (custom_ prefixed)
+    const prop = findProperty(properties, stripPropertyPrefix(id))
+    if (prop) {
+      const key = propertyKey(prop)
+      const ptype = fieldTypeToMoreFilterType(prop.field_type)
+      if (ptype === "date") {
+        return { id: key, label: prop.label || prop.name, type: "date", value: filters.dateRanges[key] || "all", onChange: (val: string) => updateDateRange(key, val as any) }
       }
+      if (ptype === "number") {
+        return {
+          id: key,
+          label: prop.label || prop.name,
+          type: "number",
+          value: (filters.properties[key] ? (() => { try { return JSON.parse(filters.properties[key][0] || "null") || null } catch { return null } })() : null),
+          onChange: (val: any) => handleSetProperty(key, [JSON.stringify(val)]),
+        }
+      }
+      if (ptype === "check") {
+        const isBoolean = prop.field_type === "boolean_checkbox" || prop.field_type === "boolean"
+        const options = propertyOptions(prop)
+        return { id: key, label: prop.label || prop.name, type: "simple-property", options: isBoolean ? ["Yes", "No"] : (options.length ? options : []), value: filters.properties[key] || [], onChange: (val: any) => handleSetProperty(key, Array.isArray(val) ? val : [val]) }
+      }
+      return { id: key, label: prop.label || prop.name, type: "generic", value: filters.properties[key]?.[0] || "", onChange: (val: any) => handleToggleProperty(key, val) }
     }
+
+    return null
   }).filter(Boolean) as GenericActiveFilter[]
 }

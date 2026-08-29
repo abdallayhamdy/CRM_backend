@@ -3,9 +3,10 @@
 import * as React from "react"
 import { GenericActiveFilter } from "@/components/crm/CrmFilterBar"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
-import { MORE_FILTERS } from "@/lib/filter-data"
 import { LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
 import { Profile } from "@/lib/types/crm"
+import { PropertyFromDB } from "@/hooks/use-properties"
+import { fieldTypeToMoreFilterType, findProperty, propertyKey, stripPropertyPrefix } from "@/lib/crm-properties"
 
 interface UseActiveFiltersParams {
   pinnedFilterIds: string[]
@@ -15,9 +16,15 @@ interface UseActiveFiltersParams {
   }
   lifecycleStages: { id: string; name: string; color: string; is_active: boolean }[]
   owners: Profile[]
+  properties: PropertyFromDB[]
   handleSetProperty: (id: string, values: string[]) => void
   handleToggleProperty: (id: string, value: string) => void
   updateDateRange: (id: string, val: DateRangeFilter) => void
+}
+
+function propertyOptions(prop: PropertyFromDB): string[] {
+  const raw = prop.options || []
+  return raw.map(o => typeof o === "string" ? o : (o.label || o.value || o.name || "")).filter(Boolean)
 }
 
 export function useActiveFilters({
@@ -25,6 +32,7 @@ export function useActiveFilters({
   filters,
   lifecycleStages,
   owners,
+  properties,
   handleSetProperty,
   handleToggleProperty,
   updateDateRange,
@@ -90,32 +98,53 @@ export function useActiveFilters({
           }
       }
 
-      // 2. Lookup in MORE_FILTERS for dynamic ones
-      const flatItems = MORE_FILTERS.flatMap(g => g.items)
-      const item = flatItems.find(i => i.id === id)
-
-      if (item) {
-        return {
-          id: item.id,
-          label: item.name,
-          // Map internal types to generic bar types
-          type: (item.type === "date" ? "date" :
-            item.type === "number" ? "number" :
-              item.type === "check" ? "simple-property" : "text") as GenericActiveFilter['type'],
-          // For picklists, use defined options or fallback to standard ones
-          options: item.type === "check" ? ((item as { options?: string[] }).options || ["Option 1", "Option 2", "Option 3"]) : undefined,
-          value: item.type === "date" ? (filters.dateRanges[item.id] || "all") :
-            item.type === "check" ? (filters.properties[item.id] || []) :
-              (filters.properties[item.id] || ""),
-          onChange: (val: string | string[] | DateRangeFilter) => {
-            if (item.type === "date") {
-              updateDateRange(item.id, val as DateRangeFilter)
-            } else if (item.type === "check") {
-              handleSetProperty(item.id, val as string[])
-            } else {
-              handleToggleProperty(item.id, val as string)
-            }
+      // 2. Dynamic filters from real DB-backed properties (pinned ids use the
+      // "custom_" prefix so the value stores to the real custom field and the
+      // services route it to filter[...], i.e. it actually filters data).
+      const propName = stripPropertyPrefix(id)
+      const prop = findProperty(properties, propName)
+      if (prop) {
+        const key = propertyKey(prop)
+        const ptype = fieldTypeToMoreFilterType(prop.field_type)
+        if (ptype === "date") {
+          return {
+            id: key,
+            label: prop.label || prop.name,
+            type: "date",
+            value: filters.dateRanges[key] || "all",
+            onChange: (val: unknown) => updateDateRange(key, val as DateRangeFilter),
           }
+        }
+        if (ptype === "number") {
+          return {
+            id: key,
+            label: prop.label || prop.name,
+            type: "number",
+            value: (filters.properties[key] ? (() => {
+              try { return JSON.parse(filters.properties[key][0] || "null") || null } catch { return null }
+            })() : null),
+            onChange: (val: unknown) => handleSetProperty(key, [JSON.stringify(val)]),
+          }
+        }
+        if (ptype === "check") {
+          const options = propertyOptions(prop)
+          const isBoolean = prop.field_type === "boolean_checkbox" || prop.field_type === "boolean"
+          return {
+            id: key,
+            label: prop.label || prop.name,
+            type: "simple-property",
+            options: isBoolean ? ["Yes", "No"] : (options.length ? options : ["Option 1", "Option 2", "Option 3"]),
+            value: filters.properties[key] || [],
+            onChange: (val: unknown) => handleSetProperty(key, val as string[]),
+          }
+        }
+        // text-type property → generic text filter
+        return {
+          id: key,
+          label: prop.label || prop.name,
+          type: "generic",
+          value: filters.properties[key]?.[0] || "",
+          onChange: (val: unknown) => handleToggleProperty(key, val as string),
         }
       }
 
@@ -129,5 +158,5 @@ export function useActiveFilters({
       }
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinnedFilterIds, filters.properties, filters.dateRanges, handleSetProperty, owners, lifecycleStages, updateDateRange, handleToggleProperty])
+  }, [pinnedFilterIds, filters.properties, filters.dateRanges, handleSetProperty, owners, lifecycleStages, properties, updateDateRange, handleToggleProperty])
 }

@@ -33,10 +33,8 @@ const CompaniesBoardView = dynamic(
 )
 import { useCrmFilters } from "@/hooks/use-crm-filters"
 import { SummaryStatsBar, type SummaryStat } from "@/components/crm/SummaryStatsBar"
-import { COMPANY_MORE_FILTERS } from "@/lib/filter-data"
-import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { DateRangeFilter } from "@/hooks/use-crm-filters"
-import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters, propertiesToSidebarCategories, findProperty, fieldTypeToMoreFilterType, propertyKey, stripPropertyPrefix } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { useBulkSelection } from "@/hooks/use-bulk-selection"
 import { usePanelCards } from "@/hooks/use-panel-cards"
@@ -605,11 +603,9 @@ export default function CompaniesPage() {
   }, [])
 
   const getFilterConfig = (id: string) => {
-    for (const category of COMPANY_MORE_FILTERS) {
-      const item = category.items.find(i => i.id === id);
-      if (item) return item;
-    }
-    return null;
+    const prop = findProperty(properties, stripPropertyPrefix(id));
+    if (!prop || prop.is_archived) return null;
+    return { id: propertyKey(prop), name: prop.label || prop.name, type: fieldTypeToMoreFilterType(prop.field_type) };
   }
 
   const activeFilters: GenericActiveFilter[] = pinnedFilterIds.map(id => {
@@ -647,52 +643,50 @@ export default function CompaniesPage() {
     const config = getFilterConfig(id);
     if (!config) return null;
 
+    const prop = findProperty(properties, stripPropertyPrefix(config.id));
+    const isBoolean = prop?.field_type === "boolean_checkbox" || prop?.field_type === "boolean"
+    const propOptions = prop?.options
+      ? prop.options.map(o => typeof o === "string" ? o : (o.label || o.value || o.name || "")).filter(Boolean)
+      : []
+
     let type: GenericActiveFilter["type"] = "generic";
-    if (config.type === "text" || config.type === "link") type = "text";
+    if (config.type === "text") type = "text";
     else if (config.type === "date") type = "date";
     else if (config.type === "number") type = "number";
-    else if (config.type === "check" || config.type === "property") type = "simple-property";
+    else if (config.type === "check") type = "simple-property";
 
     return {
-      id,
+      id: config.id,
       label: config.name,
       type,
-      options: (config as { options?: string[] }).options || (config.type === "check" ? ["Yes", "No"] : []),
-      value: type === "date" ? filters.dateRanges[id] || "all"
-           : type === "number" ? (filters.properties[id] ? JSON.parse(filters.properties[id][0] || "null") : null)
-           : type === "text" ? (filters.properties[id]?.[0] || "")
-           : filters.properties[id] || [],
+      options: type === "simple-property" ? (isBoolean ? ["Yes", "No"] : (propOptions.length ? propOptions : [])) : [],
+      value: type === "date" ? filters.dateRanges[config.id] || "all"
+           : type === "number" ? (filters.properties[config.id] ? JSON.parse(filters.properties[config.id][0] || "null") : null)
+           : type === "text" ? (filters.properties[config.id]?.[0] || "")
+           : filters.properties[config.id] || [],
       onChange: (val: string | string[]) => {
-          if (type === "date") updateDateRange(id, val as DateRangeFilter);
-          else if (type === "number") setProperty(id, [JSON.stringify(val)]);
-          else if (type === "text") setProperty(id, val ? [val as string] : []);
-          else toggleProperty(id, Array.isArray(val) ? val[0] || '' : val);
+          if (type === "date") updateDateRange(config.id, val as DateRangeFilter);
+          else if (type === "number") setProperty(config.id, [JSON.stringify(val)]);
+          else if (type === "text") setProperty(config.id, val ? [val as string] : []);
+          else toggleProperty(config.id, Array.isArray(val) ? val[0] || '' : val);
       }
     }
   }).filter(Boolean) as GenericActiveFilter[];
 
-  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
-    const flattened = COMPANY_MORE_FILTERS.flatMap(cat =>
-      cat.items.map(item => ({
-        id: item.id,
-        label: item.name,
-        type: (item.type === 'check' || item.type === 'property') ? 'property' as const
-             : (item.type === 'text' || item.type === 'link') ? 'text' as const
-             : item.type as 'text' | 'property' | 'number' | 'date',
-        options: (item as { options?: string[] }).options || (item.type === 'check' ? ['Yes', 'No'] : [])
-      }))
-    )
+  // Dynamic "+ More" quick filters sourced from real DB-backed company properties.
+  // owner/lifecycle_stage are excluded (dedicated curated chips already exist).
+  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["owner", "lifecycle_stage"]), [properties])
 
-    // Add owner manually as it's often missing or differently named in static data
-    const ownerFilter = { id: "owner", label: "Company owner", type: "property" as const, options: allOwners.map(o => o.value) }
-    const propertyFilters = buildPropertySidebarFilters(properties)
+  const sidebarConfig: SidebarFilterConfig[] = React.useMemo(() => {
+    const ownerFilter: SidebarFilterConfig = { id: "owner", label: "Company owner", type: "property", options: allOwners.map(o => o.value) }
+
+    const propertyFilters = propertiesToSidebarCategories(properties).flatMap(c => c.items)
 
     return [
-      { id: "company-name", label: "Company name", type: "text" as const },
+      { id: "company-name", label: "Company name", type: "text" },
       ownerFilter,
-      { id: "createDate", label: "Create date", type: "date" as const },
-      ...flattened.filter(f => !["company-name", "owner", "createDate"].includes(f.id)),
-      ...propertyFilters
+      { id: "createDate", label: "Create date", type: "date" },
+      ...propertyFilters,
     ]
   }, [allOwners, properties])
 
@@ -1039,7 +1033,7 @@ export default function CompaniesPage() {
         pinnedFilterIds={pinnedFilterIds}
         onAddPinnedFilter={addPinnedFilter}
         onRemovePinnedFilter={removePinnedFilter}
-        moreFilters={COMPANY_MORE_FILTERS}
+        moreFilters={moreFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onEditColumnsClick={() => setColumnEditorOpen(true)}

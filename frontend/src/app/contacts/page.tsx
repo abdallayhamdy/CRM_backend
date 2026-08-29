@@ -9,8 +9,6 @@ const ContactsBoardView = dynamic(
   () => import("./ContactsBoardView").then(mod => ({ default: mod.ContactsBoardView })),
   { ssr: false }
 )
-import { MORE_FILTERS } from "@/lib/filter-data"
-import { buildPropertySidebarFilters } from "@/lib/filter-data"
 import { CreateContactSheet } from "./create-contact-sheet"
 import dynamic from "next/dynamic"
 const RecordPreviewPanel = dynamic(
@@ -62,7 +60,7 @@ import { toast } from "sonner"
 import { useActiveFilters } from "@/hooks/use-active-filters"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
-import { propertiesToGroups } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToSidebarCategories, propertiesToMoreFilters } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { authService } from "@/services/auth"
 import { LEAD_STATUS_OPTIONS } from "@/lib/crm-constants"
@@ -427,6 +425,7 @@ export default function ContactsPage() {
     filters,
     lifecycleStages,
     owners,
+    properties,
     handleSetProperty,
     handleToggleProperty,
     updateDateRange,
@@ -574,6 +573,10 @@ export default function ContactsPage() {
     toast.success(`Exported ${exportData.length} contacts`)
   }
 
+  // Dynamic "+ More" quick filters sourced from real DB properties. lifecycle_stage
+  // is excluded here because it has a dedicated curated quick-filter chip.
+  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["lifecycle_stage"]), [properties])
+
   const sidebarConfig = React.useMemo(() => {
     const ownerOptions = owners
       .map(o => ({ value: o.clerk_user_id || o.id, label: `${o.first_name || ''} ${o.last_name || ''}`.trim() }))
@@ -582,29 +585,21 @@ export default function ContactsPage() {
 
     const leadStatusOptions = LEAD_STATUS_OPTIONS.map(o => o.value)
 
-    const propertyFilters = buildPropertySidebarFilters(properties)
+    const standardFilters: SidebarFilterConfig[] = [
+      { id: "contactOwner", label: "Contact owner", type: "property", options: ownerOptions },
+      { id: "leadStatus", label: "Lead status", type: "property", options: leadStatusOptions },
+      { id: "lifecycle_stage", label: "Lifecycle stage", type: "property", options: lifecycleStages.filter(s => s.is_active).map(s => s.name) },
+      { id: "createDate", label: "Create date", type: "date" },
+      { id: "lastActivity", label: "Last activity date", type: "date" },
+    ]
+
+    const customCategories = propertiesToSidebarCategories(properties)
 
     return [
-      ...MORE_FILTERS.map(group => ({
-        category: group.category,
-        items: group.items.map(item => {
-          if (item.id === "contactOwner") {
-            return { id: item.id, label: item.name, type: "property" as const, options: ownerOptions }
-          }
-          if (item.id === "leadStatus") {
-            return { id: item.id, label: item.name, type: "property" as const, options: leadStatusOptions }
-          }
-          return {
-            id: item.id,
-            label: item.name,
-            type: item.type as SidebarFilterConfig['type'],
-            options: (item as { options?: string[] }).options
-          }
-        })
-      })),
-      ...(propertyFilters.length > 0 ? [{ category: "Custom Properties", items: propertyFilters }] : [])
+      { category: "Standard Filters", items: standardFilters },
+      ...customCategories,
     ]
-  }, [owners, properties])
+  }, [owners, properties, lifecycleStages])
 
   const handleUpdateCell = async (contact: Contact, columnId: string, value: string | number | boolean | null) => {
     if (!canEditContact) {
@@ -815,6 +810,7 @@ export default function ContactsPage() {
           pinnedFilterIds={pinnedFilterIds}
           onAddPinnedFilter={addPinnedFilter}
           onRemovePinnedFilter={removePinnedFilter}
+          moreFilters={moreFilters}
           onClearAll={clearAll}
           activeFilterCount={activeFilterCount}
           onAdvancedFilterClick={() => setSidebarOpen(true)}

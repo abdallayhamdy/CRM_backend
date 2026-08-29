@@ -41,7 +41,7 @@ const RecordPreviewPanel = dynamic(
   { ssr: false }
 )
 import { CrmColumnEditor } from "@/components/crm/CrmColumnEditor"
-import { propertiesToGroups, propertiesToColumnDefs } from "@/lib/crm-properties"
+import { propertiesToGroups, propertiesToColumnDefs, propertiesToMoreFilters } from "@/lib/crm-properties"
 import { useProperties } from "@/hooks/use-properties"
 import { CrmDateCell } from "@/components/crm/CrmDateCell"
 
@@ -410,11 +410,16 @@ export default function DealsPage() {
     clearSelection, isAllSelected, isPartialSelected, count
   } = useBulkSelection(filteredData)
 
+  // Dynamic "+ More" quick filters sourced from real DB-backed deal properties.
+  // owner/stage are excluded (dedicated curated chips already exist).
+  const moreFilters = React.useMemo(() => propertiesToMoreFilters(properties, ["owner", "stage"]), [properties])
+
   const activeFilters = useDealsActiveFilters({
     pinnedFilterIds,
     filters,
     owners,
     allOwners,
+    properties,
     toggleProperty,
     updateDateRange,
     handleSetProperty,
@@ -810,6 +815,7 @@ export default function DealsPage() {
         pinnedFilterIds={pinnedFilterIds}
         onAddPinnedFilter={addPinnedFilter}
         onRemovePinnedFilter={removePinnedFilter}
+        moreFilters={moreFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onEditColumnsClick={() => setColumnEditorOpen(true)}

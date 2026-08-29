@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CrmFilterChipRow } from "./CrmFilterChipRow"
 import { SortPopover, SortField } from "./SortPopover"
+import type { MoreFilterCategory } from "@/lib/crm-properties"
 import {
   TableSettingsDialog,
   TableSettings,
@@ -59,7 +60,7 @@ interface CrmFilterBarProps {
   onViewModeChange?: (mode: "table" | "board") => void
   className?: string
   placeholder?: string
-  moreFilters?: { category: string, items: { id: string, name: string, type: string }[] }[]
+  moreFilters?: MoreFilterCategory[]
 
   // Table settings
   tableSettings?: TableSettings
