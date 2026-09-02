@@ -43,9 +43,12 @@ import { useOwners } from "@/hooks/use-owners"
 
 // Sheets
 import { CreateTaskSheet } from "./create-task-sheet"
-import { TaskPreviewSheet } from "./preview-sheet"
 import { TaskEditSidebar } from "@/components/tasks/TaskEditSidebar"
 import { PropertyHistoryPanel } from "@/components/crm/PropertyHistoryPanel"
+const RecordPreviewPanel = dynamic(
+  () => import("@/components/crm/RecordPreviewPanel").then(mod => ({ default: mod.RecordPreviewPanel })),
+  { ssr: false }
+)
 
 const TASK_TYPES = ["to_do", "call", "email", "follow_up", "follow_up_after_meeting"]
 const TASK_TYPE_LABELS: Record<string, string> = {
@@ -613,6 +616,17 @@ export default function TasksPage() {
             onOpenChange={setEditSidebarOpen}
             onSaved={fetchTasks}
           />
+        ) : previewOpen ? (
+          <RecordPreviewPanel
+            recordType="task"
+            recordId={selectedTask?.id || null}
+            open={previewOpen}
+            onOpenChange={(open) => {
+              setPreviewOpen(open)
+              if (!open) setSelectedTask(null)
+            }}
+            onSuccess={fetchTasks}
+          />
         ) : undefined}
       >
         <div className="p-2 flex-1 min-h-0 flex flex-col">
@@ -691,13 +705,6 @@ export default function TasksPage() {
       <CreateTaskSheet 
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onSuccess={fetchTasks}
-      />
-
-      <TaskPreviewSheet
-        task={selectedTask}
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
         onSuccess={fetchTasks}
       />
 

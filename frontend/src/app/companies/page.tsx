@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { CrmPageHeader, CrmPageLayout } from "@/components/crm/CrmPageLayout"
+import { CrmPageHeader, CrmPageLayout, CrmPageContent } from "@/components/crm/CrmPageLayout"
 import { CrmTabs } from "@/components/crm/CrmTabs"
 import { CrmFilterBar, GenericActiveFilter } from "@/components/crm/CrmFilterBar"
 import { SortField } from "@/components/crm/SortPopover"
@@ -63,7 +63,10 @@ import { toast } from "sonner"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { CreateCompanySheet } from "./create-company-sheet"
-import { CompanyPreviewSheet } from "./preview-sheet"
+const RecordPreviewPanel = dynamic(
+  () => import("@/components/crm/RecordPreviewPanel").then(mod => ({ default: mod.RecordPreviewPanel })),
+  { ssr: false }
+)
 
 const SAVED_VIEWS = [
   {
@@ -1058,8 +1061,18 @@ export default function CompaniesPage() {
         sortDir={sortDir}
         onSortChange={handleSortChange}
       />
-      {/* Main Table */}
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-muted/30 relative mt-0.5">
+      <CrmPageContent
+        inlinePanel={
+          <RecordPreviewPanel
+            recordType="company"
+            recordId={selectedCompany?.id || null}
+            open={!!selectedCompany}
+            onOpenChange={(open) => !open && setSelectedCompany(null)}
+            onSuccess={() => setRefreshKey(k => k + 1)}
+          />
+        }
+      >
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative mt-0.5">
         <div className="p-2 flex-1 min-h-0 flex flex-col">
           <div className="bg-card rounded-xl border border-border/60 overflow-hidden shadow-sm flex-1 flex flex-col min-h-0">
             {isLoading ? (
@@ -1119,6 +1132,7 @@ export default function CompaniesPage() {
           </div>
         </div>
       </div>
+      </CrmPageContent>
       </div>
 
       <CrmFilterSidebar
@@ -1196,13 +1210,6 @@ export default function CompaniesPage() {
         open={isCreateSheetOpen}
         onOpenChange={setIsCreateSheetOpen}
         onCompanyCreated={loadCompanies}
-      />
-
-      <CompanyPreviewSheet
-        company={selectedCompany}
-        open={!!selectedCompany}
-        onOpenChange={(open) => !open && setSelectedCompany(null)}
-        onSuccess={() => setRefreshKey(k => k + 1)}
       />
 
       {count > 0 && canDeleteCompany && (
