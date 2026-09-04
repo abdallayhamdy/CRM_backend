@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
-const backendApiUrl = process.env.BACKEND_API_URL;
+const backendApiUrl =
+  process.env.BACKEND_API_URL || "https://crmbackend-production-fe6f.up.railway.app";
 
 const cspValue = [
   "default-src 'self'",
