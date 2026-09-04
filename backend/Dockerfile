@@ -4,6 +4,7 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     gettext \
+    ca-certificates \
     $PHPIZE_DEPS \
     libpng-dev \
     libjpeg-turbo-dev \
