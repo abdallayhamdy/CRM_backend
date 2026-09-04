@@ -17,4 +17,6 @@ php artisan config:clear --no-interaction 2>/dev/null || true
 php artisan view:cache --no-interaction 2>/dev/null || true
 php artisan storage:link --force --no-interaction 2>/dev/null || true
 
+chmod -R 777 storage bootstrap/cache
+
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
