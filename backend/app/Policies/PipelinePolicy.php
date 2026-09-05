@@ -4,19 +4,23 @@ namespace App\Policies;
 
 use App\Models\Pipeline;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class PipelinePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_pipelines_all') || $user->hasPermissionTo('view_pipelines_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'pipelines', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Pipeline $pipeline): bool
     {
-        if ($user->workspace_id !== $pipeline->workspace_id) return false;
+        if ($user->workspace_id !== $pipeline->workspace_id) {
+            return false;
+        }
 
-        return $user->hasPermissionTo('view_pipelines_all') || $user->hasPermissionTo('view_pipelines_own');
+        return $pipeline->satisfiesScope($user, 'pipelines', 'view');
     }
 
     public function create(User $user): bool
@@ -26,15 +30,19 @@ class PipelinePolicy
 
     public function update(User $user, Pipeline $pipeline): bool
     {
-        if ($user->workspace_id !== $pipeline->workspace_id) return false;
+        if ($user->workspace_id !== $pipeline->workspace_id) {
+            return false;
+        }
 
-        return $user->hasPermissionTo('edit_pipelines_all');
+        return $pipeline->satisfiesScope($user, 'pipelines', 'edit');
     }
 
     public function delete(User $user, Pipeline $pipeline): bool
     {
-        if ($user->workspace_id !== $pipeline->workspace_id) return false;
+        if ($user->workspace_id !== $pipeline->workspace_id) {
+            return false;
+        }
 
-        return $user->hasPermissionTo('delete_pipelines_all');
+        return $pipeline->satisfiesScope($user, 'pipelines', 'delete');
     }
 }

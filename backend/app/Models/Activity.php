@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Traits\BelongsToWorkspace;
 use App\Traits\HasOwnership;
+use App\Traits\HasPermissionScopes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Activity extends Model
 {
-    use HasFactory, HasUuids, BelongsToWorkspace, HasOwnership;
+    use HasFactory, HasUuids, BelongsToWorkspace, HasOwnership, HasPermissionScopes;
 
     protected $fillable = [
         'workspace_id',

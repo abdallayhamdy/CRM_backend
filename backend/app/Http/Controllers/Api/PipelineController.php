@@ -18,9 +18,11 @@ class PipelineController extends Controller
     {
         $this->authorize('viewAny', Pipeline::class);
 
+        $user = auth('sanctum')->user();
+
         $pipelines = Pipeline::with(['stages' => function ($query) {
             $query->orderBy('display_order');
-        }])->paginate($this->paginationLimit($request));
+        }])->applyRecordScope($user, 'pipelines', 'view')->paginate($this->paginationLimit($request));
 
         return response()->json(['pipelines' => $pipelines]);
     }
@@ -80,10 +82,16 @@ class PipelineController extends Controller
     {
         $this->authorize('view', $pipeline);
 
+        $user = auth('sanctum')->user();
+
         // بنحمل المراحل ومعاها الصفقات اللي جواها عشان شاشة الـ Kanban
-        $pipeline->load(['stages.deals' => function ($query) {
+        // الصفقات بتتقيّد بنفس scope الـ deals بتاع اليوزر (ممنوع تسريب بيانات)
+        $pipeline->load(['stages.deals' => function ($query) use ($user) {
             $query->select('id', 'pipeline_stage_id', 'title', 'amount', 'contact_id', 'company_id')
-                  ->with('contact:id,first_name,last_name', 'company:id,name');
+                  ->with('contact:id,first_name,last_name', 'company:id,name')
+                  ->whereIn('deals.id', \App\Models\Deal::query()
+                      ->applyRecordScope($user, 'deals', 'view')
+                      ->select('id'));
         }]);
 
         return response()->json(['pipeline' => $pipeline]);

@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\BelongsToWorkspace;
 use App\Traits\HasOwnership;
+use App\Traits\HasPermissionScopes;
 use App\Traits\RecordsActivity;
  
 class Document extends Model
 {
-    use HasFactory, BelongsToWorkspace, HasOwnership, RecordsActivity;
+    use HasFactory, BelongsToWorkspace, HasOwnership, HasPermissionScopes, RecordsActivity;
 
     protected $keyType = 'string';
     public $incrementing = false;

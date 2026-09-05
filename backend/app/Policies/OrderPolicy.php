@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class OrderPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_orders_all') || $user->hasPermissionTo('view_orders_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'orders', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Order $order): bool
     {
-        if ($user->workspace_id !== $order->workspace_id) return false;
-        if ($user->hasPermissionTo('view_orders_all')) return true;
-        if ($user->hasPermissionTo('view_orders_own')) {
-            return $order->isOwnedBy($user);
+        if ($user->workspace_id !== $order->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $order->satisfiesScope($user, 'orders', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class OrderPolicy
 
     public function update(User $user, Order $order): bool
     {
-        if ($user->workspace_id !== $order->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_orders_all')) return true;
-        if ($user->hasPermissionTo('edit_orders_own')) {
-            return $order->isOwnedBy($user);
+        if ($user->workspace_id !== $order->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $order->satisfiesScope($user, 'orders', 'edit');
     }
 
     public function delete(User $user, Order $order): bool
     {
-        if ($user->workspace_id !== $order->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_orders_all')) return true;
-        if ($user->hasPermissionTo('delete_orders_own')) {
-            return $order->isOwnedBy($user);
+        if ($user->workspace_id !== $order->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $order->satisfiesScope($user, 'orders', 'delete');
     }
 }

@@ -61,6 +61,8 @@ class TicketController extends Controller
 
         $this->applyCustomDataFilters($query, $request, 'ticket');
 
+        $query->applyRecordScope(auth('sanctum')->user(), 'tickets', 'view');
+
         $sortBy = in_array($request->sort_by, ['subject', 'status', 'priority', 'created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

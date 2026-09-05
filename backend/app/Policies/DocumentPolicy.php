@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Document;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class DocumentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_documents_all') || $user->hasPermissionTo('view_documents_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'documents', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Document $document): bool
     {
-        if ($user->workspace_id !== $document->workspace_id) return false;
-        if ($user->hasPermissionTo('view_documents_all')) return true;
-        if ($user->hasPermissionTo('view_documents_own')) {
-            return $document->isOwnedBy($user);
+        if ($user->workspace_id !== $document->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $document->satisfiesScope($user, 'documents', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class DocumentPolicy
 
     public function update(User $user, Document $document): bool
     {
-        if ($user->workspace_id !== $document->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_documents_all')) return true;
-        if ($user->hasPermissionTo('edit_documents_own')) {
-            return $document->isOwnedBy($user);
+        if ($user->workspace_id !== $document->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $document->satisfiesScope($user, 'documents', 'edit');
     }
 
     public function delete(User $user, Document $document): bool
     {
-        if ($user->workspace_id !== $document->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_documents_all')) return true;
-        if ($user->hasPermissionTo('delete_documents_own')) {
-            return $document->isOwnedBy($user);
+        if ($user->workspace_id !== $document->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $document->satisfiesScope($user, 'documents', 'delete');
     }
 }

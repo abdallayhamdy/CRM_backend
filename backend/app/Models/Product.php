@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\BelongsToWorkspace; // Trait العزل اللي موجود عندك
+use App\Traits\HasOwnership;
+use App\Traits\HasPermissionScopes;
 use App\Traits\RecordsActivity;    // Trait تسجيل النشاطات
 
 class Product extends Model
 {
-    use HasFactory, BelongsToWorkspace, RecordsActivity;
+    use HasFactory, BelongsToWorkspace, HasOwnership, HasPermissionScopes, RecordsActivity;
 
     protected $keyType = 'string';
     public $incrementing = false;
@@ -38,6 +40,11 @@ class Product extends Model
                 $model->id = (string) Str::uuid();
             }
         });
+    }
+
+    protected function getOwnershipColumns(): ?array
+    {
+        return null;
     }
 
     // تجهيز العلاقة مع الطلبات (هنحتاجها في الخطوة الجاية)

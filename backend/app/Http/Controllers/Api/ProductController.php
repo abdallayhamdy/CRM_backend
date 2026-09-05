@@ -23,6 +23,8 @@ class ProductController extends Controller
         $sortBy = in_array($request->sort_by, ['name', 'sku', 'unit_price', 'status', 'product_folder', 'created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
 
+        $user = auth('sanctum')->user();
+
         $products = Product::query()
             ->when($request->q, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -39,6 +41,7 @@ class ProductController extends Controller
             ->when(true, function ($query) use ($request) {
                 $this->applyCustomDataFilters($query, $request, 'product');
             })
+            ->applyRecordScope($user, 'products', 'view')
             ->orderBy($sortBy, $sortDir)
             ->paginate($this->paginationLimit($request));
 
@@ -54,11 +57,14 @@ class ProductController extends Controller
             return response()->json(['data' => []]);
         }
 
+        $user = auth('sanctum')->user();
+
         $products = Product::query()
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('sku', 'like', "%{$query}%");
             })
+            ->applyRecordScope($user, 'products', 'view')
             ->limit(20)
             ->get()
             ->map(function ($product) {

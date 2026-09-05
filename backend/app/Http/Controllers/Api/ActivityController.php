@@ -36,9 +36,7 @@ class ActivityController extends Controller
 
         $query = Activity::with('user', 'activitable');
 
-        if (!$user->hasPermissionTo('view_activities_all')) {
-            $query->where('user_id', $user->id);
-        }
+        $query->applyRecordScope($user, 'activities', 'view');
 
         if ($request->q) {
             $query->where(function ($q) use ($request) {

@@ -39,6 +39,8 @@ class DocumentController extends Controller
             });
         }
 
+        $query->applyRecordScope(auth('sanctum')->user(), 'documents', 'view');
+
         $sortBy = in_array($request->sort_by, ['name', 'size', 'mime_type', 'created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

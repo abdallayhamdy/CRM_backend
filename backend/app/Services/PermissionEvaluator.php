@@ -61,11 +61,11 @@ class PermissionEvaluator
             return self::SCOPE_NONE;
         }
 
-        if ($user->hasPermissionTo("{$prefix}_{$object}_all")) {
+        if ($user->checkPermissionTo("{$prefix}_{$object}_all")) {
             return self::SCOPE_ALL;
         }
 
-        if ($user->hasPermissionTo("{$prefix}_{$object}_own")) {
+        if ($user->checkPermissionTo("{$prefix}_{$object}_own")) {
             return self::SCOPE_THEIR;
         }
 

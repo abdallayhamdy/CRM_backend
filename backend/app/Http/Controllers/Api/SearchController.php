@@ -28,6 +28,8 @@ class SearchController extends Controller
     {
         $this->authorize('viewAny', Contact::class);
 
+        $user = auth('sanctum')->user();
+
         $query = Contact::with(['company:id,name', 'assignee:id,name'])
             ->where(function ($q) use ($request) {
                 $search = $request->q;
@@ -42,6 +44,8 @@ class SearchController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
+        $query->applyRecordScope($user, 'contacts', 'view');
+
         $contacts = $query->paginate($this->paginationLimit($request));
 
         return ContactResource::collection($contacts);
@@ -50,6 +54,8 @@ class SearchController extends Controller
     public function companies(Request $request)
     {
         $this->authorize('viewAny', Company::class);
+
+        $user = auth('sanctum')->user();
 
         $query = Company::query();
 
@@ -61,6 +67,8 @@ class SearchController extends Controller
             });
         }
 
+        $query->applyRecordScope($user, 'companies', 'view');
+
         $companies = $query->paginate($this->paginationLimit($request));
 
         return CompanyResource::collection($companies);
@@ -69,6 +77,8 @@ class SearchController extends Controller
     public function deals(Request $request)
     {
         $this->authorize('viewAny', Deal::class);
+
+        $user = auth('sanctum')->user();
 
         $query = Deal::with(['stage', 'contact:id,first_name,last_name', 'company:id,name']);
 
@@ -86,6 +96,8 @@ class SearchController extends Controller
             $query->where('stage_id', $request->stage_id);
         }
 
+        $query->applyRecordScope($user, 'deals', 'view');
+
         $deals = $query->paginate($this->paginationLimit($request));
 
         return response()->json($deals);
@@ -94,6 +106,8 @@ class SearchController extends Controller
     public function products(Request $request)
     {
         $this->authorize('viewAny', Product::class);
+
+        $user = auth('sanctum')->user();
 
         $query = Product::query();
 
@@ -108,6 +122,8 @@ class SearchController extends Controller
             $query->where('status', $request->status);
         }
 
+        $query->applyRecordScope($user, 'products', 'view');
+
         $products = $query->paginate($this->paginationLimit($request));
 
         return response()->json($products);
@@ -116,6 +132,8 @@ class SearchController extends Controller
     public function search(Request $request)
     {
         $search = trim($request->q ?? '');
+
+        $user = auth('sanctum')->user();
 
         if ($search === '') {
             return response()->json([
@@ -142,6 +160,7 @@ class SearchController extends Controller
                               ->orWhere('last_name', 'like', "%{$search}%")
                               ->orWhere('email', 'like', "%{$search}%");
                         })
+                        ->applyRecordScope($user, 'contacts', 'view')
                         ->limit(5)
                         ->get()
                 );
@@ -159,6 +178,7 @@ class SearchController extends Controller
                               ->orWhere('website', 'like', "%{$search}%")
                               ->orWhere('phone', 'like', "%{$search}%");
                         })
+                        ->applyRecordScope($user, 'companies', 'view')
                         ->limit(5)
                         ->get()
                 );
@@ -172,6 +192,7 @@ class SearchController extends Controller
             if ($search && Gate::allows('viewAny', Deal::class)) {
                 $deals = Deal::with(['stage', 'contact:id,first_name,last_name', 'company:id,name'])
                     ->where('title', 'like', "%{$search}%")
+                    ->applyRecordScope($user, 'deals', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -187,6 +208,7 @@ class SearchController extends Controller
                         $q->where('name', 'like', "%{$search}%")
                           ->orWhere('sku', 'like', "%{$search}%");
                     })
+                    ->applyRecordScope($user, 'products', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -203,6 +225,7 @@ class SearchController extends Controller
                         $q->where('title', 'like', "%{$search}%")
                           ->orWhere('description', 'like', "%{$search}%");
                     })
+                    ->applyRecordScope($user, 'tasks', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -220,6 +243,7 @@ class SearchController extends Controller
                             $q->where('subject', 'like', "%{$search}%")
                               ->orWhere('description', 'like', "%{$search}%");
                         })
+                        ->applyRecordScope($user, 'activities', 'view')
                         ->limit(5)
                         ->get()
                 );
@@ -233,6 +257,7 @@ class SearchController extends Controller
             if ($search && Gate::allows('viewAny', Note::class)) {
                 $notes = Note::with('user:id,first_name,last_name,name')
                     ->where('content', 'like', "%{$search}%")
+                    ->applyRecordScope($user, 'notes', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -249,6 +274,7 @@ class SearchController extends Controller
                         $q->where('subject', 'like', "%{$search}%")
                           ->orWhere('description', 'like', "%{$search}%");
                     })
+                    ->applyRecordScope($user, 'tickets', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -265,6 +291,7 @@ class SearchController extends Controller
                         $q->where('order_number', 'like', "%{$search}%")
                           ->orWhere('title', 'like', "%{$search}%");
                     })
+                    ->applyRecordScope($user, 'orders', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();
@@ -278,6 +305,7 @@ class SearchController extends Controller
             if ($search && Gate::allows('viewAny', Document::class)) {
                 $documents = Document::with('uploader:id,name')
                     ->where('name', 'like', "%{$search}%")
+                    ->applyRecordScope($user, 'documents', 'view')
                     ->limit(5)
                     ->get()
                     ->toArray();

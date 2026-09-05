@@ -4,18 +4,23 @@ namespace App\Policies;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class ProductPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_products_all') || $user->hasPermissionTo('view_products_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'products', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Product $product): bool
     {
-        if ($user->workspace_id !== $product->workspace_id) return false;
-        return $user->hasPermissionTo('view_products_all') || $user->hasPermissionTo('view_products_own');
+        if ($user->workspace_id !== $product->workspace_id) {
+            return false;
+        }
+
+        return $product->satisfiesScope($user, 'products', 'view');
     }
 
     public function create(User $user): bool
@@ -25,13 +30,19 @@ class ProductPolicy
 
     public function update(User $user, Product $product): bool
     {
-        if ($user->workspace_id !== $product->workspace_id) return false;
-        return $user->hasPermissionTo('edit_products_all');
+        if ($user->workspace_id !== $product->workspace_id) {
+            return false;
+        }
+
+        return $product->satisfiesScope($user, 'products', 'edit');
     }
 
     public function delete(User $user, Product $product): bool
     {
-        if ($user->workspace_id !== $product->workspace_id) return false;
-        return $user->hasPermissionTo('delete_products_all');
+        if ($user->workspace_id !== $product->workspace_id) {
+            return false;
+        }
+
+        return $product->satisfiesScope($user, 'products', 'delete');
     }
 }

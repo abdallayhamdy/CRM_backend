@@ -71,6 +71,8 @@ class NoteController extends Controller
             $query->where('created_at', '<=', $request->created_to . ' 23:59:59');
         }
 
+        $query->applyRecordScope(auth('sanctum')->user(), 'notes', 'view');
+
         $sortBy = in_array($request->sort_by, ['created_at', 'updated_at']) ? $request->sort_by : 'created_at';
         $sortDir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

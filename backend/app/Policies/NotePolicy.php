@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Note;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class NotePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_notes_all') || $user->hasPermissionTo('view_notes_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'notes', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Note $note): bool
     {
-        if ($user->workspace_id !== $note->workspace_id) return false;
-        if ($user->hasPermissionTo('view_notes_all')) return true;
-        if ($user->hasPermissionTo('view_notes_own')) {
-            return $note->isOwnedBy($user);
+        if ($user->workspace_id !== $note->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $note->satisfiesScope($user, 'notes', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class NotePolicy
 
     public function update(User $user, Note $note): bool
     {
-        if ($user->workspace_id !== $note->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_notes_all')) return true;
-        if ($user->hasPermissionTo('edit_notes_own')) {
-            return $note->isOwnedBy($user);
+        if ($user->workspace_id !== $note->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $note->satisfiesScope($user, 'notes', 'edit');
     }
 
     public function delete(User $user, Note $note): bool
     {
-        if ($user->workspace_id !== $note->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_notes_all')) return true;
-        if ($user->hasPermissionTo('delete_notes_own')) {
-            return $note->isOwnedBy($user);
+        if ($user->workspace_id !== $note->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $note->satisfiesScope($user, 'notes', 'delete');
     }
 }

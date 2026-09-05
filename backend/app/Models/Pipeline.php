@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\BelongsToWorkspace;
+use App\Traits\HasOwnership;
+use App\Traits\HasPermissionScopes;
 
 class Pipeline extends Model
 {
-    use HasFactory, BelongsToWorkspace;
+    use HasFactory, BelongsToWorkspace, HasOwnership, HasPermissionScopes;
 
     protected $keyType = 'string';
     public $incrementing = false;
@@ -35,6 +37,11 @@ class Pipeline extends Model
                 $model->id = (string) Str::uuid();
             }
         });
+    }
+
+    protected function getOwnershipColumns(): ?array
+    {
+        return null;
     }
 
     // علاقة المسار بالمراحل بتاعته
