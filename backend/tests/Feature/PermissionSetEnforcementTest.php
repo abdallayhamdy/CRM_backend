@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Tests\Traits\TestHelpers;
 use App\Models\Contact;
+use App\Models\Company;
 use App\Models\Deal;
 use App\Models\PermissionSet;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class PermissionSetEnforcementTest extends TestCase
 {
@@ -36,6 +39,26 @@ class PermissionSetEnforcementTest extends TestCase
             'workspace_id' => $this->workspace->id,
             'assigned_to' => $owner->id,
             'created_by' => $owner->id,
+        ]);
+    }
+
+    private function makeCompany(User $owner): Company
+    {
+        return Company::factory()->create([
+            'workspace_id' => $this->workspace->id,
+            'assigned_to' => $owner->id,
+            'created_by' => $owner->id,
+        ]);
+    }
+
+    private function makeTask(User $owner): Task
+    {
+        return Task::factory()->create([
+            'workspace_id' => $this->workspace->id,
+            'assigned_to' => $owner->id,
+            'created_by' => $owner->id,
+            'taskable_type' => \App\Models\Company::class,
+            'taskable_id' => $this->makeCompany($owner)->id,
         ]);
     }
 
@@ -273,5 +296,138 @@ class PermissionSetEnforcementTest extends TestCase
         $this->assertForbidden($this->getJson('/api/contacts/' . $bobContact->id));
 
         $this->assertForbidden($this->putJson('/api/contacts/' . $bobContact->id, ['first_name' => 'Hacked']));
+    }
+
+    // ── Companies: record-level scoping ────────────────────────────────────
+
+    public function test_company_their_scope_restricts_index(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $bob = User::factory()->create(['workspace_id' => $this->workspace->id]);
+        $myCompany = $this->makeCompany($this->adminUser);
+        $bobCompany = $this->makeCompany($bob);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'companies', 'key' => 'view', 'value' => 'their'],
+            ['object' => 'companies', 'key' => 'edit', 'value' => 'their'],
+        ]);
+
+        $response = $this->getJson('/api/companies');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['id' => $myCompany->id]);
+        $response->assertJsonMissing(['id' => $bobCompany->id]);
+    }
+
+    public function test_company_their_scope_denies_other_users_company_record(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $bob = User::factory()->create(['workspace_id' => $this->workspace->id]);
+        $bobCompany = $this->makeCompany($bob);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'companies', 'key' => 'view', 'value' => 'their'],
+            ['object' => 'companies', 'key' => 'edit', 'value' => 'their'],
+            ['object' => 'companies', 'key' => 'delete', 'value' => 'their'],
+        ]);
+
+        $this->assertForbidden($this->getJson('/api/companies/' . $bobCompany->id));
+        $this->assertForbidden($this->putJson('/api/companies/' . $bobCompany->id, ['name' => 'Hacked']));
+        $this->assertForbidden($this->deleteJson('/api/companies/' . $bobCompany->id));
+    }
+
+    public function test_company_none_scope_denies_module_access_entirely(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $myCompany = $this->makeCompany($this->adminUser);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'companies', 'key' => 'view', 'value' => 'none'],
+        ]);
+
+        $this->assertForbidden($this->getJson('/api/companies'));
+        $this->assertForbidden($this->getJson('/api/companies/' . $myCompany->id));
+    }
+
+    // ── Tasks: record-level scoping ────────────────────────────────────────
+
+    public function test_task_their_scope_restricts_index(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $bob = User::factory()->create(['workspace_id' => $this->workspace->id]);
+        $myTask = $this->makeTask($this->adminUser);
+        $bobTask = $this->makeTask($bob);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'tasks', 'key' => 'view', 'value' => 'their'],
+            ['object' => 'tasks', 'key' => 'edit', 'value' => 'their'],
+        ]);
+
+        $response = $this->getJson('/api/tasks');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['id' => $myTask->id]);
+        $response->assertJsonMissing(['id' => $bobTask->id]);
+    }
+
+    public function test_task_their_scope_denies_other_users_task_record(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $bob = User::factory()->create(['workspace_id' => $this->workspace->id]);
+        $bobTask = $this->makeTask($bob);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'tasks', 'key' => 'view', 'value' => 'their'],
+            ['object' => 'tasks', 'key' => 'edit', 'value' => 'their'],
+            ['object' => 'tasks', 'key' => 'delete', 'value' => 'their'],
+        ]);
+
+        $this->assertForbidden($this->getJson('/api/tasks/' . $bobTask->id));
+        $this->assertForbidden($this->putJson('/api/tasks/' . $bobTask->id, ['title' => 'Hacked']));
+        $this->assertForbidden($this->deleteJson('/api/tasks/' . $bobTask->id));
+    }
+
+    public function test_task_none_scope_denies_module_access_entirely(): void
+    {
+        \Laravel\Sanctum\Sanctum::actingAs($this->adminUser);
+        $myTask = $this->makeTask($this->adminUser);
+
+        $this->assignSet($this->adminUser, [
+            ['object' => 'tasks', 'key' => 'view', 'value' => 'none'],
+        ]);
+
+        $this->assertForbidden($this->getJson('/api/tasks'));
+        $this->assertForbidden($this->getJson('/api/tasks/' . $myTask->id));
+    }
+
+    // ── Fail-closed: record-level scope with no ownership columns ──────────
+
+    public function test_apply_record_scope_fails_closed_when_no_ownership_columns(): void
+    {
+        $this->assignSet($this->adminUser, [
+            ['object' => 'deals', 'key' => 'view', 'value' => 'their'],
+        ]);
+
+        $model = new class extends Deal {
+            protected $table = 'deals';
+
+            protected function getOwnershipColumns(): ?array
+            {
+                return null;
+            }
+        };
+
+        $query = $model->newQuery();
+
+        $scoped = $query->applyRecordScope($this->adminUser, 'deals', 'their');
+
+        $seenWhere = $scoped->toSql();
+
+        // 1 = 0 must be present so a 'their' scope on a column-less model
+        // returns zero records rather than leaking everything.
+        $this->assertStringContainsString('1 = 0', $seenWhere);
+
+        $result = $scoped->get();
+        $this->assertEmpty($result);
     }
 }

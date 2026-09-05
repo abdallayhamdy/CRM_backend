@@ -24,7 +24,12 @@ class TaskController extends Controller
     {
         $this->authorize('viewAny', Task::class);
 
+        $user = auth('sanctum')->user();
+
         $query = Task::with(['assignee', 'taskable']);
+
+        // Permission-based scoping (resolves role baseline + permission-set scopes)
+        $query->applyRecordScope($user, 'tasks', 'view');
 
         if ($request->q) {
             $query->where(function ($q) use ($request) {

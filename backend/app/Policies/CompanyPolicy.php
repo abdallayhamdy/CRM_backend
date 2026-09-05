@@ -4,22 +4,23 @@ namespace App\Policies;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Services\PermissionEvaluator;
 
 class CompanyPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_companies_all') || $user->hasPermissionTo('view_companies_own');
+        return app(PermissionEvaluator::class)->effectiveScope($user, 'companies', 'view')
+            !== PermissionEvaluator::SCOPE_NONE;
     }
 
     public function view(User $user, Company $company): bool
     {
-        if ($user->workspace_id !== $company->workspace_id) return false;
-        if ($user->hasPermissionTo('view_companies_all')) return true;
-        if ($user->hasPermissionTo('view_companies_own')) {
-            return $company->isOwnedBy($user);
+        if ($user->workspace_id !== $company->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $company->satisfiesScope($user, 'companies', 'view');
     }
 
     public function create(User $user): bool
@@ -29,21 +30,19 @@ class CompanyPolicy
 
     public function update(User $user, Company $company): bool
     {
-        if ($user->workspace_id !== $company->workspace_id) return false;
-        if ($user->hasPermissionTo('edit_companies_all')) return true;
-        if ($user->hasPermissionTo('edit_companies_own')) {
-            return $company->isOwnedBy($user);
+        if ($user->workspace_id !== $company->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $company->satisfiesScope($user, 'companies', 'edit');
     }
 
     public function delete(User $user, Company $company): bool
     {
-        if ($user->workspace_id !== $company->workspace_id) return false;
-        if ($user->hasPermissionTo('delete_companies_all')) return true;
-        if ($user->hasPermissionTo('delete_companies_own')) {
-            return $company->isOwnedBy($user);
+        if ($user->workspace_id !== $company->workspace_id) {
+            return false;
         }
-        return false;
+
+        return $company->satisfiesScope($user, 'companies', 'delete');
     }
 }

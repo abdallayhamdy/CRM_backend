@@ -3,6 +3,7 @@
 namespace App\Models;
 use App\Traits\BelongsToWorkspace;
 use App\Traits\HasOwnership;
+use App\Traits\HasPermissionScopes;
 use App\Traits\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Company extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToWorkspace, HasOwnership, RecordsActivity;
+    use HasFactory, HasUuids, SoftDeletes, BelongsToWorkspace, HasOwnership, HasPermissionScopes, RecordsActivity;
 
     protected $fillable = [
         'workspace_id',

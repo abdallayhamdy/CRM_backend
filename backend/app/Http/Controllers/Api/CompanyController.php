@@ -110,6 +110,9 @@ class CompanyController extends Controller
                 }),
             );
 
+        // Permission-based scoping (resolves role baseline + permission-set scopes)
+        $companies->applyRecordScope($user, 'companies', 'view');
+
         if ($request->q) {
             $companies->where(function ($q) use ($request) {
                 $q->where('companies.name', 'like', "%{$request->q}%")

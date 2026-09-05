@@ -33,8 +33,11 @@ trait HasPermissionScopes
 
         $columns = $this->getOwnershipColumns() ?? [];
 
+        // Security: never fail-open. If a record-level scope ('their'/'team')
+        // is requested but the model defines no ownership columns, return nothing
+        // rather than leaking all workspace records.
         if (empty($columns)) {
-            return $query;
+            return $query->whereRaw('1 = 0');
         }
 
         return $query->where(function (Builder $nested) use ($user, $scope, $columns) {
@@ -81,8 +84,10 @@ trait HasPermissionScopes
 
         $columns = $this->getOwnershipColumns() ?? [];
 
+        // Security: never fail-open. A record-level scope ('their'/'team')
+        // with no ownership columns must not grant access to an arbitrary record.
         if (empty($columns)) {
-            return true;
+            return false;
         }
 
         $ownIds = collect($columns)
