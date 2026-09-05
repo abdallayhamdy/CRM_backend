@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 
 class PermissionSetController extends Controller
 {
@@ -23,7 +24,14 @@ class PermissionSetController extends Controller
             return;
         }
 
-        if (!$user || !$user->hasPermissionTo('manage_permission_sets')) {
+        $canManage = $user
+            && Permission::query()
+                ->where('name', 'manage_permission_sets')
+                ->where('guard_name', 'sanctum')
+                ->exists()
+            && $user->hasPermissionTo('manage_permission_sets');
+
+        if (!$canManage) {
             abort(response()->json(['status' => 'error', 'message' => 'Forbidden.'], 403));
         }
 

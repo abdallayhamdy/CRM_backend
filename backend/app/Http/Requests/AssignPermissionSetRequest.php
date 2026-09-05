@@ -14,7 +14,16 @@ class AssignPermissionSetRequest extends FormRequest
             return true;
         }
 
-        return $user && $user->hasPermissionTo('manage_permission_sets');
+        return $user && $this->canManagePermissionSets($user);
+    }
+
+    private function canManagePermissionSets($user): bool
+    {
+        return \Spatie\Permission\Models\Permission::query()
+                ->where('name', 'manage_permission_sets')
+                ->where('guard_name', 'sanctum')
+                ->exists()
+            && $user->hasPermissionTo('manage_permission_sets');
     }
 
     public function rules(): array
