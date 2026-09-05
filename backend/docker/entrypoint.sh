@@ -13,7 +13,9 @@ else
     echo "APP_KEY not set or not a valid key. Skipping migrations (will fail if DB init required). Set APP_KEY and redeploy."
 fi
 
+php artisan permission:cache-reset --no-interaction 2>/dev/null || true
 php artisan config:clear --no-interaction 2>/dev/null || true
+php artisan cache:clear --no-interaction 2>/dev/null || true
 php artisan view:cache --no-interaction 2>/dev/null || true
 php artisan storage:link --force --no-interaction 2>/dev/null || true
 
